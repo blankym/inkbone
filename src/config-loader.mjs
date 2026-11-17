@@ -116,6 +116,18 @@ function compileAuxiliaryRules(raw) {
           regex: new RegExp(densityRaw.ellipsisDensityTic.pattern, "gu"),
         }
       : null,
+    exclamationDensityTic: densityRaw.exclamationDensityTic
+      ? {
+          ...densityRaw.exclamationDensityTic,
+          regex: new RegExp(densityRaw.exclamationDensityTic.pattern, "gu"),
+        }
+      : null,
+    exclamationStackTic: densityRaw.exclamationStackTic
+      ? {
+          ...densityRaw.exclamationStackTic,
+          regex: new RegExp(densityRaw.exclamationStackTic.pattern, "gu"),
+        }
+      : null,
     overcompressedProseTic: densityRaw.overcompressedProseTic
       ? {
           ...densityRaw.overcompressedProseTic,

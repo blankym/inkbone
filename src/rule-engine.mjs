@@ -664,6 +664,39 @@ export function runDensityTics(
     }
   }
 
+  // 8b. 叙述层感叹号密度（精修稿 ~0-0.7/千字，滑稿可到 7-17/千字）与连叠（一处即报）
+  const exclRes = collectDensityMatches(dCfg.exclamationDensityTic, (item) => {
+    const re = dCfg.exclamationDensityTic.regex;
+    re.lastIndex = 0;
+    let count = 0;
+    const samples = [];
+    let m;
+    while ((m = re.exec(item.narration)) !== null) {
+      count += 1;
+      samples.push(
+        item.raw.slice(Math.max(0, m.index - 10), m.index + m[0].length + 2).trim()
+      );
+    }
+    return { count, samples };
+  });
+  if (exclRes) tics.push(exclRes);
+
+  const stackRes = collectDensityMatches(dCfg.exclamationStackTic, (item) => {
+    const re = dCfg.exclamationStackTic.regex;
+    re.lastIndex = 0;
+    let count = 0;
+    const samples = [];
+    let m;
+    while ((m = re.exec(item.narration)) !== null) {
+      count += 1;
+      samples.push(
+        item.raw.slice(Math.max(0, m.index - 10), m.index + m[0].length + 2).trim()
+      );
+    }
+    return { count, samples };
+  });
+  if (stackRes) tics.push(stackRes);
+
   // 9. 过度精炼短段（反去 AI 味过火成电报体守卫）
   if (
     dCfg.overcompressedProseTic &&

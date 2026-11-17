@@ -489,6 +489,22 @@
       "review": "semantic",
       "remedy": "Reduce excessive narrative ellipses outside dialogue quotes."
     },
+    "exclamationDensityTic": {
+      "id": "tic_exclamation_density",
+      "pattern": "[！!]",
+      "minHits": 8,
+      "perKilo": 5,
+      "review": "semantic",
+      "remedy": "Cut exclamation marks in narration; let stakes and wording carry the emphasis instead of punctuation."
+    },
+    "exclamationStackTic": {
+      "id": "tic_exclamation_stack",
+      "pattern": "[！!]{2,}",
+      "minHits": 1,
+      "perKilo": 0,
+      "review": "mechanical",
+      "remedy": "Remove stacked exclamation marks in narration; a single mark already shouts."
+    },
     "overcompressedProseTic": {
       "id": "tic_overcompressed_prose",
       "particlePattern": "[的了就着过呢吧啊呀嘛]",

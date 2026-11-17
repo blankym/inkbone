@@ -40,6 +40,13 @@
       "id": "book_encyclopedia_lecture",
       "category": "over_explanation",
       "pattern": "(?:头|前)[一二三四五]+(?:层|级)算[^，。！？]{1,8}，[^。！？]{2,20}(?:翻上一倍|成倍暴涨)|每满一[月日年]才能自行|只在经脉(?:浅表)?流转"
+    },
+    {
+      "id": "book_corner_quote_terms",
+      "category": "name_quoting_style",
+      "scope": "all",
+      "pattern": "「[^」\\n\\r]{1,12}」",
+      "remedy": "This book writes item and skill names bare; the 「」 quoting that drifted into the unprocessed chapters is out of contract."
     }
   ],
   "fillerRules": [

@@ -620,6 +620,29 @@ test("v1.2 ported oh-story rhetorical, density, degeneration, and meta-leak chec
   assert.ok(ticIds.includes("tic_quote_emphasis"));
   assert.ok(ticIds.includes("tic_stock_reaction"));
 
+  // 2b. 感叹号密度与连叠：叙述层高密度 + 一处连叠即报，台词里的！不计入
+  const exclReport = auditChapterText(fixtures.exclamationTicSample, {
+    presetName: "qimao-crimson",
+    skipLengthGate: true,
+  });
+  const exclV = exclReport.violations.find((v) => v.code === "PROSE_DENSITY_TIC");
+  assert.ok(exclV);
+  const exclIds = exclV.hits.map((h) => h.id);
+  assert.ok(exclIds.includes("tic_exclamation_density"));
+  assert.ok(exclIds.includes("tic_exclamation_stack"));
+  const exclHits = exclV.hits.find((h) => h.id === "tic_exclamation_density");
+  assert.equal(exclHits.hits, 12);
+  const cleanTicReport = auditChapterText(fixtures.exclamationCleanSample, {
+    presetName: "qimao-crimson",
+    skipLengthGate: true,
+  });
+  const cleanTicHits =
+    (cleanTicReport.violations.find((v) => v.code === "PROSE_DENSITY_TIC") || { hits: [] }).hits;
+  assert.equal(
+    cleanTicHits.some((h) => h.id === "tic_exclamation_density" || h.id === "tic_exclamation_stack"),
+    false
+  );
+
   // 3. 退化与工程词泄漏检测：复读、截断、AI 自指、占位符、Tier1 阻断；Tier2 仅提示且跳过引号内台词
   const degenReport = auditChapterText(fixtures.degenerationMetaSample, {
     presetName: "qimao-crimson",

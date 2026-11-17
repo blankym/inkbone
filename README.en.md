@@ -95,7 +95,7 @@ For a book already in progress: `import-ledger` scans chapters to build the ledg
 | ledger continuity | required anchors missing, foreshadowing revealed early, chapter re-opening the previous ending |
 | genre register | modern internet slang in a historical setting, fake traditional calendars, wuxia terms in sci-fi |
 | clichés & syntax | "pupils contracted"-tier stock phrases, repeated symmetric skeletons, same paragraph opening three times |
-| rhetorical density | fires only when a chapter exceeds a threshold; doesn't punish normal prose |
+| rhetorical density | similes, reasoning chains, micro-actions, exclamation marks — fires only past the per-chapter threshold |
 | model degeneration | repetition loops, truncated endings, "as an AI" leakage, engineering terms ("chapter 6 outline") in prose |
 | subject continuity | subject-dropped sentences whose action lands on the wrong character |
 | format & word count | Markdown residue, claimed-vs-actual length mismatch |
