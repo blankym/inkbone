@@ -6,6 +6,14 @@
   "bin": {
     "inkbone": "./bin/inkbone.mjs"
   },
+  "files": [
+    "bin",
+    "src",
+    "configs",
+    "prompts",
+    "resources",
+    "skills/inkbone"
+  ],
   "exports": {
     ".": "./src/index.mjs",
     "./profiler": "./src/profiler.mjs",
@@ -32,5 +40,15 @@
     "writing-engine",
     "agent-skill"
   ],
-  "license": "MIT"
+  "author": "blankym",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blankym/inkbone.git"
+  },
+  "bugs": "https://github.com/blankym/inkbone/issues",
+  "homepage": "https://github.com/blankym/inkbone#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
