@@ -4,6 +4,7 @@
 
 模型管写，InkBone 管查：第 3 章埋的设定第 40 章有没有吃书、仙侠文里有没有冒出网络热词、省略主语的动作会不会被安到别人头上。这些模型自己看不出来的错，交给确定性工具一条条过。
 
+[![test](https://github.com/blankym/inkbone/actions/workflows/test.yml/badge.svg)](https://github.com/blankym/inkbone/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![依赖: 0](https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-0-orange.svg)](package.json)

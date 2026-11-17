@@ -4,6 +4,7 @@
 
 The model writes; InkBone checks. Does chapter 40 still honor a rule established in chapter 3? Did a xianxia chapter slip in modern internet slang? When a sentence drops its subject, whose action does the reader see? These are the mistakes a model can't catch in its own output. InkBone runs them through deterministic tools, line by line.
 
+[![test](https://github.com/blankym/inkbone/actions/workflows/test.yml/badge.svg)](https://github.com/blankym/inkbone/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-orange.svg)](package.json)
