@@ -13,6 +13,7 @@ export const ROOT_DIR = path.resolve(scriptDir, "..");
 export const PUBLIC_ITEMS = [
   "LICENSE",
   "README.md",
+  "README.en.md",
   "package.json",
   "bin",
   "src",

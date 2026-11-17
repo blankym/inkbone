@@ -1,31 +1,21 @@
 # InkBone（墨骨）
 
-InkBone 是一套写中文长篇小说用的 Agent Skill，附带一个本地命令行检查工具。Skill 部分是分阶段的提示词，分别管定语体、排节拍、写正文、审读和局部修改。命令行部分检查模型自己不擅长检查的地方：台账前后对不对得上，有没有不属于这个题材的用词，有没有常见套话，省略主语会不会被读成别人的动作。
+**写中文长篇小说的 Agent Skill + 零依赖本地质检 CLI。**
 
-需要 Node.js 18 或更高版本，没有第三方依赖。当前版本 1.1。作者正在用它写自己的仙侠长篇，其他题材的规则包内容还比较少。
+模型管写，InkBone 管查：第 3 章埋的设定第 40 章有没有吃书、仙侠文里有没有冒出网络热词、省略主语的动作会不会被安到别人头上。这些模型自己看不出来的错，交给确定性工具一条条过。
 
-## 能做什么，不能做什么
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
+[![依赖: 0](https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-0-orange.svg)](package.json)
+[![版本: 1.1](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.1-lightgrey.svg)](package.json)
 
-能做的：
+[English](README.en.md) · 9 个题材包 · 17 条命令 · 20+ 项语体指纹指标 · 38 项测试
 
-- 规划时要求每条信息只安排一个位置，开场冲突之前不堆背景，主角的每个决定都要说得通。
-- 写完以后在本地检查格式残留、台账锚点和提前剧透、跨题材用词、常见套话和水话、主语歧义、连续几段同一种起头。
-- 逻辑审读和读者模拟都输出 JSON，指出的每个问题都必须引用原文，引文在正文里找不到的会被拒掉。
-- 判断一次改动有没有用：统计每条规则在人类作品里的误报，存档历次审读，生成盲读包请真人读者选。
+## 30 秒看到效果
 
-做不到的：
-
-- 写作能力弱的模型，用了它也写不出好正文。它只能约束和检查。
-- 正则查不出“同一个结论讲了三遍”“开场前背景交代太长”这类问题，这些要靠审读提示词和人去读。审计 0 告警不等于写得好。
-- 不保证通过 AI 检测，也不把降分当目标，原因见下文。用 AI 辅助写作的内容发布时，请按平台规定声明。
-
-## 一个例子
-
-下面是一段故意写坏的开头，存成 `ch01.md`：
+一段故意写坏的开头（`ch01.md`）：
 
 ```markdown
-# 第一章 雨夜
-
 子时三刻，药园的木门被人拍响。
 
 陆青瞳孔骤缩，起身去开门。
@@ -37,160 +27,164 @@ InkBone 是一套写中文长篇小说用的 Agent Skill，附带一个本地命
 孙岳转身靠在门柱上，合上了眼。从袖子里摸出一把小刀，挑开了渠边的泥。
 ```
 
-再准备一个只写了人物名单的 `ledger.json`：
+再给一份人物名单 `ledger.json`（主语检查要知道书里都有谁）：
 
 ```json
-{ "characterNames": ["陆青", "孙岳"], "protagonist": { "name": "陆青" } }
+{ "characterNames": ["陆青", "孙岳"] }
 ```
-
-运行（示例太短，用 `--skip-length` 跳过字数检查）：
 
 ```bash
-node skills/inkbone/bin/inkbone.mjs audit ch01.md --genre classical-xianxia --ledger ledger.json --skip-length
+node bin/inkbone.mjs audit ch01.md --genre classical-xianxia --ledger ledger.json --skip-length
 ```
-
-报出 3 条 warning：
 
 | 行 | 规则 | 命中 | 为什么 |
 | ---: | :--- | :--- | :--- |
-| 5 | `FORBIDDEN_AI_CLICHE` | 瞳孔骤缩 | 放进哪本书都成立的现成说法 |
-| 9 | `REGISTER_COLLISION` | 寅时十刻 | 一个时辰最多八刻 |
-| 11 | `SUBJECT_AMBIGUITY` | 从袖子里摸出一把小刀…… | 上一句以孙岳开头，这一句没写主语，读者会以为摸刀的是孙岳 |
+| 3 | `FORBIDDEN_AI_CLICHE` | 瞳孔骤缩 | 放进哪本书都成立的现成说法 |
+| 7 | `REGISTER_COLLISION` | 寅时十刻 | 一个时辰最多八刻 |
+| 9 | `SUBJECT_AMBIGUITY` | 从袖子里摸出一把小刀…… | 上一句以孙岳开头，这句没写主语，读者会以为摸刀的是孙岳 |
 
-最后一条的原始输出：
+第三条不是关键词匹配能做到的：它要知道"上一句的动作者是谁"，再把缺主语的句子接回去读一遍。这类检查模型自己做不到：它写完就忘了上一句的语法角色，InkBone 替它记住。
 
-```json
-{
-  "code": "SUBJECT_AMBIGUITY",
-  "severity": "warning",
-  "hits": [
-    {
-      "line": 11,
-      "scope": "same-paragraph",
-      "previousActor": "孙岳",
-      "previous": "孙岳转身靠在门柱上，合上了眼。",
-      "current": "从袖子里摸出一把小刀，挑开了渠边的泥。"
-    }
-  ]
-}
-```
+## 和"只有提示词"的写作 Skill 有什么不同
 
-另外还有 2 条 info 级的统计提示，只作参考。warning 只提示，不会让命令失败。默认只有客观错误会让 `audit` 返回非零退出码：格式残留、台账锚点缺失或提前剧透、重复上一章的结尾、模型退化（复读、截断）、声明的字数和实际不符。同一条规则命中得特别密时，也会升级成 error。完整结果是 JSON，`surgeryTargets` 按行号列出要改的地方。
+市面上的写小说 skill 大多是一大段提示词：告诉模型"别写套话""注意前后一致"。问题在于，模型既不擅长自查，也没有持久的记忆。写到第 40 章，第 3 章的约定早不在上下文里了。
 
-## 为什么不追 AI 检测分
+InkBone 把约束分成两半：
 
-早期版本（v0.3 到 v0.5）把腾讯朱雀的 AIGC 分数和几项统计指标（词汇多样性、句长变化之类）当成写作目标。同一个第一章前后改了十几版，记录下来的结果是：
-
-- A 稿每句都把名词写全，同一个结论讲了三遍。朱雀判为 100% 人工（AIGC 0.2025），作者读着啰嗦。
-- B 稿删掉了重复，读着顺了，朱雀判为 80.95% 疑似 AI。
-- 后面几版里，相邻两稿只改了约 2% 的字，分数就从 0.37 跳到了 0.55。这两稿没有存成基准文件，数值记在 manifest 的 `observations` 里。
-
-检测分说明不了一章好不好看，追着它反复改，量到的主要是噪声。所以现在先管剧情和读者，统计指标只作诊断，AI 检测在定稿后最多测一次，只做记录。一个改动有没有用，最后看真人盲读。每一版的检测结果都记在 `benchmarks/shoushi-wenxian/manifest.json` 里。
+- **写之前**，提示词先立合同：语体怎么定、信息放哪、节拍怎么排，写之前先给作者过目；
+- **写之后**，本地 CLI 做确定性检查：正则、词典、台账比对、统计指纹，不消耗 token，结果可复现，同样输入永远同样输出；
+- **审读环节**，要求每个问题必须引用原文，引文在正文里找不到的直接拒收（`verify-review`）；
+- **改完以后**，用 `rule-stats` 看每条规则在人类作品里的误报率，用盲读包请真人选，不靠感觉判断"是不是改好了"。
 
 ## 安装
 
-在仓库根目录下，把 `skills/inkbone/` 整个目录复制到你所用 Agent 的 skills 目录。这个目录是自包含的，SKILL.md 旁边带着命令行工具、配置、提示词、知识库和评估种子。各平台 skills 目录的位置不同，以平台文档为准。
+需要 Node.js 18+，**零第三方依赖**，克隆下来就能用。
+
+**只用 CLI（最简）：**
+
+```bash
+git clone https://github.com/blankym/inkbone.git
+cd inkbone
+node bin/inkbone.mjs --help
+```
+
+**作为 Agent Skill：** 把 `skills/inkbone/` 整个目录复制到你所用 Agent 的 skills 目录（自包含，SKILL.md 旁边带着 CLI、配置、提示词和知识库）。SKILL.md 里的路径写成 `$SKILL_DIR/...`，指 SKILL.md 所在目录；平台不允许执行命令时，只用提示词部分。
 
 ```bash
 cp -R skills/inkbone <你的 skills 目录>/inkbone
-node --version   # 18 或更高
 ```
 
-- SKILL.md 里的路径都写成 `$SKILL_DIR/...`，指 SKILL.md 所在的目录。
-- 平台不允许执行命令时，只能用提示词部分，代码检查做不了。SKILL.md 里写了这种情况怎么处理。
-- 不用 Agent、只用命令行也可以：`node skills/inkbone/bin/inkbone.mjs --help`。
+## 工作流：写一章要走哪几步
 
-## 写一章的流程
+`prompts/` 里是 7 个阶段提示词，CLI 在各阶段之间做检查：
 
-SKILL.md 里有完整说明，大致是：
+1. **定语体**（`00`）：读大纲，生成本书的语体合同和 `novel.json`；
+2. **排节拍**（`01`）：每条信息只安排一个位置，开场冲突前不堆背景，排完先停，等作者确认再动笔；
+3. **写正文**（`02`）；
+4. **本地检查**：`audit` 查单章，`doctor` 递归查整个目录；
+5. **审读**：逻辑审读（`04`）+ 零背景读者模拟（`05`），各出一份 JSON，`verify-review` 核对引文，`review-save` 存档；
+6. **局部修改**（`03`），改完回到第 4 步；
+7. （可选）定稿后 `detect` 跑一次朱雀检测，只做记录。
 
-1. 定语体（`prompts/00`）：根据大纲生成本书的语体合同和 `novel.json`。
-2. 排节拍（`01`）：先列信息分配表，每条信息只安排一个位置，再排每一幕。排完先停下来，等作者确认。
-3. 写正文（`02`）。
-4. 检查：`audit` 查单章，`doctor` 查整个目录。
-5. 审读：逻辑审读（`04`）和读者模拟（`05`）各出一份 JSON。用 `verify-review` 核对引文，用 `review-save` 存档。
-6. 局部修改（`03`），改完回到第 4 步。
-7. 可选：定稿后用 `detect` 测一次 AI 检测，只做记录。
+已写到一半的书：`import-ledger` 扫描章节自动建台账 → `doctor` 整本体检 → 从第 5 步进入流程。
 
-已经写了一部分的书，先用 `import-ledger` 扫描章节建台账（`06`），再用 `doctor` 做整本检查，然后从第 5 步开始。
+## 它查什么
 
-## 命令
+| 类别 | 例子 |
+| :--- | :--- |
+| 台账连续性 | 锚点物件没交代就使用、真相提前剧透、本章重复上一章结尾 |
+| 题材语域 | 古代背景出现"拉胯/赋能"、修真文出现伪历法、科幻里冒武侠词 |
+| 套话与句式 | "瞳孔骤缩""命运的齿轮"、对称骨架连用、同一段连续同一开头 |
+| 修辞密度 | 单章内比喻/解释链/微动作超过阈值才告警，不误伤正常写作 |
+| 模型退化 | 复读打转、无标点截断、"作为AI"元信息泄漏、"第X章"等工程词混进正文 |
+| 主语连续性 | 省略主语后动作被安错人（见上面的例子） |
+| 格式与字数 | Markdown 残留、声明字数与实际不符 |
+| 统计指纹 | 词汇熵、句长变异、'的'字链等 20+ 项指标，对照人类作品参考区间 |
+
+warning 只提示不阻塞；error（格式残留、台账违规、退化、字数造假）才返回非零退出码，可以直接接 CI。
+
+## 规则分三层，不会拿别人的口味管你
+
+| 层 | 位置 | 管什么 |
+| :--- | :--- | :--- |
+| 通用层 | `configs/` | 换题材也成立的套话、水话、句式 |
+| 题材层 | `configs/genres.json` 9 个题材包 | 题材共有的串味问题（古言出现网络词等） |
+| 项目层 | 书目录里的 `novel.json` | **只属于这本书**的声口合同和禁用词，可用 `disabledRuleIds` 关掉上层规则 |
+
+加规则之前先问：换一本书它还成立吗？再跑 `rule-stats` 看它在人类作品里的误报率。人类作者也这么写的，是个人口味，只能放项目层，引擎不替你定风格。
+
+## 为什么不拿 AI 检测分当目标
+
+这是用一整章十几版改稿换来的教训。早期版本把朱雀 AIGC 分当目标，实测：
+
+- 每句都把名词写全、一个结论讲三遍的稿子：**朱雀判 100% 人工**，作者读着啰嗦；
+- 删掉重复、读着顺了的稿子：朱雀判 80.95% 疑似 AI；
+- 相邻两稿只改约 2% 的字，分数从 0.37 跳到 0.55。
+
+检测分说明不了好不好看，追它改稿量到的主要是噪声。所以 InkBone 先管剧情和读者，统计指标只作诊断，检测在定稿后最多测一次做记录，改动有没有用最后由真人盲读决定。原始记录见 `benchmarks/shoushi-wenxian/manifest.json`。
+
+## 命令一览
 
 | 命令 | 做什么 |
 | :--- | :--- |
-| `genres` | 列出内置的 9 个题材包 |
-| `init` | 新建小说项目，生成 `novel.json` 和 `ledger.json` |
-| `import-ledger` | 扫描已有章节，生成或合并台账 |
-| `packet` | 生成写下一章用的上下文，台账里还没到揭示章节的真相会被隐去 |
-| `normalize` | 清理残留的星号、分隔线和不规范的省略号 |
-| `check-outline` | 检查细纲里有没有占位符、缺不缺关键要素 |
-| `audit` | 检查单章 |
-| `doctor` | 检查整个目录，自动识别题材 |
-| `verify-review` | 核对审读 JSON 里的引文是否真在正文里 |
-| `review-save` / `review-stats` | 审读结果存档（带正文哈希和模型名），统计历次变化 |
-| `rule-stats` | 统计每条规则在人类作品和 AI 稿里每万字命中几次 |
-| `mine` | 对比 AI 稿和改稿，列出 AI 稿里用得特别多的搭配 |
-| `calibrate` | 从人类作品算出各项统计指标的参考区间 |
-| `eval-pack` / `eval-score` | 生成隐去版本号的盲读包，统计读者的选择 |
-| `profile` | 输出一章的统计指标 |
-| `detect` | 调用一次朱雀检测（需要自己的 API key），结果只做记录 |
-| `benchmark` | 对比基准章节的统计指标 |
+| `genres` | 列出 9 个题材包（仙侠/历史/悬疑/都市/科幻/言情/轻小说/武侠/通用） |
+| `init` | 新建小说项目 |
+| `import-ledger` | 扫描已有章节，自动生成/合并台账 |
+| `packet` | 给下一章装配上下文，没到时候的真相自动隐去 |
+| `normalize` | 清理星号、分隔线、不规范省略号（零 token） |
+| `check-outline` | 查细纲占位符和要素缺失 |
+| `audit` | 查单章 |
+| `doctor` | 递归查整个目录，自动识别题材和项目配置 |
+| `verify-review` | 核对审读 JSON 的引文是否真在正文里 |
+| `review-save` / `review-stats` | 审读存档（带正文哈希和模型名）与统计 |
+| `eval-pack` / `eval-score` | 生成盲读 A/B 包、统计真人选票（含符号检验 p 值） |
+| `profile` | 输出一章的 20+ 项语体指纹 |
+| `rule-stats` | 每条规则在人类 vs AI 文本里的每万字命中率 |
+| `mine` | 挖 AI 稿相对人类作品过度使用的搭配 |
+| `calibrate` | 从人类作品算统计参考区间 |
+| `detect` | 单次朱雀检测（需自带 API key），只记录 |
+| `benchmark` | 基准语料对比 |
 
-完整参数见 `--help`。
+完整参数：`node bin/inkbone.mjs --help`。规则详情和正反例见 `resources/`。
 
-## 规则分三层
+## 怎么验证它真的有用
 
-| 层 | 位置 | 放什么 |
-| :--- | :--- | :--- |
-| 通用层 | `configs/zh-linguistics.json`，以及 `configs/genres.json` 里的通用水话规则 | 换了题材也成立的套话、水话和句式 |
-| 题材层 | `configs/genres.json` 里的各个题材包 | 某个题材共有的问题，比如古代背景里出现现代网络词 |
-| 项目层 | 小说目录里的 `novel.json`，或它指向的规则文件 | 只属于这本书的写法要求和禁用词 |
+`benchmarks/eval-set/` 带 4 个原创开篇种子（仙侠/悬疑/都市/言情）和完整评估流程：同一模型、新旧两版 skill 各写一遍 → `eval-pack` 生成隐去版本号的盲读包 → 发给真人读者 → `eval-score` 统票。比模型时反过来，固定 skill 换模型。
 
-加一条新规则之前，先问换一本书它还成不成立，再用 `rule-stats` 看它在人类作品里命中得多不多。人类作品里也常见的写法，说明这是个人口味，只能放项目层。
+## 已知不足（说在前面）
 
-## 怎么判断改动有没有用
-
-`benchmarks/eval-set/` 里有四个原创开篇种子（仙侠、悬疑、都市、言情）和完整流程。简单说：用同一个模型，新旧两版 skill 各写一遍；检查和审读结果作参考；用 `eval-pack` 生成盲读包发给读者，用 `eval-score` 统计他们的选择。比较不同模型时反过来，固定 skill 版本，只换模型。
-
-## 已知不足
-
-- 规则和正反例大多来自作者自己的一本仙侠小说。其他 8 个题材包规则少，也没有在大量人类作品上量过误报。
-- 部分通用层规则可能只是口味。比如“心头一沉”现在被算作水话，人类作者也常这样写，需要更多人类文本用 `rule-stats` 验证。
-- 主语歧义检查需要人物名单，而且只认句首的人名，用称谓或代词指人的段落会漏报。
-- 盲读评估的工具已经有了，还没有请真人读者跑过一轮完整评估。
-- 同一套 skill 在不同模型上效果不同，目前还没有跨模型的对比数据。
-- 本项目不分发任何人类作品的文本。`calibrate`、`rule-stats`、`mine` 用到的人类文本需要你自己准备，并确认有权使用。
+- 规则和正反例主要来自作者自己写的一本仙侠，其余 8 个题材包规则偏少，没在大规模人类语料上量过误报，这正是项目层存在的理由；
+- 部分通用规则可能只是口味（如"心头一沉"算水话），需要更多人类文本验证；
+- 主语歧义检查依赖人物名单，称谓/代词指人的段落会漏报；
+- 盲读工具齐备，还没跑过一轮完整真人评估；
+- 不分发任何人类作品文本，`calibrate`/`rule-stats`/`mine` 的语料需自备并确认有权使用。
 
 ## 目录结构
 
 ```
-bin/  src/         命令行工具
-configs/           规则、题材包、违规分级
-prompts/           各阶段提示词（00 到 06）
-resources/         正反例、写作技巧、题材手册、盲读说明
-benchmarks/        评估种子，以及作者小说第一章各版本的检测记录（正文不公开）
-skills/inkbone/    打包好的 skill，除 SKILL.md 外由脚本生成
-scripts/           打包脚本
-tests/             测试
+bin/  src/         CLI 与核心实现（纯 Node，零依赖）
+configs/           三层规则、9 个题材包、分级与阈值
+prompts/           7 个阶段提示词（00–06）
+resources/         正反例、微技法、9 份题材手册、盲读说明
+benchmarks/        评估种子 + 第一章各版本检测记录（正文不公开）
+skills/inkbone/    打包好的 Skill（脚本生成，勿手改）
+tests/             38 项测试
 ```
 
 ## 开发
 
 ```bash
-npm test               # 38 项测试，其中一项检查 skills/inkbone 是否和源文件同步；
-                       # 另有一项回归测试要用作者未公开的小说正文，公开仓库里会跳过
-npm run build:skill    # 改了 bin、src、configs、prompts、resources 之后重新打包
-npm run check:skill    # 只检查是否同步，不写文件
+npm test               # 38 项测试（含 skill 同步检查；一项回归需私有语料，公开仓库自动跳过）
+npm run build:skill    # 改了 bin/src/configs/prompts/resources 后重新打包
+npm run check:skill    # 只检查同步状态
 ```
-
-`skills/inkbone/` 里除了 SKILL.md，其他文件都是生成的，不要直接改。
 
 ## 致谢
 
-- 上下章边界和“审稿意见必须引原文”的做法，参考了 [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)。
-- 中文句子主干和对称句式的处理，参考了 [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)。
-- 修辞密度分级、模型退化和工程用语泄漏的检查，以及防止把文字改成电报体的检查，参考了 [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)。
+- 上下章边界与"审稿必须引原文"参考 [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)；
+- 中文主干与对称句式处理参考 [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)；
+- 修辞密度分级、退化与工程词泄漏检查参考 [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)。
 
 ## 许可
 
-MIT
+MIT。规则文件也是 MIT，欢迎抄走去改你自己的题材包。
