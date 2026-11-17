@@ -1,0 +1,36 @@
+{
+  "name": "inkbone",
+  "version": "1.1.0",
+  "description": "Agent skill and zero-dependency CLI for writing and revising Chinese long-form fiction: staged prompts plus local checks for continuity, genre register, stock phrases and unclear subjects.",
+  "type": "module",
+  "bin": {
+    "inkbone": "./bin/inkbone.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./profiler": "./src/profiler.mjs",
+    "./auditor": "./src/auditor.mjs",
+    "./boundary": "./src/boundary-compiler.mjs",
+    "./evidence": "./src/evidence-validator.mjs",
+    "./doctor": "./src/doctor.mjs"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "benchmark": "node ./bin/inkbone.mjs benchmark",
+    "build:skill": "node scripts/build-skill.mjs",
+    "check:skill": "node scripts/build-skill.mjs --check",
+    "export:public": "node scripts/export-public.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "chinese-novel",
+    "multi-genre",
+    "register-consistency",
+    "computational-linguistics",
+    "writing-engine",
+    "agent-skill"
+  ],
+  "license": "MIT"
+}

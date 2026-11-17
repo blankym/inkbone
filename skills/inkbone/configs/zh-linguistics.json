@@ -1,0 +1,878 @@
+{
+  "locale": "zh-CN",
+  "tokens": {
+    "comma": "，",
+    "enumerationComma": "、",
+    "deParticle": "的",
+    "diParticle": "地",
+    "deComplement": "得",
+    "emDash": "——",
+    "questionMark": "？",
+    "quoteMaskChar": "？",
+    "whitelistMaskChar": " ",
+    "colon": "：",
+    "semicolon": "；",
+    "markdownHeadingPrefix": "#",
+    "markdownRule": "---",
+    "asterisk": "*"
+  },
+  "regex": {
+    "hanChar": "\\p{Script=Han}",
+    "visibleChar": "\\p{Script=Han}|[A-Za-z0-9\\uFF21-\\uFF5A]",
+    "sentenceDelimiter": "[。！？!?…]+",
+    "quoteChars": "[“”‘’「」『』\"']",
+    "dialogueSpan": "[“「『][^”」』]*[”」』]",
+    "quoteMaskPatterns": [
+      "「[^」\\n\\r]*」",
+      "『[^』\\n\\r]*』",
+      "【[^】\\n\\r]*】",
+      "“[^”\\n\\r]*”",
+      "‘[^’\\n\\r]*’",
+      "\"[^\"\\n\\r]*\"",
+      "(?<![A-Za-z0-9_])'(?:[^'\\n\\r]|(?<=[A-Za-z0-9_])'(?=[A-Za-z0-9_]))*(?!(?<=[A-Za-z0-9_])'[A-Za-z0-9_])'"
+    ],
+    "unclosedQuoteStart": "[“「『\"]",
+    "nonDialogueRhetoricalQuestion": "[^“「『”」』\\r\\n]{4,}？$",
+    "nestedDeChain": "的[^，。！？；：\\r\\n]{1,8}的",
+    "ledgerBracketNote": "（[^）]{0,12}(?:余|剩余|共计|当前|消耗)[^）]{0,12}\\d+[^）]*）",
+    "bookTitleTerm": "《[^》]{2,14}》",
+    "pronounHeadLine": "^\\s*(?:他|她|它)(?:们)?[^“”「」『』]{2,}",
+    "clauseSplitterForNgram": "[^\\p{Script=Han}]|[的了着过在把被让给往从向到和与跟同或而却便就都也还又只才更最很太不没是我你他她它这那哪]",
+    "quantifierNoiseFragment": "^[一二三四五六七八九十百千万两半几多各每][个滴块张扇具名位步尺寸丈层品次遍回年天月日时]|^[个滴块张扇具名位步尺寸丈层品]|[个滴块张扇具名位次遍回]$"
+  },
+  "commonTwoCharStopwords": [
+    "已经",
+    "只是",
+    "其实",
+    "随后",
+    "如今",
+    "刚才",
+    "转眼",
+    "不过",
+    "因为",
+    "所以",
+    "如果",
+    "虽然",
+    "而且",
+    "或者",
+    "自己",
+    "什么",
+    "怎么",
+    "这么",
+    "那么",
+    "一点",
+    "一下",
+    "一起",
+    "一块",
+    "一般",
+    "一声",
+    "一边",
+    "一头",
+    "一样",
+    "一直",
+    "出来",
+    "进去",
+    "过来",
+    "过去",
+    "起来",
+    "下来",
+    "下去",
+    "上来",
+    "里头",
+    "外头",
+    "上头",
+    "下头",
+    "后头",
+    "前头",
+    "那边",
+    "这边",
+    "这儿",
+    "那儿",
+    "地方",
+    "时候",
+    "东西"
+  ],
+  "thresholds": {
+    "mattrWindowSize": 50,
+    "topicMemoryWindow": 2,
+    "longPreModifierMinHan": 7,
+    "flowingSentenceMinCommas": 4,
+    "ultraShortSentenceMaxHan": 10,
+    "monotonousWindowSize": 6,
+    "monotonousMaxCv": 0.22,
+    "boundaryNgramSize": 6
+  },
+  "forbiddenCliches": [
+    {
+      "id": "cliche_eye_flash",
+      "category": "micro_acting",
+      "pattern": "(?:眼神|眸中|眼底|眸底)(?:深处)?(?:闪过|掠过|浮现|涌起)(?:一丝|一抹|一缕)"
+    },
+    {
+      "id": "cliche_pupil_shrink",
+      "category": "micro_acting",
+      "pattern": "瞳孔(?:骤缩|猛缩|急剧收缩|微微一缩|一缩)"
+    },
+    {
+      "id": "cliche_thin_lip_line",
+      "category": "micro_acting",
+      "pattern": "(?:薄唇|嘴角|双唇)(?:抿成|勾起)(?:一条|一抹|一丝)"
+    },
+    {
+      "id": "cliche_knuckle_white",
+      "category": "micro_acting",
+      "pattern": "指节(?:因用力而)?(?:泛白|发白|捏得发白)"
+    },
+    {
+      "id": "cliche_purple_prose_verb",
+      "category": "purple_prose",
+      "pattern": "洇开|坍缩|裹挟着|摩挲着|织就|倾泻而出|交织成"
+    },
+    {
+      "id": "cliche_ink_scroll",
+      "category": "purple_prose",
+      "pattern": "水墨(?:画面|长卷)|命运的齿轮|一切才刚刚开始|空气(?:仿佛|似乎)?凝固"
+    },
+    {
+      "id": "cliche_webnovel_shock",
+      "category": "transition_cliche",
+      "pattern": "(?:微微|猛地|轰然|剧烈)一震"
+    },
+    {
+      "id": "cliche_webnovel_vision",
+      "category": "transition_cliche",
+      "pattern": "画面在[^。！？\\r\\n]{0,12}眼前[^。！？\\r\\n]{0,8}(?:铺开|展开|浮现)|(?:声音|轰鸣声)骤然(?:远去|断去)"
+    },
+    {
+      "id": "cliche_acting_manual",
+      "category": "over_explanation",
+      "pattern": "装出[^，。！？\\r\\n]{1,8}的模样"
+    },
+    {
+      "id": "cliche_ai_plastic_mental",
+      "category": "plastic_literary",
+      "pattern": "(?:心头|心中)(?:微凛|一凛|猛地一跳)|神色没有半分波动|毫无温度的?声音"
+    },
+    {
+      "id": "cliche_ai_plastic_posture",
+      "category": "plastic_literary",
+      "pattern": "死死抠进掌心"
+    },
+    {
+      "id": "cliche_dangerous_squint",
+      "category": "micro_acting",
+      "pattern": "(?:危险|邪魅|宠溺|玩味|讥诮|三分凉薄)地?(?:眯起|勾起|挑起|扬起)"
+    },
+    {
+      "id": "cliche_greasy_overlord",
+      "category": "melodrama_cliche",
+      "scope": "all",
+      "pattern": "(?:女人|男人)[，,]你(?:成功)?引起(?:了)?我的注意|磨人的小妖精|该死的(?:甜美|温柔|迷人)"
+    },
+    {
+      "id": "cliche_blood_boil_shiver",
+      "category": "purple_prose",
+      "pattern": "浑身血液(?:仿佛|瞬间|几乎)?(?:凝固|倒流|沸腾)|灵魂(?:深处)?都在(?:战栗|颤栗|发抖)"
+    }
+  ],
+  "dialogueHygieneRules": [
+    {
+      "id": "dialogue_mid_colon",
+      "category": "dialogue_punctuation",
+      "scope": "all",
+      "pattern": "，[”」][^“”「」\\r\\n。！？!?]{1,16}(?:说|道|问|答|开口|冷笑|笑道|叹道|喝道|低声道|沉声道)：[“「]",
+      "remedy": "Use a comma instead of a colon after a mid-sentence speaker tag between split quotes."
+    },
+    {
+      "id": "dialogue_outside_period",
+      "category": "dialogue_punctuation",
+      "scope": "all",
+      "pattern": "(?:说|道|问|答|喊|叫|喝|叹|笑)道?[：:，,]\\s*[“「][^”」\\r\\n。！？!?…—]{2,}[”」]。",
+      "remedy": "Place the sentence-ending period inside the closing quotation mark."
+    }
+  ],
+  "symmetricSkeletons": [
+    {
+      "id": "sym_not_but",
+      "family": "not_is",
+      "blockingMinHits": 3,
+      "scaleUnitChars": 4500,
+      "review": "semantic",
+      "pattern": "不是[^，。！？]{2,20}，而是[^。！？]{2,24}"
+    },
+    {
+      "id": "sym_surface_essence",
+      "pattern": "(?:表面上|看似)[^，。！？]{2,20}，(?:实则|实际上|本质上)[^。！？]{2,24}"
+    },
+    {
+      "id": "sym_rather_than",
+      "pattern": "与其说[^，。！？]{2,20}，不如说[^。！？]{2,24}"
+    },
+    {
+      "id": "sym_not_only_moreover",
+      "pattern": "不仅[^，。！？]{2,20}，更(?:是|在于)[^。！？]{2,24}"
+    },
+    {
+      "id": "sym_parallel_if_not",
+      "pattern": "若不[^。！？\\r\\n]{2,32}，若不[^。！？\\r\\n]{2,38}"
+    }
+  ],
+  "rhetoricalRules": [
+    {
+      "id": "rhet_voice_contrast",
+      "category": "voice_contrast",
+      "scope": "narration",
+      "window": "all",
+      "advisoryMinHits": 1,
+      "blockingMinHits": 2,
+      "scaleUnitChars": 4500,
+      "review": "semantic",
+      "pattern": "声音(?:并)?不[大高响亮][^。！？!?\\n\\r]{0,16}[却但偏]",
+      "remedy": "Cut 'quiet voice yet commanding' contrast; show the physical weight or listener reaction directly."
+    },
+    {
+      "id": "rhet_negation_parade",
+      "category": "negation_parade",
+      "scope": "narration",
+      "window": "all",
+      "advisoryMinHits": 1,
+      "blockingMinHits": 2,
+      "scaleUnitChars": 4500,
+      "review": "semantic",
+      "pattern": "(?:没有[^。！？!?\\n\\r，,]{1,12}[，,]){2}|(?<![沉淹埋出隐湮吞覆漫泯])没(?!有?过?多久)(?:有)?[^。！？!?\\n\\r，,]{1,12}[，,]\\s*没(?!有?过?多久)(?:有)?[^。！？!?\\n\\r，,]{1,16}[，,。.][^。！？!?\\n\\r，,]{0,6}只(?:是|会|有)",
+      "remedy": "Replace repeated 'no X, no Y, only Z' negation lists with concrete immediate details."
+    },
+    {
+      "id": "rhet_reverse_not_is",
+      "category": "reverse_not_is",
+      "family": "not_is",
+      "scope": "narration",
+      "window": "all",
+      "advisoryMinHits": 1,
+      "blockingMinHits": 3,
+      "scaleUnitChars": 4500,
+      "review": "semantic",
+      "pattern": "是([^。！？!?\\n\\r，,]{1,12})[，,]\\s*(?:而)?不是([^。！？!?\\n\\r]{1,20})",
+      "guard": "reverseNotIs",
+      "prevExcludeChars": [
+        "不",
+        "就",
+        "也",
+        "还",
+        "只",
+        "可",
+        "但",
+        "于",
+        "倒",
+        "像",
+        "若",
+        "要",
+        "正",
+        "便",
+        "总",
+        "老",
+        "更",
+        "最",
+        "算",
+        "怕",
+        "凡",
+        "或",
+        "即",
+        "自",
+        "竟",
+        "原",
+        "本",
+        "仍",
+        "许",
+        "净",
+        "光",
+        "单",
+        "尽"
+      ],
+      "secondCharNot": "不",
+      "affirmationParticles": [
+        "的",
+        "啊",
+        "呀",
+        "呢"
+      ],
+      "affirmationBoundaries": [
+        "",
+        "，",
+        ",",
+        "。",
+        ".",
+        "！",
+        "!",
+        "？",
+        "?",
+        "、",
+        "；",
+        ";",
+        "：",
+        ":",
+        "\n",
+        "\r",
+        "\t",
+        " "
+      ],
+      "nextIgnoreRegex": "^[吗么吧]",
+      "remedy": "Cut trailing negation ('is A, not B') unless clarifying a specific prior mistake; state A concretely."
+    },
+    {
+      "id": "rhet_trailer_ending",
+      "category": "trailer_ending",
+      "scope": "narration",
+      "window": "tail600",
+      "advisoryMinHits": 1,
+      "blockingMinHits": 2,
+      "scaleUnitChars": 4500,
+      "review": "semantic",
+      "pattern": "没人知道|谁也不知道|谁也没想到|殊不知|(?:这)?才刚刚开(?:始|头)|正(?:朝着|向着)[^。！？!?\\n\\r]{0,24}(?:压|涌|袭|逼)(?:了?过去|了?过来|来)|(?<!正式)拉开(?:序幕|帷幕)|即将(?:开始|来临|降临)",
+      "remedy": "End the chapter on a concrete action, decision, or sensory beat rather than narrator preview."
+    },
+    {
+      "id": "rhet_trailer_summary",
+      "category": "trailer_summary",
+      "scope": "narration",
+      "window": "tail600",
+      "advisoryMinHits": 1,
+      "blockingMinHits": 2,
+      "scaleUnitChars": 4500,
+      "review": "semantic",
+      "pattern": "这一(?:夜|天|刻|战|年|局|役)[，,]?[^。！？!?，,\\n\\r]{0,6}(?<!命中)(?<!是)注定[^。！？!?\\n\\r]{0,8}[。！]|就这样[，,][^。！？!?，,\\n\\r]{0,8}(?:一切|全部)[^。！？!?，,\\n\\r]{0,4}(?:结束了|落幕|收场)[。！]|这一切[，,]?[^。！？!?，,\\n\\r]{0,6}(?:都)?(?:说明|意味着|结束了)(?!的)(?:(?!什么)[^。！？!?\\n\\r]){0,6}[。！]|(?:新的篇章|新的旅程|崭新的篇章|新的人生)[^。！？!?\\n\\r]{0,6}(?:开始|拉开|展开)|命运[^。！？!?\\n\\r]{0,6}齿轮",
+      "remedy": "Remove chapter-closing summary stamps ('tonight was destined...'); leave the scene's own momentum to carry the hook."
+    },
+    {
+      "id": "rhet_formulaic_parallelism",
+      "category": "formulaic_parallelism",
+      "scope": "all",
+      "window": "all",
+      "advisoryMinHits": 1,
+      "level": "advisory",
+      "review": "semantic",
+      "pattern": "至于([\\u3400-\\u9fff]{1,3})不\\1[，,]\\s*怎么\\1|不([\\u3400-\\u9fff]{1,2})([\\u3400-\\u9fff]{2,8})[，,]\\s*不\\2([\\u3400-\\u9fff]{2,8})",
+      "remedy": "Avoid neat symmetrical checklists unless genuinely spoken for rhythmic pressure."
+    },
+    {
+      "id": "rhet_negation_pair",
+      "category": "negation_pair_tic",
+      "scope": "narration",
+      "window": "all",
+      "minHits": 3,
+      "level": "advisory",
+      "review": "semantic",
+      "pattern": "(?:没有|没|不)[^，。！？；,!?\\n\\r]{1,10}[，,]\\s*[^，。！？；,!?\\n\\r]{0,6}?也(?:没有|没|不)",
+      "remedy": "Too many 'didn't A, and didn't B' negative pairs; show what the character actually did."
+    }
+  ],
+  "crossParagraphParallel": {
+    "id": "rhet_cross_negation_parallel",
+    "category": "formulaic_parallelism",
+    "level": "advisory",
+    "review": "semantic",
+    "startRegex": "^不是[^。！？!?\\n\\r]{1,24}[。！？!?]?$",
+    "middleRegex": "^(?:也|还)不是[^。！？!?\\n\\r]{1,24}[。！？!?]?$",
+    "endRegex": "^只是[^。！？!?\\n\\r]{1,32}[。！？!?]?$",
+    "remedy": "Review 3-paragraph 'not A / not B / only C' escalation; compress if it drags."
+  },
+  "densityRules": {
+    "tailWindowChars": 600,
+    "microActionTic": {
+      "id": "tic_micro_action",
+      "pattern": "了(?:[一两三几半])?[下阵圈道声眼口气会]",
+      "minHits": 5,
+      "perKilo": 6,
+      "review": "mechanical",
+      "remedy": "Reduce excessive 'V-le-yixia' filler micro-actions in narration."
+    },
+    "stockReactionTic": {
+      "id": "tic_stock_reaction",
+      "patterns": [
+        "(?:指尖|指腹|手指|指节|手背|掌心|拳头|袖口|衣角|裙角|下唇|嘴唇|唇角|嘴角|眉头|眼底|眸光|目光|视线|肩膀|呼吸)[^。！？!?\\n\\r]{0,16}(?:轻轻|微微|缓缓|慢慢|悄然|不自觉|无意识|下意识|攥紧|握紧|收紧|绞紧|拢住|按住|压住|扣住|捻|泛白|发白|叩|敲|摩挲|抿紧|抿成|移开|垂下|躲开|落[在到][^，。！？!?\\n\\r]{1,10}(?:停|顿)|一颤|颤了?一下|停了?一下|顿了?一下)",
+        "(?:手|指尖|手指)往(?:袖口?|怀|兜|口袋|身后|背后)里?一?(?:缩|揣|收|藏)",
+        "(?:语气|声音)[^。！？!?\\n\\r]{0,12}(?:平静|冷静|平淡|冷淡|淡漠|平直)[^。！？!?\\n\\r]{0,12}(?:像|仿佛|如同|好像)[^。！？!?\\n\\r]{0,16}(?:念|读|报|说|陈述|宣判|背诵)",
+        "(?:胸口|心口)[^。！？!?\\n\\r]{0,16}(?:像|仿佛|如同|好像)[^。！？!?\\n\\r]{0,16}(?:撞|锤|压|攥|堵)[^。！？!?\\n\\r]{0,8}(?:一下|一记|一拳)?",
+        "(?:声音|嗓音|语气)[^。！？!?\\n\\r]{0,12}(?:放轻|压低|发紧|发颤|很轻|轻了些)",
+        "(?:喉结|喉头|喉咙)[^。！？!?\\n\\r]{0,10}(?:滚|动|紧|堵|发涩|发干)",
+        "(?:眼眶|眼圈|鼻子)[^。！？!?\\n\\r]{0,8}(?:发红|红了|发热|发酸|一酸)",
+        "(?:抿了?下唇|抿了?抿唇|抿了?下嘴|抿着笑)"
+      ],
+      "minHits": 4,
+      "perKilo": 1.5,
+      "review": "semantic",
+      "remedy": "Delete decorative body-part reaction tics that only translate emotions without changing choices or consequences."
+    },
+    "actionListTic": {
+      "id": "tic_action_list",
+      "verbPattern": "伸手|抬手|探手|拿起|拿过|取出|取过|掏出|摸出|抓起|攥住|握住|捏住|按住|推开|拉开|打开|关上|放下|递给|挑开|掀开|扯开|拧开|倒出|端起|转身|回头|抬头|低头|弯腰|俯身|走到|走向|坐下|站起|看向|看着|盯着|扫过",
+      "separatorPattern": "[，、；;]",
+      "minVerbsPerPara": 5,
+      "minSeparatorsPerPara": 4,
+      "review": "semantic",
+      "remedy": "Merge surveillance-camera step-by-step verb chains; keep only consequential actions."
+    },
+    "quoteEmphasisTic": {
+      "id": "tic_quote_emphasis",
+      "speechVerbPattern": "[说道问喊答念叫回吼骂写读唱笑叹应哼嗤啐呸嘀咕]|开口|摇头|点头|出声|冷笑|苦笑|轻声|低声|沉声",
+      "punctuationInsidePattern": "[。！？!?…，,；;：:—]|\\.{2,}",
+      "onomatopoeiaSuffixPattern": "^(?:的|地)?一?[声下响]",
+      "panelOpenChar": "【",
+      "maxVisibleHan": 4,
+      "minHits": 3,
+      "review": "semantic",
+      "remedy": "Remove excessive quotation-mark emphasis around 1-4 char terms in narration."
+    },
+    "metaphorDensityTic": {
+      "id": "tic_metaphor_density",
+      "markerPattern": "好像|像是|仿佛|宛如|如同|犹如|(?<![不头图画影录摄肖])像(?![头像素])",
+      "likePhrasePattern": "(?:死|水|冰|火|潮水|石头|木头|机器|纸|铁|鬼|死人|刀|针|网|墙)一样",
+      "prefixGuardPattern": "好像|像是|像|仿佛|宛如|如同|犹如",
+      "minHits": 7,
+      "perKilo": 3,
+      "review": "semantic",
+      "remedy": "Trim excessive simile clusters; keep only distinctive scene-specific comparisons."
+    },
+    "abstractSummaryTic": {
+      "id": "tic_abstract_summary",
+      "patterns": [
+        "这一刻[，,]?[^\\n\\r。！？!?]{0,24}(?:终于|才)(?:明白|意识到)",
+        "从这一刻开始",
+        "(?:命运|宿命)[^\\n\\r。！？!?]{0,28}(?:齿轮|棋局|獠牙|改写|推向|安排)",
+        "早已[^\\n\\r。！？!?]{0,8}(?:布好|安排好)[^\\n\\r。！？!?]{0,8}(?:棋局|局)",
+        "前所未有的(?:决意|清醒|勇气|力量|恐惧|平静|信念)",
+        "(?:反击|复仇|战争|较量|故事|命运)[^\\n\\r。！？!?]{0,12}才刚刚开始",
+        "(?:新的开始|全新的开始)"
+      ],
+      "minHits": 3,
+      "perKilo": 4,
+      "review": "semantic",
+      "remedy": "Replace abstract narrator summaries with concrete immediate stakes and decisions."
+    },
+    "reasoningChainTic": {
+      "id": "tic_reasoning_chain",
+      "patterns": [
+        {
+          "key": "connector",
+          "core": true,
+          "pattern": "这意味着|也就是说|换句话说|真正的问题(?:在于)?|问题在于|关键在于|在这种情况下|按照这个逻辑"
+        },
+        {
+          "key": "modal",
+          "core": true,
+          "pattern": "(?:(?<!不)(?:必须|需要|应该|只要|就会|可能|无法)|不能)[^。！？!?\\n\\r]{0,16}(?:判断|确认|承担|维持|稳住|控制|扩大|失控|带来|造成|默认|核对|筛选|减少|建立|风险|结果|秩序|责任)"
+        },
+        {
+          "key": "mental",
+          "core": true,
+          "pattern": "(?<![不没未无])(?:他|她|我)?(?:知道|明白|意识到|清楚|判断|确认|分析)"
+        },
+        {
+          "key": "abstract",
+          "core": false,
+          "pattern": "(?:任务|条件|风险|来源|逻辑|局面|结果|责任|秩序|规则|信息不足|决策能力)"
+        }
+      ],
+      "minHits": 8,
+      "minCoreHits": 4,
+      "minLinkHits": 3,
+      "minBuckets": 2,
+      "perKilo": 18,
+      "review": "semantic",
+      "remedy": "Cut essay-style reasoning chains ('this means / under this logic'); keep character cost-benefit calculation crisp."
+    },
+    "ellipsisDensityTic": {
+      "id": "tic_ellipsis_density",
+      "pattern": "…+|\\.{3,}|。{3,}",
+      "minHits": 6,
+      "perKilo": 3.5,
+      "review": "semantic",
+      "remedy": "Reduce excessive narrative ellipses outside dialogue quotes."
+    },
+    "overcompressedProseTic": {
+      "id": "tic_overcompressed_prose",
+      "particlePattern": "[的了就着过呢吧啊呀嘛]",
+      "panelLinePattern": "^【[^】]+】$",
+      "minChars": 1200,
+      "minParas": 30,
+      "shortMaxChars": 15,
+      "shortRatio": 0.58,
+      "maxParticlePerKilo": 85,
+      "review": "semantic",
+      "remedy": "Anti-overpolishing guard: too many <=15-char choppy paragraphs with sparse natural connectives; restore smooth flow."
+    },
+    "lowConnectiveDensityTic": {
+      "id": "tic_low_connective_density",
+      "functionTerms": [
+        "的",
+        "了",
+        "就",
+        "在",
+        "是",
+        "也",
+        "都",
+        "还",
+        "又",
+        "把",
+        "被",
+        "给",
+        "这个",
+        "那个",
+        "里面",
+        "以后",
+        "时候",
+        "现在",
+        "因为",
+        "所以",
+        "但是",
+        "不过",
+        "然后",
+        "已经",
+        "还是",
+        "起来",
+        "出来",
+        "下去"
+      ],
+      "plainTerms": [
+        "的",
+        "了",
+        "就",
+        "也",
+        "还",
+        "又",
+        "这个",
+        "那个",
+        "东西",
+        "事情",
+        "时候",
+        "里面",
+        "以后",
+        "一下",
+        "一点",
+        "有点",
+        "还是"
+      ],
+      "minChars": 800,
+      "maxFunctionPerKilo": 100,
+      "maxPlainPerKilo": 65,
+      "longSentChars": 30,
+      "maxLongSentRatio": 0.08,
+      "review": "semantic",
+      "remedy": "Telegraphic prose alert: narrative outside quotes lacks natural vernacular connectors and medium-long clauses."
+    },
+    "dialogueOnlyStreakTic": {
+      "id": "tic_dialogue_only_streak",
+      "quoteLinePattern": "^\\s*(?:[“「『][^”」』]+[”」』]\\s*)+$",
+      "minStreak": 8,
+      "review": "semantic",
+      "remedy": "Break 8+ consecutive unanchored quote-only paragraphs with concrete speaker actions or scene beats."
+    }
+  },
+  "degeneration": {
+    "adjacentRepeatMinLen": 8,
+    "sentenceRepeatMinLen": 12,
+    "sentenceRepeatMinCount": 3,
+    "sentenceSplitRegex": "[。！？!?]+",
+    "chapterHeadingRegex": "^第[零〇一二三四五六七八九十百千万两0-9]+[章节回](?:$|[\\s_：:——\\-]+[^\\n。；;]{0,28}$)",
+    "endSignoffRegex": "^[-—~～＜<【\\[（(《\\s]*(?:全文完|正文完|全书完|本卷完|完结|完|END|The\\s+End)[-—~～＞>】\\]）)》.。！!\\s]*$",
+    "dividerRegex": "^(?:-{3,}|[*_]{3,})$",
+    "trailingMarkdownStripRegex": "[*_~`\\s]+$",
+    "terminalPunctuationRegex": "[。！？!?….”」』\"')\\]】）>》~—]$",
+    "placeholderRules": [
+      {
+        "id": "degen_ai_self_ref",
+        "scope": "narration",
+        "pattern": "作为(?:一个)?(?:AI|人工智能|大?语言模型|智能助手|聊天助手)(?:语言模型|大?模型|助手|机器人)?(?=[，,。、；;：:！!？?\\s）)」』\"】]|我|无法|不能|没法|$)",
+        "remedy": "Remove leaked AI self-reference."
+      },
+      {
+        "id": "degen_replacement_char",
+        "scope": "all",
+        "pattern": "\\uFFFD",
+        "remedy": "Fix garbled Unicode replacement character."
+      },
+      {
+        "id": "degen_english_refusal",
+        "scope": "all",
+        "pattern": "^(?:Sure|Certainly|Here'?s|As an AI|I (?:cannot|can't|am unable|apologize))",
+        "remedy": "Remove English assistant preamble/refusal leaked into prose."
+      },
+      {
+        "id": "degen_bracket_omission",
+        "scope": "all",
+        "pattern": "[（(](?:此处|以下|这里|下文|后续)?\\s*(?:省略|略)(?:去|过)?[^）)]{0,10}[）)]",
+        "remedy": "Replace omitted placeholder brackets with actual prose."
+      },
+      {
+        "id": "degen_placeholder_word",
+        "scope": "all",
+        "pattern": "未完待续|TODO|占位符|placeholder",
+        "remedy": "Remove unfinished draft placeholder."
+      },
+      {
+        "id": "degen_refusal_zh",
+        "scope": "narration",
+        "pattern": "我(?:无法|不能)(?:继续(?:写|创作|生成|下去)|生成(?:内容|文本|正文)?|创作|续写|完成(?:这个|本)?(?:章|篇|创作|请求))",
+        "remedy": "Remove model refusal leaked into prose."
+      }
+    ],
+    "metaLeakTier1Pattern": "细纲|(?<!剧)情节点|卷纲|功能标签|目标情绪|字数目标|字数口径|章首钩子|章尾钩子|这章不能说破|本章禁止提前释放|排纲笔记|排纲底稿|节尾停在哪|结尾承接",
+    "metaLeakTier2Pattern": "第[零〇一二三四五六七八九十百千万两0-9]+章|本章|这一章|上一章|下一章|上章|下章|前一章|后一章|前文|后文|伏笔|读者|任务描述"
+  },
+  "allowedReviewCategories": [
+    "plot_continuity",
+    "causal_motivation",
+    "character_state",
+    "chapter_transition",
+    "required_goal",
+    "redundant_recap",
+    "剧情连贯性",
+    "剧情合理性",
+    "因果与动机",
+    "角色状态",
+    "前后章节串联",
+    "当章明确必需目标",
+    "前情复述",
+    "repeated_information",
+    "early_reveal",
+    "decision_logic",
+    "stakes_flat",
+    "physics_geometry_contradiction",
+    "redundant_scene_beat",
+    "pov_boundary_breach",
+    "character_logic_suicide",
+    "tool_causality_mismatch",
+    "reader_hooked",
+    "reader_skim",
+    "reader_confused",
+    "reader_disbelief",
+    "reader_drop",
+    "cold_reader_scale_blind",
+    "cold_reader_term_blind",
+    "cold_reader_stakes_blind",
+    "reader_register_clash",
+    "reader_filler_skim",
+    "reader_micro_bloat",
+    "reader_dialogue_awkward",
+    "reader_exposition_drag"
+  ],
+  "bannedStyleReviewKeywords": [
+    "五感",
+    "形容词",
+    "修辞",
+    "比喻",
+    "画面感不足",
+    "词汇平淡",
+    "升级动词",
+    "感染力"
+  ],
+  "quoteRequiredCategories": [
+    "reader_hooked",
+    "reader_skim",
+    "reader_confused",
+    "reader_disbelief",
+    "reader_drop",
+    "cold_reader_scale_blind",
+    "cold_reader_term_blind",
+    "cold_reader_stakes_blind",
+    "reader_register_clash",
+    "reader_filler_skim",
+    "reader_micro_bloat",
+    "reader_dialogue_awkward",
+    "reader_exposition_drag",
+    "physics_geometry_contradiction",
+    "redundant_scene_beat",
+    "pov_boundary_breach",
+    "character_logic_suicide",
+    "tool_causality_mismatch"
+  ],
+  "outlineCopy": {
+    "minRunChars": 16,
+    "exemptHeaderRegex": "^(?:原样出现的原话|复沓锚句)[：:]"
+  },
+  "chineseNumerals": {
+    "digits": {
+      "零": 0,
+      "〇": 0,
+      "一": 1,
+      "二": 2,
+      "两": 2,
+      "三": 3,
+      "四": 4,
+      "五": 5,
+      "六": 6,
+      "七": 7,
+      "八": 8,
+      "九": 9
+    },
+    "units": {
+      "十": 10,
+      "百": 100,
+      "千": 1000
+    },
+    "chapterHeadingParseRegex": "^#?\\s*第([零〇一二两三四五六七八九十百千0-9]+)[章节回][\\s_：:——\\-]*(.*)$",
+    "chapterFileParseRegex": "第([零〇一二两三四五六七八九十百千0-9]+)[章节回][\\s_：:——\\-]*([^.]*)"
+  },
+  "normalizer": {
+    "rangeConnector": "到",
+    "colonLeadRegex": "^(?:因为|原来|这是|那是|也就是|换句话|说白了|所谓|答案|原因|结果|真相|问题在于)",
+    "colonTailRegex": "(?:原因|答案|真相|结果|结论|问题|选择|意思)$"
+  },
+  "charCountClaim": {
+    "postQuoteRegex": "[“「『]([^”」』\\r\\n]{1,30})[”」』][，,\\s]{0,2}(?:这|那)?(?:短短|寥寥|区区)?([零〇一二两三四五六七八九十0-9]{1,3})个?字",
+    "preQuoteRegex": "(?:短短|寥寥|区区|吐出|说出|留下|写着|写下|刻着|只有)([零〇一二两三四五六七八九十0-9]{1,3})个?字[：:，,\\s]{0,3}[“「『]([^”」』\\r\\n]{1,30})[”」』]"
+  },
+  "outlineContract": {
+    "placeholderRegex": "\\[待补充\\]|\\b(?:TODO|TBD)\\b|(?:^|[（(【\\[<：:\\s])(?:待定|未定|暂定)(?=$|[\\s）)】\\]>、，,。；;])",
+    "requiredFacets": [
+      {
+        "id": "protagonist_goal_or_conflict",
+        "pattern": "主角目标|关键选择|核心冲突|局势升级|核心事件|核心动作|分幕节拍|Beat"
+      },
+      {
+        "id": "reader_payoff_or_emotion",
+        "pattern": "目标情绪|爽点|利害|标尺|代价|压迫|信息分配"
+      },
+      {
+        "id": "hook_or_spoiler_fence",
+        "pattern": "章末钩子|早出硬切|不能说破|禁止提前|悬念|钩子"
+      }
+    ]
+  },
+  "subjectContinuity": {
+    "description": "主语连续性检查（SUBJECT_AMBIGUITY / OPENING_PATTERN_STREAK）。需要台账人物名单才会运行。actionLeads 是常见的无主语动作句开头；pronouns 出现在句首时视为主语不明，不再往下延续上一句的主语。",
+    "sentenceEndChars": "。！？!?…",
+    "clauseSplitter": "[,，;；:：]",
+    "maxDelayedClauses": 4,
+    "maxSameOpening": 3,
+    "streakKinds": [
+      "delayed",
+      "subjectless",
+      "protagonist"
+    ],
+    "pronouns": [
+      "他",
+      "她",
+      "它",
+      "我",
+      "这人",
+      "那人",
+      "此人",
+      "对方",
+      "来人",
+      "那汉子",
+      "那老者"
+    ],
+    "actionLeads": [
+      "摸",
+      "抓",
+      "拿",
+      "握",
+      "攥",
+      "捏",
+      "掰",
+      "扯",
+      "拽",
+      "拖",
+      "推",
+      "拉",
+      "掀",
+      "挑",
+      "抽",
+      "拔",
+      "塞",
+      "揣",
+      "套",
+      "褪",
+      "脱",
+      "戴",
+      "抬",
+      "扛",
+      "提",
+      "拎",
+      "捧",
+      "端",
+      "起身",
+      "转身",
+      "弯腰",
+      "俯身",
+      "蹲",
+      "站起",
+      "坐下",
+      "走",
+      "跨",
+      "跑",
+      "退",
+      "迈",
+      "伸手",
+      "抬手",
+      "抬头",
+      "低头",
+      "扭头",
+      "回头",
+      "侧身",
+      "屏住",
+      "屏气",
+      "咽",
+      "吸了",
+      "舒了",
+      "叹了",
+      "咬",
+      "闭上",
+      "睁",
+      "眯",
+      "盯",
+      "瞄",
+      "瞧",
+      "看了",
+      "望",
+      "听",
+      "闻",
+      "嗅",
+      "点头",
+      "摇头",
+      "应了",
+      "接过",
+      "递",
+      "丢",
+      "扔",
+      "放下",
+      "搁",
+      "收回",
+      "捡",
+      "翻",
+      "按",
+      "压",
+      "敲",
+      "叩",
+      "踢",
+      "踹",
+      "砸",
+      "劈",
+      "刺",
+      "斩",
+      "挥",
+      "甩",
+      "先",
+      "又",
+      "便",
+      "才",
+      "跟着",
+      "跟到",
+      "随手",
+      "顺手",
+      "从",
+      "把",
+      "往",
+      "朝",
+      "冲着",
+      "顺着",
+      "借着",
+      "趁着",
+      "贴着",
+      "凑过去",
+      "凑近"
+    ],
+    "maxActorClauseIndex": 2
+  }
+}

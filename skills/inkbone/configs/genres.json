@@ -1,0 +1,389 @@
+{
+  "version": "1.0.0",
+  "defaultGenre": "general-clean",
+  "universalFillerRules": [
+    {
+      "id": "filler_pleasantry_exit",
+      "category": "pleasantry_filler",
+      "pattern": "您(?:老人家)?先歇着|慢走不送",
+      "remedy": "Cut farewell/greeting pleasantries (Early-Out rule); end dialogue immediately on stakes or action."
+    },
+    {
+      "id": "filler_purpose_handholding",
+      "category": "explanatory_padding",
+      "pattern": "免得[^，。！？]{3,24}(?:看出端倪|惹来盘问|生出疑心|引人注意|露出马脚)",
+      "remedy": "Cut 'so as not to...' explanatory tail; let the physical action carry the subtext."
+    },
+    {
+      "id": "filler_storyteller_exclamation",
+      "category": "narrator_intrusion",
+      "pattern": "哪是什么[^，。！？]{2,14}，分明(?:是|让人)",
+      "remedy": "Replace narrator exclamation with direct physical observation."
+    },
+    {
+      "id": "filler_bridge_glue",
+      "category": "transition_filler",
+      "pattern": "不得不说的是|时间一晃眼|转眼间便来到了|话说另一头|且说另一边",
+      "remedy": "Hard-cut to the next scene's sensory or time anchor without glue phrases."
+    },
+    {
+      "id": "filler_stage_padding",
+      "category": "stage_direction_padding",
+      "pattern": "(?:做完|办妥)这(?:手|些)(?:防备|遮掩|布置)?[，,]?(?:他|她)?才|(?:确认|探清)[^，。！？]{2,14}(?:纹丝未乱|安然无恙|毫无破绽)",
+      "remedy": "Delete summary transitions ('After finishing this precaution...'); cut directly to the next concrete action."
+    },
+    {
+      "id": "filler_clutter_reaction",
+      "category": "micro_clutter",
+      "pattern": "心头(?:微紧|一紧|一沉|暗凛)",
+      "remedy": "Delete redundant prop reactions and internal emotion labels already shown by action."
+    }
+  ],
+  "genres": {
+    "classical-xianxia": {
+      "id": "classical-xianxia",
+      "title": "古典仙侠 / 硬派修真 / 东方玄幻",
+      "defaultPreset": "grim-classical",
+      "registerFormula": "85% 洗练规范现代白话动作骨架 + 15% 考究道门法度、器物与古历法名物",
+      "voiceMatrix": {
+        "highTier": "惜字如金，断语定生死，不放狠话不解释，视低阶如损耗品",
+        "midTier": "体制化冷漠，拿门规条文、灵石折算、差役损耗施压，绝不用县衙捕快叫骂腔",
+        "lowTier": "恭谨简短、话留三分、重行当规矩与成本核算，不用胡同儿化贫嘴腔"
+      },
+      "domainSignals": [
+        "练气",
+        "筑基",
+        "金丹",
+        "元婴",
+        "化神",
+        "灵石",
+        "神识",
+        "真元",
+        "储物袋",
+        "阵法",
+        "符箓",
+        "仙墟",
+        "宗门",
+        "道友",
+        "灵根"
+      ],
+      "registerRules": [
+        {
+          "id": "reg_impossible_ke_count",
+          "category": "calendar_anachronism",
+          "pattern": "(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)时(?:九|十[一二]?)刻",
+          "remedy": "A shichen holds at most eight ke (chu 1-4 + zheng 1-4); nine or more ke is impossible. Fix the count or use chu/zheng notation."
+        }
+      ],
+      "clicheRules": [
+        {
+          "id": "cliche_modern_slang",
+          "category": "anachronism",
+          "scope": "all",
+          "pattern": "拉胯|赋能|逻辑闭环|降维打击|心态崩了|秒懂|颗粒度|底层逻辑"
+        },
+        {
+          "id": "cliche_spirit_sea_drill",
+          "category": "transition_cliche",
+          "pattern": "识海深处|钻入[^。！？\\r\\n]{0,8}眉心|散作一缕[^，。！？\\r\\n]{0,6}雾气|化作一丝[^，。！？\\r\\n]{0,6}没入"
+        },
+        {
+          "id": "cliche_ai_plastic_cultivation",
+          "category": "plastic_literary",
+          "pattern": "默运《[^》]+》将体内|强横(?:法力|灵压)"
+        },
+        {
+          "id": "cliche_encyclopedia_lecture",
+          "category": "over_explanation",
+          "pattern": "(?:一共|共)分[为成]?[一二三四五六七八九十]+(?:层|重|境|级|品)|(?:划分为)[一二三四五六七八九十]+(?:层|重|境|级|品)"
+        }
+      ]
+    },
+    "historical-court": {
+      "id": "historical-court",
+      "title": "历史权谋 / 严肃古风 / 古言正剧",
+      "defaultPreset": "grim-classical",
+      "registerFormula": "85% 沉稳规范现代书面语 + 15% 准确官制、礼法、器物与时令称谓",
+      "voiceMatrix": {
+        "highTier": "重政治潜台词与礼法分寸，喜怒不形于色",
+        "midTier": "公文程式与官场体面并重，威胁藏于考成与律例",
+        "lowTier": "守尊卑礼数与行当本分，忌现代网络梗与修仙词汇串入"
+      },
+      "domainSignals": [
+        "朝廷",
+        "陛下",
+        "奏折",
+        "户部",
+        "吏部",
+        "刺史",
+        "县衙",
+        "世子",
+        "侯府",
+        "粮草",
+        "科举",
+        "太后"
+      ],
+      "registerRules": [
+        {
+          "id": "reg_pseudo_classical_time",
+          "category": "calendar_anachronism",
+          "pattern": "(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)时(?:[四五六七八九十]|十[一二])刻",
+          "remedy": "Use authentic 初/正 timekeeping or night watch (更鼓) terms."
+        },
+        {
+          "id": "reg_xianxia_leak_in_history",
+          "category": "genre_leak",
+          "pattern": "神识|灵石|筑基|元婴|储物袋|法力|灵气",
+          "remedy": "Remove cultivation terms leaked into historical fiction."
+        },
+        {
+          "id": "reg_modern_office_in_history",
+          "category": "anachronism",
+          "pattern": "性价比|情绪价值|信息差|内卷|KPI|时间节点|闭环",
+          "remedy": "Replace modern corporate jargon with period-authentic equivalents."
+        },
+        {
+          "id": "reg_modern_fabric_in_history",
+          "category": "anachronism",
+          "pattern": "蕾丝(?:花边)?|雪纺|百褶超短裙",
+          "remedy": "Replace modern textile anachronisms with period-authentic fabrics."
+        }
+      ],
+      "clicheRules": [
+        {
+          "id": "cliche_modern_slang",
+          "category": "anachronism",
+          "scope": "all",
+          "pattern": "拉胯|赋能|逻辑闭环|降维打击|心态崩了|秒懂|颗粒度|底层逻辑"
+        }
+      ]
+    },
+    "wuxia-jianghu": {
+      "id": "wuxia-jianghu",
+      "title": "传统新武侠 / 庙堂江湖",
+      "defaultPreset": "jianlai-bamboo",
+      "registerFormula": "成熟新武侠洗练白话 + 招式方位/兵器质感短句切分",
+      "voiceMatrix": {
+        "highTier": "宗师气度，重机锋与武道意境",
+        "midTier": "江湖规矩与门派体面",
+        "lowTier": "市井豪气或草莽直白，忌现代理工科术语出戏"
+      },
+      "domainSignals": [
+        "内力",
+        "轻功",
+        "剑法",
+        "刀法",
+        "镖局",
+        "帮主",
+        "江湖",
+        "穴道",
+        "少侠",
+        "客栈"
+      ],
+      "registerRules": [
+        {
+          "id": "reg_modern_science_in_wuxia",
+          "category": "anachronism",
+          "pattern": "肾上腺素|多巴胺|条件反射|物理定律|概率论|基因",
+          "remedy": "Replace modern scientific terms with somatic martial sensations."
+        }
+      ],
+      "clicheRules": [
+        {
+          "id": "cliche_modern_slang",
+          "category": "anachronism",
+          "scope": "all",
+          "pattern": "拉胯|赋能|逻辑闭环|降维打击|心态崩了|秒懂|颗粒度|底层逻辑"
+        }
+      ]
+    },
+    "mystery-thriller": {
+      "id": "mystery-thriller",
+      "title": "悬疑刑侦 / 民俗诡秘 / 无限流智斗",
+      "defaultPreset": "crisp-suspense",
+      "registerFormula": "高密度感官限知白描 + 冷硬短句 + 零剧透悬念控制",
+      "voiceMatrix": {
+        "highTier": "压迫感来自信息垄断与反常平静",
+        "midTier": "职业化冷峻，只谈证据、规则与时间窗",
+        "lowTier": "受惊或隐瞒时的生理微反应，少空洞尖叫"
+      },
+      "domainSignals": [
+        "案发现场",
+        "法医",
+        "指纹",
+        "卷宗",
+        "审讯",
+        "嫌疑人",
+        "血迹",
+        "诡异",
+        "副本",
+        "规则怪谈"
+      ],
+      "registerRules": [
+        {
+          "id": "reg_abstract_horror_cliche",
+          "category": "abstract_atmosphere",
+          "pattern": "恐怖如斯|诡异莫测|不可名状的恐惧|令人毛骨悚然的气息|死亡的阴影笼罩",
+          "remedy": "Replace abstract horror labels with concrete sensory textures (sound, temperature, odor, residue)."
+        },
+        {
+          "id": "reg_omniscient_spoiler_tell",
+          "category": "pov_leak",
+          "pattern": "殊不知|他做梦也没想到|只是此刻他还不知道",
+          "remedy": "Keep strict limited POV; never spoil future turns via omniscient commentary."
+        }
+      ]
+    },
+    "urban-realism": {
+      "id": "urban-realism",
+      "title": "现代都市 / 职场商战 / 现实言情",
+      "defaultPreset": "modern-clean",
+      "registerFormula": "当代干净规范书面叙事 + 贴合职业年龄的自然生活对白",
+      "voiceMatrix": {
+        "highTier": "克制简练，谈利益边界与结果，不端古装架子",
+        "midTier": "职场分寸与潜台词拉扯",
+        "lowTier": "鲜活当代口语，忌半文言古装酸词串味"
+      },
+      "domainSignals": [
+        "手机",
+        "微信",
+        "地铁",
+        "写字楼",
+        "合同",
+        "医院",
+        "出租车",
+        "咖啡",
+        "董事会",
+        "公寓"
+      ],
+      "registerRules": [
+        {
+          "id": "reg_archaic_leak_in_urban",
+          "category": "archaic_clash",
+          "pattern": "此乃|断不会|尔等|老夫|一息之?间|拱手道|拂袖而去|莫要自误|半炷香",
+          "remedy": "Remove classical/costume-drama phrasing from modern urban narrative."
+        }
+      ]
+    },
+    "scifi-wasteland": {
+      "id": "scifi-wasteland",
+      "title": "科幻废土 / 星际赛博 / 末日求生",
+      "defaultPreset": "crisp-suspense",
+      "registerFormula": "冷硬精确的工业/生存白描 + 参数代价锚定",
+      "voiceMatrix": {
+        "highTier": "系统化、理性至上，视个体为算力或生存概率",
+        "midTier": "战术简报式短句",
+        "lowTier": "紧盯物资余量、辐射/污染阈值与退路"
+      },
+      "domainSignals": [
+        "辐射",
+        "舰队",
+        "义体",
+        "算力",
+        "轨道",
+        "废土",
+        "避难所",
+        "基因",
+        "跃迁",
+        "装甲"
+      ],
+      "registerRules": [
+        {
+          "id": "reg_archaic_wuxia_in_scifi",
+          "category": "genre_leak",
+          "pattern": "拱手道|洒家|小二|客官|丹田气海|掐诀|老夫",
+          "remedy": "Remove classical wuxia/xianxia idioms from sci-fi setting."
+        }
+      ]
+    },
+    "light-fantasy": {
+      "id": "light-fantasy",
+      "title": "轻小说 / 脑洞欢脱 / 反套路系统",
+      "defaultPreset": "light-brisk",
+      "registerFormula": "明快高弹性短句 + 精准反差吐槽 + 快节奏反馈",
+      "voiceMatrix": {
+        "highTier": "反差感或冷幽默极简",
+        "midTier": "鲜明标签化互动",
+        "lowTier": "允许现代网感与内心吐槽，但严禁枯燥设定说明书"
+      },
+      "domainSignals": [
+        "系统",
+        "面板",
+        "好感度",
+        "任务奖励",
+        "词条",
+        "氪金",
+        "吐槽",
+        "熟练度"
+      ],
+      "registerRules": [
+        {
+          "id": "reg_pompous_archaic_cliche",
+          "category": "stale_cliche",
+          "pattern": "恐怖如斯|倒吸一口凉气|此子断不可留",
+          "remedy": "Replace overused webnovel cliches with fresh comedic or concrete reactions."
+        }
+      ]
+    },
+    "romance-emotional": {
+      "id": "romance-emotional",
+      "title": "古言女强 / 现代言情 / 双线情感拉扯",
+      "defaultPreset": "modern-clean",
+      "registerFormula": "细腻克制的生活或礼法动作白描 + 事业升级与情感推拉双轮咬合",
+      "voiceMatrix": {
+        "highTier": "克制有分寸，压迫与偏爱落在行事边界与资源倾斜上，忌油腻霸总语录",
+        "midTier": "体面交锋与利益算计并重，试探留三分余地",
+        "lowTier": "鲜活贴合身份，忌无脑尖叫花痴工具人腔"
+      },
+      "domainSignals": [
+        "婚约",
+        "心动",
+        "偏爱",
+        "嫁妆",
+        "掌家",
+        "嫡女",
+        "世子妃",
+        "和离",
+        "领证",
+        "暗恋",
+        "前任",
+        "相亲"
+      ],
+      "registerRules": [
+        {
+          "id": "reg_roleplay_purple_dress",
+          "category": "purple_costume",
+          "pattern": "逶迤拖地[^。！？\\r\\n]{2,16}百水裙|三千青丝(?:散落|如瀑)",
+          "remedy": "Replace over-ornate costume roleplay cliches with concise period-accurate dress details."
+        }
+      ],
+      "clicheRules": [
+        {
+          "id": "cliche_greasy_ceo_talk",
+          "category": "romance_cliche",
+          "scope": "all",
+          "pattern": "邪魅一笑|三分凉薄[^。！？\\r\\n]{0,8}四分漫不经心|扇形统计图|天凉王破"
+        },
+        {
+          "id": "cliche_marysue_tears",
+          "category": "romance_cliche",
+          "scope": "narration",
+          "pattern": "晶莹的泪珠(?:像断了线的珍珠)?|梨花带雨地?(?:咬着下唇|望着)"
+        }
+      ]
+    },
+    "general-clean": {
+      "id": "general-clean",
+      "title": "通用洁净叙事（跨题材默认基座）",
+      "defaultPreset": "modern-clean",
+      "registerFormula": "准确洗练现代汉语 + 动作/信息单次投放 + 晚进早出对白",
+      "voiceMatrix": {
+        "highTier": "少言重威，直指核心利益",
+        "midTier": "按职业身份说话，不念设定旁白",
+        "lowTier": "符合处境与动机，零无效客套寒暄"
+      },
+      "domainSignals": [],
+      "registerRules": []
+    }
+  }
+}

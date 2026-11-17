@@ -1,0 +1,98 @@
+{
+  "description": "《收尸问仙》项目级规则：只对本书生效的口味与第 1 章迭代中沉淀的专属套话，不随引擎约束其他书。",
+  "clicheRules": [
+    {
+      "id": "book_purple_prose_verb",
+      "category": "purple_prose",
+      "pattern": "收住锋"
+    },
+    {
+      "id": "book_webnovel_vision",
+      "category": "transition_cliche",
+      "pattern": "炉火声骤然(?:远去|断去)"
+    },
+    {
+      "id": "book_acting_manual",
+      "category": "over_explanation",
+      "pattern": "脸上那点[^，。！？\\r\\n]{1,6}也?收了"
+    },
+    {
+      "id": "book_plastic_mental",
+      "category": "plastic_literary",
+      "pattern": "面上愈发恭顺"
+    },
+    {
+      "id": "book_plastic_posture",
+      "category": "plastic_literary",
+      "pattern": "重重顿在[^，。！？]{0,6}地上|腰间空空如也|僵硬蜷曲|凝而不散|冷若霜针|立着三道黑影|惨白[^，。！？]{0,3}风灯"
+    },
+    {
+      "id": "book_plastic_cultivation",
+      "category": "plastic_literary",
+      "pattern": "虚浮水准|应声(?:化开|碎裂)"
+    },
+    {
+      "id": "book_outline_preview",
+      "category": "over_explanation",
+      "pattern": "眼下唯一的活路，便是|这笔账(?:根本)?不用再(?:往下)?细算"
+    },
+    {
+      "id": "book_encyclopedia_lecture",
+      "category": "over_explanation",
+      "pattern": "(?:头|前)[一二三四五]+(?:层|级)算[^，。！？]{1,8}，[^。！？]{2,20}(?:翻上一倍|成倍暴涨)|每满一[月日年]才能自行|只在经脉(?:浅表)?流转"
+    }
+  ],
+  "fillerRules": [
+    {
+      "id": "book_pleasantry_exit",
+      "category": "pleasantry_filler",
+      "pattern": "夜里风凉，[^”」』]{1,14}歇着|不知是哪位[^，。！？”]{1,6}当差",
+      "remedy": "Cut farewell/greeting pleasantries (Early-Out rule); end dialogue immediately on stakes or action."
+    },
+    {
+      "id": "book_clutter_reaction",
+      "category": "micro_clutter",
+      "pattern": "门栓乱跳|(?:油灯|烛火)(?:也)?跟着晃个不住",
+      "remedy": "Delete redundant prop reactions and internal emotion labels already shown by action."
+    }
+  ],
+  "registerRules": [
+    {
+      "id": "book_plain_daytime",
+      "category": "calendar_anachronism",
+      "pattern": "今日白日",
+      "remedy": "Use authentic 初/正 ke notation (e.g. 寅初/寅正) or watch drums (五更前), and plain 白日里."
+    },
+    {
+      "id": "reg_northern_erhua_casual",
+      "category": "colloquial_clash",
+      "pattern": "这会儿|那会儿|一会会儿|提过一嘴|犯不着|几百号|满打满算|快过完的时候",
+      "remedy": "Replace modern Northern erhua/chatty phrases with clean neutral vernacular (此刻/当年/提过/不必/数百名)."
+    },
+    {
+      "id": "reg_pingshu_yamen_slang",
+      "category": "yamen_storyteller_clash",
+      "pattern": "仔细你的(?:脑袋|皮)|耍滑头|直咂嘴|瞧见没|我扒你的皮|冷邦邦|硬邦邦|没有一百也有八十|且说那|暗道一声不好",
+      "remedy": "Purge Qing-pingshu & TV yamen-constable cliches; use sect rule/cost pressure instead."
+    },
+    {
+      "id": "reg_modern_snark_banter",
+      "category": "dialogue_tone_clash",
+      "pattern": "你(?:烧|写|干|忙|查)你的|我进来帮你|避避雨",
+      "remedy": "Cut chatty excuses or modern snarky banter in high-stakes classical dialogue; use stark commands."
+    },
+    {
+      "id": "book_time_chuzheng",
+      "category": "calendar_style",
+      "pattern": "(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)时[四五六七八]刻",
+      "remedy": "This book's style contract writes time as chu/zheng (e.g. 寅初, 寅正); 'X shi 4-8 ke' is flagged here as a book preference, not as an error."
+    }
+  ],
+  "symmetricSkeletons": [
+    {
+      "id": "sym_resume_intro",
+      "pattern": "这人是[^，。！？\\r\\n]{2,18}手底下最[^，。！？\\r\\n]{1,12}的"
+    }
+  ],
+  "disabledRuleIds": []
+}

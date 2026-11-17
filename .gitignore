@@ -1,0 +1,13 @@
+# local secrets and caches
+.env
+.env.*
+.zhuque-cache.json
+# local corpora and scratch files (never publish copyrighted text)
+benchmarks/master-corpus.json
+tmp/
+runs/
+# system and tooling
+.DS_Store
+node_modules/
+*.log
+coverage/

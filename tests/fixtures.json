@@ -1,0 +1,266 @@
+{
+  "aiPurpleSample": "三记重扣砸在乌木院门上——震得潮湿的青石地砖上的豁了口的艾草油灯的灯芯猛地一跳。他瞳孔骤缩，眼神中闪过一丝寒芒，薄唇抿成一条死线。这不是普通的试探，而是生死的博弈。难道命运的齿轮就这样开始转动了吗？",
+  "termStuffingSample": "他靠着识海深处的青铜残鉴，花掉四滴清岁露，一滴清岁露瞧见灵石，三滴清岁露剥出《龟息敛华诀》，凭《龟息敛华诀》活命，为了攒下十五滴清岁露，他没动过一滴清岁露。他合上账册，拍掉石灰，收回法力，跌回练气三层，摸出药粉，塞进袖袋，披上灰袍，微弓着腰，小跑过去拉开了院门。青铜残鉴微微一震，一幅血气冲天的画面在眼前猛地铺开。",
+  "humanCleanSample": "九月下旬，山雨下了一整夜。\n刚过亥时，敛尘院外那扇木门让人擂得山响。木门上的门栓乱跳，连带着屋里木桌上的油灯也晃个不住。宋简坐在木桌后头没动，提笔在账册末尾添了个“焚”字，吹干账册上的墨迹，这才搁下笔往木门那边看去。\n打头的是周厉。\n周厉穿一身执法堂黑衣，大雨天连件蓑衣也没披，只撑着练气六层的法力挡雨，站在廊下脸拉得老长，寻常外门弟子横死，执法堂随便打发两个杂役抬来敛尘院扔下也就完了，实在犯不着周厉三更半夜冒雨跑这一趟敛尘院。",
+  "prevChapterTail": "院门廊下，那道沉寂了将近两个时辰的练气六层气机陡然睁眼苏醒。靴底碾过门前积水，不紧不慢地穿过偏厅，稳稳停在了后堂生铁闸门外。",
+  "echoOpening": "院门廊下，那道沉寂了将近两个时辰的练气六层气机陡然睁眼苏醒，靴底碾过门前积水停在后堂生铁闸门外。宋简屏住呼吸看着铁门。",
+  "cleanOpening": "生铁门内侧的木栓被一缕巧劲震断。铁门往旁推开三尺，周厉左手激发护身符，迈步跨进石室。",
+  "mockLedger": {
+    "projectTitle": "TestNovel",
+    "deprecatedTerms": [
+      "沈砚"
+    ],
+    "chapters": [
+      {
+        "chapterNumber": 3,
+        "title": "TestCh3",
+        "coreSummary": "Test summary",
+        "requiredAnchors": [
+          "宋简",
+          "周厉"
+        ],
+        "futureForbiddenTerms": [
+          "枯骨道人"
+        ]
+      }
+    ]
+  },
+  "validReview": {
+    "items": [
+      {
+        "category": "plot_continuity",
+        "quote": "打头的是周厉。",
+        "description": "Matches prior timeline.",
+        "severity": "warning"
+      }
+    ],
+    "summary": "Clean check."
+  },
+  "hallucinatedReview": {
+    "items": [
+      {
+        "category": "plot_continuity",
+        "quote": "这段原句根本不在正文里。",
+        "description": "增加更多五感细节和形容词。",
+        "severity": "error"
+      }
+    ],
+    "summary": "Bad review."
+  },
+  "readerReview": {
+    "items": [
+      {
+        "category": "reader_hooked",
+        "quote": "打头的是周厉。",
+        "description": "读者想知道周厉为什么亲自来",
+        "severity": "pass"
+      }
+    ]
+  },
+  "readerReviewNoQuote": {
+    "items": [
+      {
+        "category": "reader_skim",
+        "description": "读者在这里跳读",
+        "severity": "pass"
+      }
+    ]
+  },
+  "ledgerNoteSample": "凹槽里化开两滴清岁露（余13滴），**照影**开始。",
+  "xianxiaRegisterClashSample": "到了寅时十刻，门外飘进冷邦邦的一句：“你要是敢耍滑头，仔细你的脑袋！”\n\n他那会儿脑子发懵，哪是什么意外，分明是有人害命。\n\n他连忙点头道：“是，夜里风凉，您先歇着。”\n\n他转身拉上铁门，免得对方看出端倪。",
+  "urbanArchaicLeakSample": "陈默走出地铁站，掏出手机看了一眼微信合同，冷冷拱手道：“此乃董事会决议，尔等莫要自误！”一息之间，他拂袖而去，拦下一辆出租车。",
+  "coldReaderReview": {
+    "items": [
+      {
+        "category": "cold_reader_scale_blind",
+        "quote": "只撑着练气六层的法力挡雨",
+        "description": "初读者还不清楚练气共几层以及六层与杂役的差距",
+        "severity": "warning"
+      },
+      {
+        "category": "reader_dialogue_awkward",
+        "quote": "犯不着周厉三更半夜冒雨跑这一趟敛尘院。",
+        "description": "测试对白与语感审查分类可正常过白名单校验",
+        "severity": "warning"
+      },
+      {
+        "category": "character_logic_suicide",
+        "quote": "打头的是周厉。",
+        "description": "测试谨慎人设无强迫冒险逻辑审查分类可过白名单校验",
+        "severity": "warning"
+      },
+      {
+        "category": "pov_boundary_breach",
+        "quote": "宋简坐在木桌后头没动，提笔在账册末尾添了个“焚”字",
+        "description": "测试第三人称有限视角越界审查分类可过白名单校验",
+        "severity": "warning"
+      }
+    ],
+    "summary": "Cold reader check."
+  },
+  "bloatAndBanterSample": "山里练气一共九层，头三层算初期，法力浅，一过四层法力能翻上一倍。\n\n门外木门响起，门栓乱跳，油灯跟着晃个不住，他心头微紧，确认体内法门纹丝未乱，做完这手防备才走去开门。\n\n来人冷冷道：“你烧你的，我在廊下避避雨，丑初我进来帮你推。”",
+  "modernSlangSample": "他把方案往桌上一放，说这就是降维打击，底层逻辑早就闭环了。对面的人没接话，低头翻了两页，又把方案推了回来。",
+  "quoteMaskingSample": "周执事冷声道：“不是怕你偷懒，而是怕你坏了规矩。他声音不高，却重重落在众人心头——夜里风凉，您先歇着。”\n\n说完，宋简合上木门，屋里只剩一盏油灯。",
+  "rhetoricAdvisorySample": "陈墨站定身形，是这把旧剑护住了心脉，不是旁人施舍的灵丹。\n\n外头雨越下越大，街角灯笼早灭了一半。",
+  "rhetoricBlockingSample": "陈墨站定身形，是这把旧剑护住了心脉，不是旁人施舍的灵丹。对面那人不是寻常散修，而是暗阁派来的死士。掌柜看得明白，是利益摆在眼前，不是什么交情。\n\n屋檐滴水声不断，没有人再开口。",
+  "rhetoricExtendedSample": "风从北窗灌进来，桌上的残烛晃了两晃。\n\n他声音并不大，第一句却压住了满堂嘈杂。\n\n院子里没有灯火，没有巡夜弟子，只有石阶上积着半寸冷水。\n\n这本是第一幕的暗流，无人知晓内情。这一句只是铺垫，中间还要走上很长一段路。\n\n",
+  "rhetoricExtendedTail": "没有人知道，属于他的反击才刚刚开始。这一夜注定无人入眠。",
+  "rhetoricEarlyPreviewChunk": "没有人知道这批货从何而来，只是掌柜从不多问，只管把银两称足收进柜台里头，再挑出三成成色最好的碎银另包好送去后院账房。\n\n",
+  "densityTicSample": "他抬起手，在案头推开木匣，取出药瓶，拧开瓶盖，倒出药丸，塞进嘴里，又端起茶碗喝了口凉茶，转身走向门口。\n\n“秋水刃”刚出鞘，“碧灵丹”便掉在地上，偏偏“影鼠”也窜了过去，“断魂涧”的风声忽然响起。\n\n掌柜指尖微微泛白，喉结滚了一下，眼眶发酸，手往袖口里一缩，唇角抿成一条线，呼吸顿了一下。",
+  "degenerationMetaSample": "他迈步走过这条幽暗长廊。\n他迈步走过这条幽暗长廊。\n\n石壁上的铜灯闪烁了半息，照出半截干涸血印。\n\n石壁上的铜灯闪烁了半息，照出半截干涸血印。\n\n石壁上的铜灯闪烁了半息，照出半截干涸血印。\n\n细纲里写的这一场还没收尾，按照第6章留下的暗记，他推开石门。\n\n作为AI助手，我无法继续创作这段血腥场面。\n\n（此处省略三百字）\n\n最后他伸手推开了那扇铁",
+  "degenerationDialogueExemptSample": "众人齐声大喊：“退下！退下！”\n\n众人齐声大喊：“退下！退下！”\n\n屋里只剩风声，按照“第6章”的旧账，谁也没有再提一个字。\n\n院门缓缓合拢。",
+  "whitelistSample": "他看了一眼门上的朱漆封条，空气仿佛凝固。\n\n另一边，空气仿佛凝固，谁也不敢先出声。",
+  "whitelistLiteralText": "他看了一眼门上的朱漆封条，空气仿佛凝固。",
+  "whitelistRuleSample": "到了寅时四刻，门外风冷，谁也没再出声。",
+  "whitelistRulePattern": "寅时四刻",
+  "projectBlockingRulePattern": "风冷",
+  "crossParallelSample": "不是为了那几块灵石。\n\n也不是为了宗门记下的薄功。\n\n只是怕再晚半步，连这间屋子都保不住。",
+  "outlineCopyOutline": "## 第一幕\n- 动作：陈砚把铜盏挪到窗台背风处，借着最后一丝微光数清封泥上的三道裂痕。\n- 原样出现的原话：“风雪压住檐角，今晚谁也别推那扇门。”",
+  "outlineCopyBadChapter": "陈砚把铜盏挪到窗台背风处，借着最后一丝微光数清封泥上的三道裂痕。\n\n风雪压住檐角，今晚谁也别推那扇门。",
+  "outlineCopyGoodChapter": "风雪压住檐角，今晚谁也别推那扇门。\n\n陈砚低头搓了把凉水，把桌角的铜盏往墙根推去三寸。封泥偏偏裂成三道岔，恰像被人指尖掐过。",
+  "knowledgeLedgerSample": {
+    "projectTitle": "KnowledgeBoundaryTest",
+    "protagonist": {
+      "name": "ChenMo"
+    },
+    "knowledgeLedger": [
+      {
+        "entity": "青铜碎戒",
+        "firstChapter": 1,
+        "readerKnown": "一只生了绿锈的普通陪葬铜戒。",
+        "fullTruth": "内藏上古守墓宗秘传心脉烙印。",
+        "revealChapter": 5,
+        "revealForbiddenTerms": [
+          "守墓宗",
+          "心脉烙印"
+        ]
+      }
+    ],
+    "characterSnapshots": {
+      "ChenMo": {
+        "location": "敛尘院东厢"
+      }
+    },
+    "foreshadowing": [
+      {
+        "id": "f1",
+        "clue": "铜戒内圈刻着半道竖纹",
+        "plantedChapter": 1,
+        "status": "planted"
+      },
+      {
+        "id": "f2",
+        "clue": "北山寒潭异响",
+        "plantedChapter": 8,
+        "status": "planted"
+      }
+    ],
+    "chapters": [
+      {
+        "chapterNumber": 2,
+        "title": "试灰",
+        "coreSummary": "东厢验灰",
+        "requiredAnchors": [],
+        "futureForbiddenTerms": []
+      },
+      {
+        "chapterNumber": 5,
+        "title": "破印",
+        "coreSummary": "古戒显形",
+        "requiredAnchors": [],
+        "futureForbiddenTerms": []
+      }
+    ]
+  },
+  "knowledgeSpoilerChapter": "他翻过铜戒内圈，一眼认出这是失传多年的守墓宗旧物。",
+  "knowledgeTruthSecret": "心脉烙印",
+  "knowledgeForbiddenTerm": "守墓宗",
+  "importNumerals": {
+    "chOne": "一",
+    "chTen": "十",
+    "chTwelve": "十二",
+    "chHundredFive": "一百零五"
+  },
+  "importSamples": {
+    "ch01File": "notes_only_ch1.md",
+    "ch01Content": "# 第一章 灰窑旧事\n\n天还没亮，陈砚已经把铜勺刷洗干净。",
+    "ch12File": "第十二章_雪夜封门.md",
+    "ch12Content": "风雪堵住半扇院门，桌案上放着半册残缺的《玄灰诀》。\n\n他合上《玄灰诀》，熄了灯火。",
+    "noteFile": "设定备忘.md",
+    "noteContent": "这是全书设定备忘，不应被当成正文章节。",
+    "curatedSummary": "人工精修过的第一章简介",
+    "importedBookTerm": "《玄灰诀》"
+  },
+  "formattingSurgerySample": "他推门进了院子。\n\n手里正拎着**一盏旧油灯**。\n\n摸出青铜古鉴一看（当前余额：12滴清岁露），心里踏实许多。",
+  "doctorChainSample": {
+    "ch1File": "第一章_入局.md",
+    "ch1Body": "寒风卷过石阶，他熄了炭盆，提着铁铲转身朝西角地窖下去。",
+    "ch2File": "第二章_暗夜.md",
+    "ch2EchoTail": "夜风卷着碎雪扑在窗纸上，宋简把铜灯拨暗半寸，静静听着廊外由远及近的踏雪声，顺手摸向袖袋里那枚冰凉的青铜短锥，指腹在锥尾云雷纹上轻轻一按，心底早已算定今夜这一关绝无半步退路。",
+    "ch2EchoHead": "夜风卷着碎雪扑在窗纸上，宋简把铜灯拨暗半寸，静静听着廊外由远及近的踏雪声，顺手摸向袖袋里那枚冰凉的青铜短锥，指腹在锥尾云雷纹上轻轻一按，随后才推门出去。",
+    "ch2Title": "暗夜",
+    "ledgerSummary": "第十二章前情测试"
+  },
+  "normalizerSample": {
+    "raw": "# 第一章 试验\n\n这本是**粗体重点**与*斜体低语*。\n\n---\n\n风雪...卷地而来。。。“先别走—我……”\n\n轰——！一声巨响，答案——就是这样。\n\n保留白名单：**特殊星号记号**。",
+    "whitelistLiteral": "**特殊星号记号**",
+    "expectedCleanCheck": "粗体重点与斜体低语",
+    "expectedDialogueDash": "“先别走——我……”",
+    "expectedBoom": "轰！一声巨响",
+    "expectedColon": "答案："
+  },
+  "charCountSample": {
+    "mismatch": "他冷笑一声，吐出短短四个字：“你给我滚出去！”",
+    "valid": "门口那人只留下一句话，短短四个字：“速来领赏。”",
+    "ellipsisSkip": "那人断断续续吐出四个字：“救……我……”",
+    "mismatchToken": "你给我滚出去！"
+  },
+  "outlineContractSample": {
+    "goodOutline": "## 本章规划\n- 核心事件：周厉夜探敛尘院。\n- 目标情绪：步步紧逼后的绝境反制。\n- 章末钩子：铜鉴背面浮出第三道纹路。",
+    "badOutline": "## 本章规划\n- 核心事件：[待补充]\n- 其他背景：普通流水账，没有任何焦点。"
+  },
+  "romanceAndHygieneSamples": {
+    "romanceGenreId": "romance-emotional",
+    "romanceClicheText": "她着实不想赴这门婚约，正思忖和离后怎么拿回嫁妆掌家，面前那人却危险地眯起双眸，邪魅一笑道：“女人，你成功引起了我的注意。”她浑身血液瞬间凝固，晶莹的泪珠落下来。",
+    "dialogueBadPunctuation": "“这批茶盐怎么少了一半，”管事冷笑道：“别以为我查不到账。”\n\n小厮低声答道：“小的真的不知”。",
+    "dialogueGoodPunctuation": "“这批茶盐怎么少了一半，”管事用指节敲了敲茶盖，“别以为我查不到账。”\n\n小厮低声答道：“小的真的不知。”",
+    "dialogueOnlyStreakText": "“今夜谁守西门？”\n\n“轮到老陈了。”\n\n“他人呢？”\n\n“刚还见在茶棚喝水。”\n\n“外头风这么大，怎么不关门？”\n\n“门栓好像卡住了。”\n\n“快去喊人来看看。”\n\n“我这就去叫。”\n\n“顺手把灯笼也拎去。”"
+  },
+  "continuityLedger": {
+    "characterNames": [
+      "宋简",
+      "周厉",
+      "韩瘸子"
+    ],
+    "protagonist": {
+      "name": "宋简"
+    }
+  },
+  "ambiguitySample": "周厉连院门都闩上才守着烧，黑布底下裹着的肯定大有来头。从靴筒摸出剔骨小刀挑断麻绳，一把扯开湿透的黑布。",
+  "clearSubjectSample": "周厉连院门都闩上才守着烧，黑布底下裹着的肯定大有来头。宋简从靴筒摸出剔骨小刀挑断麻绳，一把扯开湿透的黑布。",
+  "openingStreakSample": "套上皮手套，宋简拽起担架往后堂拖。\n\n跟到前厅门边，宋简低声问了一句。\n\n收回铁牌，宋简冲两人摆了摆手。",
+  "ruleStatsHuman": "门外下着雨，他压低声音，免得隔壁那几个人惹来盘问。\n\n院子里没人说话，他把灯拨暗，免得巡夜的弟子看出端倪。\n\n雨停了，他又等了一会儿，免得守门的老头生出疑心。",
+  "ruleStatsAi": [
+    "他心头一沉，压低声音，免得隔壁那几个人惹来盘问。\n\n他心头一紧，把灯拨暗。\n\n他心头一沉，又等了一会儿。",
+    "她心头一沉，转身就走，免得巡夜的弟子看出端倪。\n\n她心头一紧，攥住袖口。\n\n她心头暗凛，没有回头，免得守门的老头生出疑心。"
+  ],
+  "evalVersionA": "# 第一章 旧版\n\n门外下着雨，他把账册合上，起身去开门。",
+  "evalVersionB": "# 第一章 新版 v2\n\n雨下了一夜。拍门声一下比一下重，他合上账册才去开门。",
+  "archiveReview": {
+    "items": [
+      {
+        "category": "reader_skim",
+        "quote": "门外下着雨",
+        "description": "开头太平",
+        "severity": "warning"
+      },
+      {
+        "category": "reader_hooked",
+        "quote": "起身去开门",
+        "description": "想看门外是谁",
+        "severity": "pass"
+      }
+    ],
+    "summary": "会看下一章"
+  }
+}

@@ -1,0 +1,420 @@
+{
+  "detectorSchema": {
+    "description": "detectors 记录外部检测器的实测结果。只记录真实测过的数据，没测过就留空数组。humanPct / suspectedPct / aiPct 为朱雀报告里三种特征的字数占比，aigc 为片段 AIGC 值（0-1）。scope=excerpt 表示检测对象是全章、而本文件只是节选。",
+    "fields": [
+      "name",
+      "testedAt",
+      "scope",
+      "humanPct",
+      "suspectedPct",
+      "aiPct",
+      "aigc",
+      "segments",
+      "source",
+      "note"
+    ]
+  },
+  "generationSchema": {
+    "description": "generation 记录这一版正文由谁、用哪个版本的 skill 生成。model 写模型名，modelVersion 写模型的具体版本或日期（平台显示什么就记什么），skillVersion 写当时用的 InkBone 版本，source 写信息来源。不知道的字段填 null，不要猜。比较不同模型时，只比 skillVersion 相同的条目；比较不同 skill 版本时，只比 model 相同的条目。",
+    "fields": [
+      "model",
+      "modelVersion",
+      "skillVersion",
+      "source"
+    ]
+  },
+  "observations": [
+    {
+      "date": "2026-11-16",
+      "detector": "zhuque-api",
+      "note": "第 1 章 v6.2 之后的改稿中，相邻两稿正文约 2% 不同（8 字片段覆盖率 98%），AIGC softmax 从 0.3736 变为 0.5542。另有两组约 5% 的改动，分别从 0.3872 降到 0.244、从 0.244 升到 0.3427。这些草稿没有存成基准文件。",
+      "source": "本地 .zhuque-cache.json 缓存记录"
+    }
+  ],
+  "entries": [
+    {
+      "id": "shoushi_ch001_v1_ai",
+      "label": "《收尸问仙》Ch1 v1.0（旧 AI 精修版，节选）",
+      "file": "ch001-v1-ai-refined.md",
+      "group": "ai_refined",
+      "note": "朱雀 100% 疑似 AI；ZeroGPT 83%（全章实测，本文件为节选）",
+      "detectors": [
+        {
+          "name": "zhuque",
+          "scope": "excerpt",
+          "humanPct": 0,
+          "source": "README 消融表",
+          "note": "README 记片段 1、片段 2 的 AIGC 值均 > 0.85"
+        },
+        {
+          "name": "zerogpt",
+          "scope": "excerpt",
+          "aiPct": 83,
+          "source": "README 消融表",
+          "note": "README 记 83%–84% AI"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": null,
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v2_vernacular",
+      "label": "《收尸问仙》Ch1 v2.0（寸芒白话版）",
+      "file": "ch001-v2-vernacular.md",
+      "group": "vernacular_rewrite",
+      "note": "朱雀 AIGC 0.33（人工区）；读感松散、复读多",
+      "detectors": [
+        {
+          "name": "zhuque",
+          "aigc": 0.33,
+          "source": "README 消融表"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": null,
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v3_2_inkbone_v0_3",
+      "label": "《收尸问仙》Ch1 v3.2（InkBone v0.3，A 稿）",
+      "file": "ch001-v3.2-inkbone-v0.3.md",
+      "group": "inkbone_compiled",
+      "note": "朱雀 AIGC 0.2025，人工 100%；读感：名词逐句写全、同一结论讲三遍",
+      "detectors": [
+        {
+          "name": "zhuque",
+          "humanPct": 100,
+          "suspectedPct": 0,
+          "aiPct": 0,
+          "aigc": 0.2025,
+          "segments": [
+            {
+              "chars": 3762,
+              "aigc": 0.2025
+            }
+          ],
+          "source": "README 消融表（v3.2 行）；作者反馈朱雀 0% AI"
+        },
+        {
+          "name": "isgen",
+          "humanPct": 93,
+          "source": "README 消融表"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v0.3",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v4_0_inkbone_v0_4",
+      "label": "《收尸问仙》Ch1 v4.0（InkBone v0.4，B 稿）",
+      "file": "ch001-v4.0-inkbone-v0.4.md",
+      "group": "inkbone_compiled",
+      "note": "朱雀人工 19.05% / 疑似 AI 80.95%；读感比 A 顺，套话回潮",
+      "detectors": [
+        {
+          "name": "zhuque",
+          "testedAt": "2026-11-13 18:47:50",
+          "humanPct": 19.05,
+          "suspectedPct": 80.95,
+          "aiPct": 0,
+          "segments": [
+            {
+              "chars": 1353,
+              "aigc": 0.6049
+            },
+            {
+              "chars": 604,
+              "aigc": 0.4908
+            },
+            {
+              "chars": 1214,
+              "aigc": 0.7332
+            }
+          ],
+          "source": "作者提供的朱雀检测报告单 PDF"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v0.4",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v3_inkbone",
+      "label": "《收尸问仙》Ch1 v5.0（InkBone v0.5 草稿）",
+      "file": "ch001-v3-inkbone.md",
+      "group": "inkbone_compiled",
+      "note": "朱雀人工 35.49% / 疑似 AI 64.51%；中段纯动作博弈 0.4638 绿，首尾背景回填与设定算账微黄",
+      "detectors": [
+        {
+          "name": "zhuque",
+          "testedAt": "2026-11-13 19:57:05",
+          "humanPct": 35.49,
+          "suspectedPct": 64.51,
+          "aiPct": 0,
+          "segments": [
+            {
+              "chars": 823,
+              "aigc": 0.5558
+            },
+            {
+              "chars": 1060,
+              "aigc": 0.4638
+            },
+            {
+              "chars": 1104,
+              "aigc": 0.6047
+            }
+          ],
+          "source": "detector-reports/2026-11-13_1957_zhuque-v5.0-inkbone-v0.5.pdf"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v0.5",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v6_0_reader_first",
+      "label": "《收尸问仙》Ch1 v6.0（读者优先，C 稿）",
+      "file": "ch001-v6.0-reader-first.md",
+      "group": "reader_first",
+      "note": "朱雀人工 65.64% / 疑似 AI 34.36%；中间 2182 字主体段 0.4081 纯绿，仅首尾 556/586 字擦线微黄",
+      "detectors": [
+        {
+          "name": "zhuque",
+          "testedAt": "2026-11-16 10:10:06",
+          "humanPct": 65.64,
+          "suspectedPct": 34.36,
+          "aiPct": 0,
+          "segments": [
+            {
+              "chars": 556,
+              "aigc": 0.5354
+            },
+            {
+              "chars": 2182,
+              "aigc": 0.4081
+            },
+            {
+              "chars": 586,
+              "aigc": 0.5792
+            }
+          ],
+          "source": "detector-reports/2026-11-16_1010_zhuque-v6.0-draft-C.pdf"
+        }
+      ],
+      "generation": {
+        "model": "Claude Opus 5.5",
+        "modelVersion": null,
+        "skillVersion": null,
+        "source": "Kiro 会话中由模型直接撰写（2026-11-14），未走 skill 流程"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v6_1_reader_first",
+      "label": "《收尸问仙》Ch1 v6.1（读者优先）",
+      "file": "ch001-v6.1-reader-first.md",
+      "group": "reader_first",
+      "note": "朱雀 API 实测 100% 人工（全章单段 0.3453，全部 11 个细粒度窗口均 < 0.50）",
+      "detectors": [
+        {
+          "name": "zhuque-api",
+          "testedAt": "2026-11-16 11:31:27",
+          "humanPct": 100,
+          "suspectedPct": 0,
+          "aiPct": 0,
+          "aigc": 0.3453,
+          "segments": [
+            {
+              "chars": 3087,
+              "aigc": 0.3453
+            }
+          ],
+          "source": "inkbone detect (Tencent EdgeOne Zhuque API)"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": null,
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v6_2_sub030",
+      "label": "《收尸问仙》Ch1 v6.2（读者优先）",
+      "file": "ch001-v6.2-sub030.md",
+      "group": "reader_first",
+      "note": "朱雀 API 实测 100% 人工（全章单段 AIGC 0.2852 / softmax 0.2863，中后段 7 个窗口深入 0.0996–0.2675）；已同步正文第 1 章",
+      "detectors": [
+        {
+          "name": "zhuque-api",
+          "testedAt": "2026-11-16 11:51:07",
+          "humanPct": 100,
+          "suspectedPct": 0,
+          "aiPct": 0,
+          "aigc": 0.2852,
+          "segments": [
+            {
+              "chars": 3076,
+              "aigc": 0.2852
+            }
+          ],
+          "source": "inkbone detect (Tencent EdgeOne Zhuque API)"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": null,
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v7_0_inkbone_v1_0",
+      "label": "《收尸问仙》Ch1 v7.0（InkBone v1.0 · 纯净古典语域 + 初读者标尺）",
+      "file": "ch001-v7.0-inkbone-v1.0.md",
+      "group": "inkbone_v1_showcase",
+      "note": "清除全部 17 处评书衙役/儿化串味词与 3 处寒暄水话，补齐练气初/中期分水岭与矿队征调利害标尺；strict 审计 0/0/0，朱雀 API 实测 100% 人工（softmax 0.3442，全章单段 0.3948，11/11 细窗口全绿）",
+      "detectors": [
+        {
+          "name": "zhuque-api",
+          "testedAt": "2026-11-16 17:18:30",
+          "humanPct": 100,
+          "suspectedPct": 0,
+          "aiPct": 0,
+          "aigc": 0.3948,
+          "segments": [
+            {
+              "chars": 3185,
+              "aigc": 0.3948
+            }
+          ],
+          "source": "inkbone detect (Tencent EdgeOne Zhuque API)"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v1.0",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch001_v9_0_inkbone_v1_0",
+      "label": "《收尸问仙》Ch1 v9.0（InkBone v1.0 · 五大逻辑硬伤闭环 + 零注水）",
+      "file": "ch001-v9.0-inkbone-v1.0.md",
+      "group": "inkbone_v1_showcase",
+      "note": "彻底重构人物自救动机（三面绝壁+外门反闩+袖藏短锥）、金手指先照后剥因果（与《龟息敛华诀》同源前置）、贴身袖袋与亥末封火时空一致性，以及第三人称有限视角留白；doctor/strict/verify-review 全绿 0 告警，朱雀 API 实测 100% 人工（全章单段 0.4281，softmax 0.3841，11/11 细窗口全绿 0.3245–0.4826）",
+      "detectors": [
+        {
+          "name": "zhuque-api",
+          "testedAt": "2026-11-16 18:23:02",
+          "humanPct": 100,
+          "suspectedPct": 0,
+          "aiPct": 0,
+          "aigc": 0.4281,
+          "segments": [
+            {
+              "chars": 2987,
+              "aigc": 0.4281
+            }
+          ],
+          "source": "inkbone detect (Tencent EdgeOne Zhuque API)"
+        }
+      ],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v1.0",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch002_v3_inkbone",
+      "label": "《收尸问仙》Ch2（InkBone v0.4）",
+      "file": "ch002-v3-inkbone.md",
+      "group": "inkbone_compiled",
+      "note": "朱雀未记录",
+      "detectors": [],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v0.4",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch003_v3_inkbone",
+      "label": "《收尸问仙》Ch3（InkBone v0.4）",
+      "file": "ch003-v3-inkbone.md",
+      "group": "inkbone_compiled",
+      "note": "朱雀未记录",
+      "detectors": [],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v0.4",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch004_v3_inkbone",
+      "label": "《收尸问仙》Ch4（InkBone v0.4）",
+      "file": "ch004-v3-inkbone.md",
+      "group": "inkbone_compiled",
+      "note": "朱雀未记录",
+      "detectors": [],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v0.4",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch005_v3_inkbone",
+      "label": "《收尸问仙》Ch5（InkBone v0.4）",
+      "file": "ch005-v3-inkbone.md",
+      "group": "inkbone_compiled",
+      "note": "朱雀未记录",
+      "detectors": [],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v0.4",
+        "source": "未记录"
+      }
+    },
+    {
+      "id": "shoushi_ch006_v3_inkbone",
+      "label": "《收尸问仙》Ch6（InkBone v0.4）",
+      "file": "ch006-v3-inkbone.md",
+      "group": "inkbone_compiled",
+      "note": "朱雀未记录",
+      "detectors": [],
+      "generation": {
+        "model": null,
+        "modelVersion": null,
+        "skillVersion": "InkBone v0.4",
+        "source": "未记录"
+      }
+    }
+  ]
+}
