@@ -21,6 +21,7 @@ export const PUBLIC_ITEMS = [
   "bin",
   "src",
   "configs",
+  "evals",
   "prompts",
   "resources",
   "scripts",
