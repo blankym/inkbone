@@ -8,7 +8,7 @@
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-orange.svg)](package.json)
 [![Version: 1.2](https://img.shields.io/badge/version-1.2-lightgrey.svg)](package.json)
 
-[中文](README.md) · 9 genre packs · 19 commands · 51 tests · zero external dependencies
+[中文](README.md) · **[Live Browser Playground (client-side)](https://blankym.github.io/inkbone/)** · 9 genre packs · 19 commands · 51 tests · zero external dependencies
 
 > **Language note:** Prompts, rule patterns, and CLI findings target **Chinese fiction**. This README documents the design and workflow in English.
 
@@ -24,6 +24,12 @@ Prompting alone stops working once earlier rules fall out of context. InkBone se
 ---
 
 ## See it work in 30 seconds
+
+> **Want to try without cloning?** Open the **[Live Browser Playground](https://blankym.github.io/inkbone/)** — pure browser-side ES Modules running the exact engine locally with zero server uploads, including `doctor`, `packet` spoiler redaction, and `verify-review` demos.
+
+<!-- Save your terminal capture as docs/assets/demo.gif and uncomment:
+![InkBone 20s CLI Demo](docs/assets/demo.gif)
+-->
 
 Save a 9-line sample chapter (`ch01.md`):
 
@@ -256,5 +262,6 @@ npm run check:docs     # Verify docs/vendor matches sources (enforced in CI)
 - Chapter boundary isolation and verbatim-quote review checks inspired by [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)
 - Chinese clause-trunk and symmetric-frame checks inspired by [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)
 - Rhetorical density grading, degeneration detection, and meta-leak checks inspired by [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)
+- Community & discussion: [LINUX DO](https://linux.do/)
 
 Released under the [MIT License](LICENSE), including all rule configurations.

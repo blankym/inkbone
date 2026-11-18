@@ -8,7 +8,7 @@
 [![依赖: 0](https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-0-orange.svg)](package.json)
 [![版本: 1.2](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.2-lightgrey.svg)](package.json)
 
-[English](README.en.md) · 9 个题材包 · 19 条命令 · 51 项测试 · 零第三方依赖
+[English](README.en.md) · **[在线试跑（纯浏览器本地运算）](https://blankym.github.io/inkbone/)** · 9 个题材包 · 19 条命令 · 51 项测试 · 零第三方依赖
 
 用大模型写长篇连载，头三章看着还行，写到十几章毛病就全出来了：
 
@@ -22,6 +22,12 @@
 ---
 
 ## 30 秒看它能抓出什么
+
+> **不想装环境？** 直接打开 **[在线试跑台](https://blankym.github.io/inkbone/)** —— 纯前端 ES Module 在浏览器本地运行，你的正文、台账与审稿 JSON 绝不上传任何服务器，内置《药园》《宫闱》等样例与 `packet` / `verify-review` 实时演示。
+
+<!-- 录制终端演示后保存为 docs/assets/demo.gif 并取消下行注释：
+![InkBone 20 秒命令行实测演示](docs/assets/demo.gif)
+-->
 
 准备一段 9 行的测试稿 `ch01.md`：
 
@@ -254,5 +260,6 @@ npm run check:docs     # 检查 docs/vendor 同步状态（CI 强制检查）
 - 上下章边界隔离与“审读必须附原文引文”参考 [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)
 - 中文主干与对称句式清理思路参考 [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)
 - 修辞密度分级、退化及工程词泄漏检测参考 [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)
+- 社区交流与反馈：[LINUX DO](https://linux.do/)
 
 采用 [MIT](LICENSE) 协议开源。规则文件同样使用 MIT，可直接复制改造为自己的题材规则包。
