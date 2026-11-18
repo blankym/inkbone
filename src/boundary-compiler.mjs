@@ -1,5 +1,6 @@
 import { countHan, profileText } from "./profiler.mjs";
 import { loadLinguisticsConfig } from "./config-loader.mjs";
+import { stripMarkdownEmphasis } from "./normalizer.mjs";
 
 // 提取文本中的连续汉字序列并生成固定长度的 N-gram 集合用于重演回声检测
 function extractHanNgrams(text, ngramSize, hanGlobalRegex) {
@@ -169,11 +170,18 @@ export function verifyChapterBoundaries(
     cfg
   );
 
+  // 剥离成对的 Markdown 加粗/斜体星号，避免 **锚点** 误报缺失或用 **剧透词** 绕过防剧透扫描
+  const plainChapterText = stripMarkdownEmphasis(chapterText, [], cfg);
+
   // 2. 扫描是否违规提前出现后续章节才允许解锁的剧透词（防剧情抢跑）
   const spoilerHits = [];
   const spoilerSet = new Set();
   const recordSpoiler = (term) => {
-    if (term && chapterText.includes(term) && !spoilerSet.has(term)) {
+    if (
+      term &&
+      (chapterText.includes(term) || plainChapterText.includes(term)) &&
+      !spoilerSet.has(term)
+    ) {
       spoilerSet.add(term);
       spoilerHits.push(term);
     }
@@ -197,7 +205,11 @@ export function verifyChapterBoundaries(
   // 3. 扫描本章是否遗漏了台账规定的必达事实锚点（防偏离主线或吃书）
   const missingAnchors = [];
   for (const anchor of chapterSpec.requiredAnchors || []) {
-    if (anchor && !chapterText.includes(anchor)) {
+    if (
+      anchor &&
+      !chapterText.includes(anchor) &&
+      !plainChapterText.includes(anchor)
+    ) {
       missingAnchors.push(anchor);
     }
   }
@@ -205,7 +217,10 @@ export function verifyChapterBoundaries(
   // 4. 扫描是否误用已废弃的旧人名或旧设定词（防历史残影吃书）
   const deprecatedHits = [];
   for (const legacyTerm of ledger.deprecatedTerms || []) {
-    if (legacyTerm && chapterText.includes(legacyTerm)) {
+    if (
+      legacyTerm &&
+      (chapterText.includes(legacyTerm) || plainChapterText.includes(legacyTerm))
+    ) {
       deprecatedHits.push(legacyTerm);
     }
   }

@@ -297,5 +297,27 @@
   "historicalWuxiaGenreSample": {
     "historical": "太监弯腰回话道：“皇后殿下，外头臣子求见。”那将领虎躯一震，冷哼了一声。",
     "wuxia": "他推开悦来客栈的木门，拍桌喊道：“小二，切两斤熟牛肉，温一壶上等女儿红！”"
+  },
+  "faultRegressionSample": {
+    "metaBracketNote": "沈晏推门走进库房。\n\n【注：此处伏笔需第4章再写清楚为什么他突然确定】",
+    "jadeSlipCleanNote": "> 【其二，须得先天隔绝天机污染之源物！（注：吾所得『太初净道石』可当此任）】",
+    "outsidePeriodPostTag": "“大人切莫轻举妄动”。赵书吏压低嗓音提醒道。\n\n“我这就回去”。",
+    "endQuotedTermClean": "他手心紧握那口薄如蝉翼的「秋水刃」。回到院中又取了那张「玄玉符」。\n\n他看着那块「青羊玉佩」。赵书吏压低嗓音提醒道。",
+    "impossibleKeDuration": "不过九刻钟功夫，消息便传遍了半座京城。",
+    "boundaryBoldAnchorText": "他点起油灯，亲手取出那**四枚**蜡封铜印，连夜赶往南档库核验旧档。",
+    "boundaryBoldSpoilerText": "他站在廊下琢磨着，私印定然藏在**慈恩寺枯井**底下的青砖缝里。",
+    "boundaryLedger": {
+      "projectTitle": "大理寺测试",
+      "deprecatedTerms": [],
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "测试章",
+          "coreSummary": "测试边界匹配",
+          "requiredAnchors": ["四枚蜡封铜印", "南档库"],
+          "futureForbiddenTerms": ["慈恩寺枯井"]
+        }
+      ]
+    }
   }
 }

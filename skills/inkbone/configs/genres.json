@@ -71,8 +71,8 @@
         {
           "id": "reg_impossible_ke_count",
           "category": "calendar_anachronism",
-          "pattern": "(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)时(?:九|十[一二]?)刻",
-          "remedy": "A shichen holds at most eight ke (chu 1-4 + zheng 1-4); nine or more ke is impossible. Fix the count or use chu/zheng notation."
+          "pattern": "(?:(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)时(?:九|十[一二]?)刻|(?:九|十[一二三四五六七八九]?|[二三四五六七八九]十[一二三四五六七八九]?)刻钟)",
+          "remedy": "A shichen holds at most eight ke (chu 1-4 + zheng 1-4); nine or more ke is impossible. Fix the count or use 时辰 / 柱香 / chu-zheng notation."
         }
       ],
       "clicheRules": [
@@ -127,8 +127,8 @@
         {
           "id": "reg_pseudo_classical_time",
           "category": "calendar_anachronism",
-          "pattern": "(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)时(?:[四五六七八九十]|十[一二])刻",
-          "remedy": "Use authentic 初/正 timekeeping or night watch (更鼓) terms."
+          "pattern": "(?:(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)时(?:[四五六七八九十]|十[一二])刻|(?:九|十[一二三四五六七八九]?|[二三四五六七八九]十[一二三四五六七八九]?)刻钟)",
+          "remedy": "Use authentic 初/正 timekeeping, night watch (更鼓), or 时辰/柱香 durations (at most 8 ke per shichen)."
         },
         {
           "id": "reg_xianxia_leak_in_history",

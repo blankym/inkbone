@@ -421,8 +421,12 @@ export function normalizeProseText(rawContent, options = {}) {
       continue;
     }
 
-    // 独立分隔线 --- 或 *** 直接移除
-    if (!commentOpen && (trimmed === "---" || /^\s*\*{3,}\s*$/.test(line))) {
+    // 独立分隔线 --- 或 *** 直接移除（仅剥离星号模式可保留分隔线）
+    if (
+      !options.preserveDividers &&
+      !commentOpen &&
+      (trimmed === "---" || /^\s*\*{3,}\s*$/.test(line))
+    ) {
       findings.push({
         line: lineNo,
         column: Math.max(1, line.search(/\S/) + 1),
@@ -460,23 +464,25 @@ export function normalizeProseText(rawContent, options = {}) {
       findings.push(...empRes.findings);
     }
 
-    let firstPass = true;
-    for (let iter = 0; iter < 5; iter += 1) {
-      const cState = getHtmlCommentSpans(line, commentBefore);
-      const prot = getProtectedSpans(line, cState.spans, whitelistLiterals);
-      const pRes = normalizePunctuationPass(
-        line,
-        lineNo,
-        prot,
-        options,
-        normCfg
-      );
-      if (firstPass) {
-        findings.push(...pRes.findings);
-        firstPass = false;
+    if (!options.skipPunctuation) {
+      let firstPass = true;
+      for (let iter = 0; iter < 5; iter += 1) {
+        const cState = getHtmlCommentSpans(line, commentBefore);
+        const prot = getProtectedSpans(line, cState.spans, whitelistLiterals);
+        const pRes = normalizePunctuationPass(
+          line,
+          lineNo,
+          prot,
+          options,
+          normCfg
+        );
+        if (firstPass) {
+          findings.push(...pRes.findings);
+          firstPass = false;
+        }
+        if (pRes.line === line) break;
+        line = pRes.line;
       }
-      if (pRes.line === line) break;
-      line = pRes.line;
     }
 
     outputLines.push(line + ending);
@@ -497,6 +503,21 @@ export function normalizeProseText(rawContent, options = {}) {
     findingCount: findings.length,
     findings,
   };
+}
+
+// 仅剥离受保护区间之外的 Markdown 加粗与斜体星号，用于边界与锚点匹配
+export function stripMarkdownEmphasis(
+  rawContent,
+  whitelistLiterals = [],
+  lingConfig = null
+) {
+  return normalizeProseText(rawContent, {
+    lingConfig,
+    whitelistLiterals,
+    stripMarkdownEmphasis: true,
+    skipPunctuation: true,
+    preserveDividers: true,
+  }).output;
 }
 
 // 批量检查或清洗目录下所有小说文件（check 模式只读不写回）

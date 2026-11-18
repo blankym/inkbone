@@ -59,6 +59,7 @@ export {
 export {
   normalizeProseText,
   normalizeFiles,
+  stripMarkdownEmphasis,
 } from "./normalizer.mjs";
 export { computeRuleStats, collectRuleFamilies, formatRuleStatsMarkdown } from "./rule-stats.mjs";
 export { scanSubjectContinuity, collectCharacterNames } from "./continuity.mjs";

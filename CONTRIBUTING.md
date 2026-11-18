@@ -13,7 +13,7 @@ InkBone 的规则分三层，改之前先想清楚你的规则属于哪一层：
 ## 开发
 
 ```bash
-npm test               # 44 项测试；其中一项回归需要作者的私有语料，没有会自动跳过
+npm test               # 45 项测试；其中一项回归需要作者的私有语料，没有会自动跳过
 npm run build:skill    # 改了 bin/src/configs/prompts/resources 之后重新打包 skills/inkbone
 npm run check:skill    # 提交前确认打包结果与源文件同步（CI 也查这项）
 ```

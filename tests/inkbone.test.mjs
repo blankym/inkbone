@@ -1355,3 +1355,47 @@ test("historical-court and wuxia-jianghu catch stale genre tropes and title anac
   const wuxiaCli = wuxia.violations.find((v) => v.code === "FORBIDDEN_AI_CLICHE");
   assert.ok(wuxiaCli && wuxiaCli.hits.filter((h) => h.id === "cliche_wuxia_inn_template").length >= 3);
 });
+
+// 压测补洞回归：全角作者注记、引号前置句号外漏、脱离时辰的非法刻数以及边界加粗拆词匹配
+test("audit catches bracket author notes, post-tagged outside periods, standalone ke durations, and bold-split boundaries", () => {
+  const s = fixtures.faultRegressionSample;
+
+  const metaHit = auditChapterText(s.metaBracketNote, { skipLengthGate: true });
+  assert.equal(metaHit.pass, false);
+  assert.ok(
+    metaHit.violations.some((v) => v.code === "ENGINEERING_META_LEAK" && v.hits.some((h) => h.level === "blocking"))
+  );
+
+  const jadeClean = auditChapterText(s.jadeSlipCleanNote, { skipLengthGate: true });
+  assert.equal(
+    jadeClean.violations.some((v) => v.code === "ENGINEERING_META_LEAK"),
+    false
+  );
+
+  const punctHit = auditChapterText(s.outsidePeriodPostTag, { skipLengthGate: true });
+  const punctViol = punctHit.violations.find((v) => v.code === "DIALOGUE_PUNCTUATION_ERROR");
+  assert.ok(punctViol && punctViol.count >= 2);
+
+  const termClean = auditChapterText(s.endQuotedTermClean, { skipLengthGate: true });
+  assert.equal(
+    termClean.violations.some((v) => v.code === "DIALOGUE_PUNCTUATION_ERROR"),
+    false
+  );
+
+  const keHist = auditChapterText(s.impossibleKeDuration, { genre: "historical-court", skipLengthGate: true });
+  assert.ok(
+    keHist.violations.some((v) => v.code === "REGISTER_COLLISION" && v.hits.some((h) => h.id === "reg_pseudo_classical_time"))
+  );
+  const keXian = auditChapterText(s.impossibleKeDuration, { genre: "classical-xianxia", skipLengthGate: true });
+  assert.ok(
+    keXian.violations.some((v) => v.code === "REGISTER_COLLISION" && v.hits.some((h) => h.id === "reg_impossible_ke_count"))
+  );
+
+  const boldAnchorRes = verifyChapterBoundaries(s.boundaryBoldAnchorText, s.boundaryLedger, 1);
+  assert.equal(boldAnchorRes.pass, true);
+  assert.deepEqual(boldAnchorRes.missingAnchors, []);
+
+  const boldSpoilerRes = verifyChapterBoundaries(s.boundaryBoldSpoilerText, s.boundaryLedger, 1);
+  assert.equal(boldSpoilerRes.pass, false);
+  assert.deepEqual(boldSpoilerRes.spoilerHits, s.boundaryLedger.chapters[0].futureForbiddenTerms);
+});
