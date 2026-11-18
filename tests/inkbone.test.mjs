@@ -30,6 +30,7 @@ import {
   normalizeFiles,
   scanSubjectContinuity,
   collectCharacterNames,
+  stripSpokenDialogue,
   computeRuleStats,
   buildBlindPack,
   writeBlindPack,
@@ -1222,4 +1223,116 @@ test("blind packs and review archives record which model produced each side", ()
   const stats = summarizeReviews([first.file, second.file]);
   assert.equal(stats.trends[0].reviewerChanged, true);
   assert.equal(stats.trends[0].writerChanged, false);
+});
+
+// 直角引号专名与真对白隔离：行内专名引号不打断主语连续性，真对白仍正常剥离
+test("corner-quote term highlights do not break subject continuity or dialogue drought detection", () => {
+  const ling = loadLinguisticsConfig();
+  const termOnly = stripSpokenDialogue(fixtures.cornerQuoteIsolationSample.termParagraph.split("\n")[0], ling);
+  assert.equal(termOnly.hasSpokenDialogue, false);
+
+  const spoken = stripSpokenDialogue(fixtures.cornerQuoteIsolationSample.spokenDialogueLine, ling);
+  assert.equal(spoken.hasSpokenDialogue, true);
+
+  const standalone = stripSpokenDialogue(fixtures.cornerQuoteIsolationSample.standaloneDialogueLine, ling);
+  assert.equal(standalone.isPureDialogue, true);
+
+  const audit = auditChapterText(fixtures.cornerQuoteIsolationSample.termParagraph, {
+    skipLengthGate: true,
+    ledger: fixtures.continuityLedger,
+  });
+  assert.equal(audit.violations.some((v) => v.code === "SUBJECT_AMBIGUITY"), true);
+});
+
+// 跨中文分卷排序：第一卷/第二卷/第三卷按章号而非字典序排列，跨卷衔接回声不漏检
+test("doctor sorts chapters numerically across Chinese volume directories and checks cross-volume echoes", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "inkbone-vol-order-"));
+  try {
+    const v1Dir = path.join(tmpDir, fixtures.volumeOrderSample.vol1);
+    const v2Dir = path.join(tmpDir, fixtures.volumeOrderSample.vol2);
+    const v3Dir = path.join(tmpDir, fixtures.volumeOrderSample.vol3);
+    fs.mkdirSync(v1Dir, { recursive: true });
+    fs.mkdirSync(v2Dir, { recursive: true });
+    fs.mkdirSync(v3Dir, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(v1Dir, fixtures.volumeOrderSample.ch1File),
+      `# ${fixtures.volumeOrderSample.ch1File}\n\n${fixtures.doctorChainSample.ch2EchoTail}`
+    );
+    fs.writeFileSync(
+      path.join(v2Dir, fixtures.volumeOrderSample.ch2File),
+      `# ${fixtures.volumeOrderSample.ch2File}\n\n${fixtures.doctorChainSample.ch2EchoHead}`
+    );
+    fs.writeFileSync(
+      path.join(v3Dir, fixtures.volumeOrderSample.ch3File),
+      `# ${fixtures.volumeOrderSample.ch3File}\n\n${fixtures.volumeOrderSample.ch3Body}`
+    );
+
+    const diag = diagnoseProject([tmpDir], {
+      genre: "classical-xianxia",
+      skipLengthGate: true,
+    });
+    assert.deepEqual(
+      diag.chapters.map((c) => c.detectedChapterNumber),
+      [1, 2, 3]
+    );
+    assert.ok(
+      diag.chapters[1].violations.some((v) => v.code === "PREVIOUS_ENDING_ECHO")
+    );
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+// 括号账本注记：兼容纯中文数字与较长前置说明
+test("ledgerBracketNote catches Chinese numerals and long prefixes", () => {
+  for (const sample of fixtures.chineseLedgerBracketSamples) {
+    const report = auditChapterText(sample, { skipLengthGate: true });
+    assert.equal(report.pass, false);
+    assert.ok(
+      report.violations.some((v) => v.code === "FORMATTING_OR_LEDGER_ARTIFACTS")
+    );
+  }
+});
+
+// normalizer 在同行先去加粗后，仍保留 HTML 注释与书级白名单里的斜体星号
+test("normalizer preserves italics inside HTML comments and whitelisted literals after bold stripping", () => {
+  const res = normalizeProseText(fixtures.normalizerProtectSample.raw, {
+    stripMarkdownEmphasis: true,
+    whitelistLiterals: [fixtures.normalizerProtectSample.whitelistLiteral],
+  });
+  assert.equal(res.output, fixtures.normalizerProtectSample.expected);
+});
+
+// profiler 跳过 Frontmatter/代码块/HTML 注释，尊重星号白名单，且词频疲劳豁免主角别名
+test("profiler skips frontmatter/comments/codeblocks, respects whitelist on asterisks, and auditor exempts protagonist aliases", () => {
+  const prof = profileText(fixtures.frontmatterSkipSample);
+  assert.equal(prof.metrics.totalHan, 8);
+  assert.equal(prof.metrics.forbiddenClicheCount, 0);
+
+  const wlReport = auditChapterText(fixtures.normalizerSample.whitelistLiteral, {
+    skipLengthGate: true,
+    projectRules: compileProjectRules({
+      whitelistLiterals: [fixtures.normalizerSample.whitelistLiteral],
+    }),
+  });
+  assert.equal(
+    wlReport.violations.some((v) => v.code === "FORMATTING_OR_LEDGER_ARTIFACTS"),
+    false
+  );
+
+  const aliasAudit = auditChapterText(fixtures.aliasExemptSample.text, {
+    presetName: "qimao-crimson",
+    skipLengthGate: true,
+    ledger: {
+      protagonist: {
+        name: fixtures.aliasExemptSample.protagonistName,
+        alias: fixtures.aliasExemptSample.alias,
+      },
+    },
+  });
+  assert.equal(
+    aliasAudit.violations.some((v) => v.code === "CHAPTER_TERM_FATIGUE"),
+    false
+  );
 });

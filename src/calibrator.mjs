@@ -37,7 +37,7 @@ function quantile(sorted, q) {
 export function collectTextFiles(inputs) {
   const files = [];
   const walkDir = (dirPath) => {
-    for (const entry of fs.readdirSync(dirPath, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    for (const entry of fs.readdirSync(dirPath, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))) {
       if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
       if (entry.isDirectory() && entry.name.startsWith("_")) continue;
       const full = path.join(dirPath, entry.name);

@@ -224,6 +224,17 @@ export function loadLinguisticsConfig(customPath = null) {
       sentenceDelimiter: new RegExp(raw.regex.sentenceDelimiter, "u"),
       quoteCharsGlobal: new RegExp(raw.regex.quoteChars, "gu"),
       dialogueSpanGlobal: new RegExp(raw.regex.dialogueSpan, "gu"),
+      cornerQuoteDialogue: raw.regex.cornerQuoteDialogue
+        ? {
+            cornerChars: new Set(raw.regex.cornerQuoteDialogue.cornerChars || []),
+            innerPunctRegex: raw.regex.cornerQuoteDialogue.innerPunctPattern
+              ? new RegExp(raw.regex.cornerQuoteDialogue.innerPunctPattern, "u")
+              : null,
+            leadSpeechRegex: raw.regex.cornerQuoteDialogue.leadSpeechPattern
+              ? new RegExp(raw.regex.cornerQuoteDialogue.leadSpeechPattern, "u")
+              : null,
+          }
+        : null,
       quoteMaskRegexes: (raw.regex.quoteMaskPatterns || []).map(
         (p) => new RegExp(p, "gu")
       ),

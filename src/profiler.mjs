@@ -1,8 +1,10 @@
 import { loadLinguisticsConfig } from "./config-loader.mjs";
 import {
+  extractBodyParagraphLines,
   maskWhitelistLiterals,
   maskQuotedText,
   scanParagraphRuleSet,
+  stripSpokenDialogue,
 } from "./rule-engine.mjs";
 
 // 计算数值数组的算术均值
@@ -47,7 +49,7 @@ function computeMattr(tokens, windowSize) {
 }
 
 // 扫描单个自然段内的专有名词、书名号词条及双字实词局部机械复读现象
-function scanParagraphTermStuffing(para, segmenter, cfg) {
+function scanParagraphTermStuffing(para, segmenter, cfg, whitelistLiterals = []) {
   const {
     hanCharGlobal,
     bookTitleTermGlobal,
@@ -55,17 +57,19 @@ function scanParagraphTermStuffing(para, segmenter, cfg) {
     quantifierNoiseFragment,
     twoCharStopwordSet,
   } = cfg.compiledRegex;
+  const wlMaskChar = cfg.tokens.whitelistMaskChar || " ";
+  const scanText = maskWhitelistLiterals(para.text, whitelistLiterals, wlMaskChar);
 
   const bookTitleCounts = new Map();
   bookTitleTermGlobal.lastIndex = 0;
   let titleMatch;
-  while ((titleMatch = bookTitleTermGlobal.exec(para.text)) !== null) {
+  while ((titleMatch = bookTitleTermGlobal.exec(scanText)) !== null) {
     const term = titleMatch[0];
     bookTitleCounts.set(term, (bookTitleCounts.get(term) || 0) + 1);
   }
 
   // 切分语法虚词后的连续实词汉字块，零词典提取3-4字复合专有名词频次
-  const chunks = para.text
+  const chunks = scanText
     .split(clauseSplitterForNgram)
     .filter((chunk) => chunk.length >= 3);
 
@@ -105,7 +109,7 @@ function scanParagraphTermStuffing(para, segmenter, cfg) {
 
   // 统计同一自然段内双字实词的出现频次
   const twoCharCounts = new Map();
-  for (const seg of segmenter.segment(para.text)) {
+  for (const seg of segmenter.segment(scanText)) {
     if (!seg.isWordLike) continue;
     if (
       countHan(seg.segment, hanCharGlobal) === 2 &&
@@ -141,7 +145,6 @@ export function profileText(rawContent, customLingConfig = null, ruleOverrides =
     hanCharGlobal,
     sentenceDelimiter,
     quoteCharsGlobal,
-    dialogueSpanGlobal,
     nonDialogueRhetoricalQuestion,
     nestedDeChainGlobal,
     ledgerBracketNoteGlobal,
@@ -161,28 +164,8 @@ export function profileText(rawContent, customLingConfig = null, ruleOverrides =
   const unclosedQuoteStart = cfg.compiledRegex.unclosedQuoteStart || null;
   const visibleCharRegex = cfg.compiledRegex.visibleCharGlobal || hanCharGlobal;
 
-  const rawLines = rawContent.split(/\r?\n/u);
-  const paragraphs = [];
-
-  // 提取有效正文自然段并记录原始行号
-  rawLines.forEach((line, idx) => {
-    const trimmed = line.trim();
-    if (
-      !trimmed ||
-      trimmed.startsWith(cfg.tokens.markdownHeadingPrefix) ||
-      trimmed === cfg.tokens.markdownRule
-    ) {
-      return;
-    }
-    const hanLen = countHan(trimmed, hanCharGlobal);
-    if (hanLen > 0) {
-      paragraphs.push({
-        line: idx + 1,
-        text: trimmed,
-        hanLen,
-      });
-    }
-  });
+  // 提取有效正文自然段并跳过 Frontmatter、代码块与 HTML 注释
+  const paragraphs = extractBodyParagraphLines(rawContent, cfg);
 
   const fullBodyText = paragraphs.map((p) => p.text).join("\n");
   const totalHan = paragraphs.reduce((acc, p) => acc + p.hanLen, 0);
@@ -236,7 +219,12 @@ export function profileText(rawContent, customLingConfig = null, ruleOverrides =
 
   // 遍历每个自然段，切分句子并扫描微观句法与禁用模式
   for (const para of paragraphs) {
-    const stuffingRecord = scanParagraphTermStuffing(para, segmenter, cfg);
+    const stuffingRecord = scanParagraphTermStuffing(
+      para,
+      segmenter,
+      cfg,
+      whitelistLiterals
+    );
     if (
       stuffingRecord.bookTitleRepeats.length > 0 ||
       stuffingRecord.compoundRepeats.length > 0 ||
@@ -245,10 +233,10 @@ export function profileText(rawContent, customLingConfig = null, ruleOverrides =
       paragraphStuffingScan.push(stuffingRecord);
     }
 
-    const strippedDialogue = para.text.replace(dialogueSpanGlobal, "");
-    const isPureDialoguePara = strippedDialogue.trim().length === 0;
-    const hasSpokenDialogue =
-      para.text.length - strippedDialogue.length >= 8;
+    const dialogueInfo = stripSpokenDialogue(para.text, cfg);
+    const strippedDialogue = dialogueInfo.narration;
+    const isPureDialoguePara = dialogueInfo.isPureDialogue;
+    const hasSpokenDialogue = dialogueInfo.spokenChars >= 8;
 
     // 检测连续多个自然段以第三人称代词起头的英文翻译腔句式（触发AIGC高分的核心隐患）
     if (pronounHeadLine && !isPureDialoguePara) {
@@ -336,23 +324,23 @@ export function profileText(rawContent, customLingConfig = null, ruleOverrides =
       });
     }
 
-    // 检查嵌套定语链（X的Y的Z）
+    // 检查嵌套定语链（X的Y的Z，同样跳过对话引号与书级白名单）
     nestedDeChainGlobal.lastIndex = 0;
     let nestedMatch;
-    while ((nestedMatch = nestedDeChainGlobal.exec(para.text)) !== null) {
+    while ((nestedMatch = nestedDeChainGlobal.exec(emDashScanText)) !== null) {
       nestedDeHits.push({
         line: para.line,
         matched: nestedMatch[0],
       });
     }
 
-    // 检查账本括号出戏注记与残留星号
+    // 检查账本括号出戏注记与残留星号（尊重书级白名单）
     ledgerBracketNoteGlobal.lastIndex = 0;
     let noteMatch;
-    while ((noteMatch = ledgerBracketNoteGlobal.exec(para.text)) !== null) {
+    while ((noteMatch = ledgerBracketNoteGlobal.exec(wlParaText)) !== null) {
       bracketNoteHits.push({ line: para.line, matched: noteMatch[0] });
     }
-    if (para.text.includes(cfg.tokens.asterisk)) {
+    if (wlParaText.includes(cfg.tokens.asterisk)) {
       asteriskHits.push({ line: para.line, preview: para.text.slice(0, 40) });
     }
 
@@ -364,7 +352,7 @@ export function profileText(rawContent, customLingConfig = null, ruleOverrides =
       .filter((s) => countHan(s, hanCharGlobal) > 0);
 
     paraSentenceCounts.push(rawSents.length);
-    const isDialogueOnlyPara = strippedDialogue.trim().length === 0;
+    const isDialogueOnlyPara = isPureDialoguePara;
     if (rawSents.length === 1 && !isDialogueOnlyPara && para.hanLen > 14) {
       currentSingleSentStreak += 1;
       if (currentSingleSentStreak > maxSingleSentParaStreak) {

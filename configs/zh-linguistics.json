@@ -21,7 +21,15 @@
     "visibleChar": "\\p{Script=Han}|[A-Za-z0-9\\uFF21-\\uFF5A]",
     "sentenceDelimiter": "[。！？!?…]+",
     "quoteChars": "[“”‘’「」『』\"']",
-    "dialogueSpan": "[“「『][^”」』]*[”」』]",
+    "dialogueSpan": "“[^”\\r\\n]*”|「[^」\\r\\n]*」|『[^』\\r\\n]*』",
+    "cornerQuoteDialogue": {
+      "cornerChars": [
+        "「",
+        "『"
+      ],
+      "innerPunctPattern": "[，。！？；：…—,.!?]",
+      "leadSpeechPattern": "(?:说|道|问|答|喊|叫|喝|叹|笑|开口|低声|沉声|冷笑|笑道|叹道|喝道)?[：:]\\s*$"
+    },
     "quoteMaskPatterns": [
       "「[^」\\n\\r]*」",
       "『[^』\\n\\r]*』",
@@ -34,7 +42,7 @@
     "unclosedQuoteStart": "[“「『\"]",
     "nonDialogueRhetoricalQuestion": "[^“「『”」』\\r\\n]{4,}？$",
     "nestedDeChain": "的[^，。！？；：\\r\\n]{1,8}的",
-    "ledgerBracketNote": "（[^）]{0,12}(?:余|剩余|共计|当前|消耗)[^）]{0,12}\\d+[^）]*）",
+    "ledgerBracketNote": "（[^）\\r\\n]{0,36}(?:尚?余|剩余|余额|共计|合计|当前|消耗|耗去|净赚|另存|减)[^）\\r\\n]{0,12}[零〇一二两三四五六七八九十百千万\\d]+[^）\\r\\n]*）",
     "bookTitleTerm": "《[^》]{2,14}》",
     "pronounHeadLine": "^\\s*(?:他|她|它)(?:们)?[^“”「」『』]{2,}",
     "clauseSplitterForNgram": "[^\\p{Script=Han}]|[的了着过在把被让给往从向到和与跟同或而却便就都也还又只才更最很太不没是我你他她它这那哪]",
@@ -743,15 +751,15 @@
     "requiredFacets": [
       {
         "id": "protagonist_goal_or_conflict",
-        "pattern": "主角目标|关键选择|核心冲突|局势升级|核心事件|核心动作|分幕节拍|Beat"
+        "pattern": "主角目标|核心目标|设计目标|关键选择|核心冲突|局势升级|核心事件|核心动作|分幕节拍|Beat"
       },
       {
         "id": "reader_payoff_or_emotion",
-        "pattern": "目标情绪|爽点|利害|标尺|代价|压迫|信息分配"
+        "pattern": "目标情绪|爽点|爽感|利害|标尺|代价|压迫|信息分配"
       },
       {
         "id": "hook_or_spoiler_fence",
-        "pattern": "章末钩子|早出硬切|不能说破|禁止提前|悬念|钩子"
+        "pattern": "章末钩子|早出硬切|不能说破|禁止提前|悬念|钩子|倒计时"
       }
     ]
   },

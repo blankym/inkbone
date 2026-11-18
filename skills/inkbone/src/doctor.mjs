@@ -98,27 +98,39 @@ export function diagnoseProject(targetPaths, options = {}) {
 
   const lingConfig = options.linguisticsConfig || loadLinguisticsConfig();
   const outlineFiles = collectTextFiles([].concat(options.outlinePaths || []));
-  const chapterTexts = chapterFiles.map((f) => fs.readFileSync(f, "utf8"));
-  const outlineTexts = outlineFiles.map((f) => fs.readFileSync(f, "utf8"));
-  const chapInfos = chapterFiles.map((filePath, idx) =>
-    resolveDoctorChapterInfo(
+  const rawEntries = chapterFiles.map((filePath, idx) => {
+    const text = fs.readFileSync(filePath, "utf8");
+    const info = resolveDoctorChapterInfo(
       filePath,
-      chapterTexts[idx],
+      text,
       options.ledger,
       lingConfig
-    )
-  );
+    );
+    return { idx, filePath, text, info };
+  });
+  // 按解析出的章节号排序，避免中文卷名（如第一卷/第三卷/第二卷）字典序打乱相邻章衔接
+  rawEntries.sort((a, b) => {
+    const numA = a.info.detectedNumber ?? Number.MAX_SAFE_INTEGER;
+    const numB = b.info.detectedNumber ?? Number.MAX_SAFE_INTEGER;
+    return numA - numB || a.idx - b.idx;
+  });
+  const sortedFiles = rawEntries.map((e) => e.filePath);
+  const chapterTexts = rawEntries.map((e) => e.text);
+  const chapInfos = rawEntries.map((e) => e.info);
+  const outlineTexts = outlineFiles.map((f) => fs.readFileSync(f, "utf8"));
 
-  const inferred = inferGenreFromTexts(
-    [...outlineTexts, ...chapterTexts.slice(0, 5)],
-    options.genresPath
-  );
+  const inferred = options.genre
+    ? { genreId: options.genre, matchedSignals: [] }
+    : inferGenreFromTexts(
+        [...outlineTexts, ...chapterTexts.slice(0, 5)],
+        options.genresPath
+      );
   const genrePack = options.genre
     ? resolveGenre(options.genre, options.genresPath)
     : resolveGenre(inferred.genreId, options.genresPath);
 
   const totals = {
-    chaptersScanned: chapterFiles.length,
+    chaptersScanned: sortedFiles.length,
     hardErrors: 0,
     registerCollisions: 0,
     narrativeFillers: 0,
@@ -131,11 +143,11 @@ export function diagnoseProject(targetPaths, options = {}) {
     totalWarnings: 0,
   };
 
-  const chapters = chapterFiles.map((filePath, idx) => {
+  const chapters = sortedFiles.map((filePath, idx) => {
     const raw = chapterTexts[idx];
     const info = chapInfos[idx];
     const chapNum =
-      chapterFiles.length === 1 && options.chapterNumber
+      sortedFiles.length === 1 && options.chapterNumber
         ? Number(options.chapterNumber)
         : info.ledgerChapterNumber;
     const prevInfo = idx > 0 ? chapInfos[idx - 1] : null;

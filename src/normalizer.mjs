@@ -142,7 +142,7 @@ function insideSpans(start, end, spans) {
 }
 
 // 在未受保护区间剥离成对的 Markdown 加粗（**...**）或斜体（*...*）星号
-function stripEmphasisInLine(line, lineNo, protectedSpans) {
+function stripEmphasisInLine(line, lineNo, commentBefore, whitelistLiterals) {
   let current = line;
   const findings = [];
   const boldRe = /\*\*([^*\r\n]+)\*\*/g;
@@ -173,17 +173,20 @@ function stripEmphasisInLine(line, lineNo, protectedSpans) {
 
   let firstPass = true;
   for (let iter = 0; iter < 5; iter += 1) {
-    const spansNow =
-      iter === 0
-        ? protectedSpans
-        : getProtectedSpans(current, [], []);
-    let next = stripOnePattern(current, boldRe, spansNow, firstPass);
-    next = stripOnePattern(
-      next,
-      italicRe,
-      iter === 0 ? getProtectedSpans(next, [], []) : [],
-      firstPass
+    const boldComments = getHtmlCommentSpans(current, commentBefore);
+    const boldProtected = getProtectedSpans(
+      current,
+      boldComments.spans,
+      whitelistLiterals
     );
+    let next = stripOnePattern(current, boldRe, boldProtected, firstPass);
+    const italicComments = getHtmlCommentSpans(next, commentBefore);
+    const italicProtected = getProtectedSpans(
+      next,
+      italicComments.spans,
+      whitelistLiterals
+    );
+    next = stripOnePattern(next, italicRe, italicProtected, firstPass);
     firstPass = false;
     if (next === current) break;
     current = next;
@@ -447,12 +450,12 @@ export function normalizeProseText(rawContent, options = {}) {
     }
 
     if (options.stripMarkdownEmphasis) {
-      const protectedInit = getProtectedSpans(
+      const empRes = stripEmphasisInLine(
         line,
-        initialComments.spans,
+        lineNo,
+        commentBefore,
         whitelistLiterals
       );
-      const empRes = stripEmphasisInLine(line, lineNo, protectedInit);
       line = empRes.line;
       findings.push(...empRes.findings);
     }

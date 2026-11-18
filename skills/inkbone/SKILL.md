@@ -84,7 +84,7 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
    node "$SKILL_DIR/bin/inkbone.mjs" normalize <章节或目录> [--check] [--strip-bold]
    node "$SKILL_DIR/bin/inkbone.mjs" check-outline <细纲文件或目录>
    ```
-   `normalize --strip-bold` 会去掉误留的 Markdown 加粗星号和 `---` 分隔线，白名单里的内容和行内代码不动。`check-outline` 在动笔前检查细纲是否缺少关键要素，或者还留着 `[待补充]`。
+   `normalize --strip-bold` 会去掉误留的 Markdown 加粗星号和 `---` 分隔线，白名单里的内容和行内代码不动。`check-outline` 在动笔前检查单章 Stage 1 节拍细纲是否缺少关键要素，或者还留着 `[待补充]`。
 1. **本地检查**：
    ```bash
    node "$SKILL_DIR/bin/inkbone.mjs" audit <chapter.md> --genre <genreId> [--ledger <ledger.json> --chapter <N> --prev <上一章.md>] [--outline-chapter <细纲.md>]

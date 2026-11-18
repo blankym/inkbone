@@ -73,6 +73,82 @@ export function maskQuotedText(
   return out;
 }
 
+// 从单段文本中剥离真正的说话对白（区分弯双引号对白与直角引号书名/器物强调）
+export function stripSpokenDialogue(text, lingConfig, replacement = "") {
+  const src = String(text || "");
+  const spanRe = lingConfig?.compiledRegex?.dialogueSpanGlobal;
+  if (!src || !spanRe) {
+    return {
+      narration: src,
+      hasSpokenDialogue: false,
+      spokenChars: 0,
+      isPureDialogue: false,
+    };
+  }
+  const cornerCfg = lingConfig.compiledRegex.cornerQuoteDialogue || null;
+  spanRe.lastIndex = 0;
+  const spans = [];
+  let match;
+  while ((match = spanRe.exec(src)) !== null) {
+    if (match[0].length === 0) {
+      spanRe.lastIndex += 1;
+      continue;
+    }
+    spans.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      raw: match[0],
+    });
+  }
+  if (spans.length === 0) {
+    return {
+      narration: src,
+      hasSpokenDialogue: false,
+      spokenChars: 0,
+      isPureDialogue: false,
+    };
+  }
+
+  // 整段只由引号片段构成时，即使使用直角引号也按纯对白段处理
+  let nonSpanText = "";
+  let pos = 0;
+  for (const sp of spans) {
+    nonSpanText += src.slice(pos, sp.start);
+    pos = sp.end;
+  }
+  nonSpanText += src.slice(pos);
+  const wholeLineQuoted = nonSpanText.trim().length === 0;
+
+  let out = "";
+  let cursor = 0;
+  let spokenChars = 0;
+  let hasSpokenDialogue = false;
+  for (const sp of spans) {
+    const openChar = sp.raw[0];
+    let isDialogue = true;
+    if (cornerCfg && cornerCfg.cornerChars.has(openChar) && !wholeLineQuoted) {
+      const inner = sp.raw.slice(1, -1);
+      const before = src.slice(Math.max(0, sp.start - 8), sp.start);
+      const hasPunct = cornerCfg.innerPunctRegex
+        ? cornerCfg.innerPunctRegex.test(inner)
+        : false;
+      const hasLead = cornerCfg.leadSpeechRegex
+        ? cornerCfg.leadSpeechRegex.test(before)
+        : false;
+      isDialogue = hasPunct || hasLead;
+    }
+    if (isDialogue) {
+      out += src.slice(cursor, sp.start) + replacement;
+      cursor = sp.end;
+      spokenChars += sp.raw.length;
+      hasSpokenDialogue = true;
+    }
+  }
+  out += src.slice(cursor);
+  const isPureDialogue = hasSpokenDialogue && out.trim().length === 0;
+  return { narration: out, hasSpokenDialogue, spokenChars, isPureDialogue };
+}
+
 // 同一段落内被更长命中完全包住的短命中只保留最长的一条；同长撞车按 project > genre > universal 保留
 export function dedupContainedHits(hits) {
   return hits.filter((a) => {
@@ -237,7 +313,7 @@ export function evaluateHitsWithDensity(
   for (const h of hits) {
     const rule = ruleMap.get(h.id) || {};
     const ruleCount = byRule.get(h.id) || 0;
-    const minHits = rule.minHits || 1;
+    const minHits = rule.minHits || rule.advisoryMinHits || 1;
     const perKiloMin = rule.perKilo || 0;
     const actualPerKilo = totalHan > 0 ? (ruleCount / totalHan) * 1000 : 0;
 
@@ -895,9 +971,9 @@ function stripHtmlCommentsFromLines(rawLines) {
   return result;
 }
 
-// 跳过 YAML Frontmatter 与代码块围栏后的有效正文行
+// 跳过 YAML Frontmatter、HTML 注释、代码块围栏、标题与分隔线后的有效正文行
 function extractScannableBodyLines(rawContent, dgCfg, lingConfig) {
-  const rawLines = rawContent.split(/\r?\n/u);
+  const rawLines = String(rawContent || "").split(/\r?\n/u);
   const cleaned = stripHtmlCommentsFromLines(rawLines);
   const body = [];
   let fenceChar = null;
@@ -906,7 +982,8 @@ function extractScannableBodyLines(rawContent, dgCfg, lingConfig) {
     cleaned[0].trimmed === "---" &&
     cleaned.slice(1, 30).some((l) => /^[A-Za-z0-9_-]+:\s*/u.test(l.trimmed));
 
-  const headingPrefix = lingConfig.tokens.markdownHeadingPrefix || "#";
+  const headingPrefix = lingConfig.tokens?.markdownHeadingPrefix || "#";
+  const markdownRule = lingConfig.tokens?.markdownRule || "---";
   for (let i = 0; i < cleaned.length; i += 1) {
     const item = cleaned[i];
     if (inFrontMatter) {
@@ -924,10 +1001,32 @@ function extractScannableBodyLines(rawContent, dgCfg, lingConfig) {
     }
     if (!item.trimmed) continue;
     if (item.trimmed.startsWith(headingPrefix)) continue;
-    if (dgCfg.dividerRegex.test(item.trimmed)) continue;
+    if (item.trimmed === markdownRule) continue;
+    if (dgCfg?.dividerRegex && dgCfg.dividerRegex.test(item.trimmed)) continue;
     body.push(item);
   }
   return body;
+}
+
+// 提取用于语言学画像与规则扫描的含汉字正文自然段
+export function extractBodyParagraphLines(rawContent, customLingConfig = null) {
+  const cfg = customLingConfig || loadLinguisticsConfig();
+  const dgCfg = cfg.compiledRegex?.degeneration || null;
+  const hanRegex = cfg.compiledRegex.hanCharGlobal;
+  const bodyLines = extractScannableBodyLines(rawContent, dgCfg, cfg);
+  const paragraphs = [];
+  for (const item of bodyLines) {
+    const matches = item.trimmed.match(hanRegex);
+    const hanLen = matches ? matches.length : 0;
+    if (hanLen > 0) {
+      paragraphs.push({
+        line: item.line,
+        text: item.trimmed,
+        hanLen,
+      });
+    }
+  }
+  return paragraphs;
 }
 
 // 运行模型退化与工程词泄漏检测（复读、截断、AI 自指/占位符、Tier1/Tier2 工程词）

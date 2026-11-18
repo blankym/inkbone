@@ -1,5 +1,6 @@
 // 主语连续性检查：找出省略主语后可能被读成别人动作的句子，以及连续多段同一种起头方式
 // 只在提供了人物名单（台账 characterNames / protagonist）时运行；所有中文词表都在 zh-linguistics.json 的 subjectContinuity 里
+import { stripSpokenDialogue } from "./rule-engine.mjs";
 
 // 把配置里的词表编译成按长度降序的数组，保证长名字优先匹配
 function sortByLengthDesc(list) {
@@ -81,7 +82,6 @@ export function scanSubjectContinuity(paragraphs, lingConfig, options = {}) {
     maxDelayedClauses: sc.maxDelayedClauses || 4,
   };
   const sentenceSplitter = new RegExp(`(?<=[${sc.sentenceEndChars || "。！？!?…"}])`, "u");
-  const dialogueSpan = lingConfig.compiledRegex.dialogueSpanGlobal;
   const maxSame = sc.maxSameOpening || 3;
   const streakKinds = new Set(sc.streakKinds || ["delayed", "subjectless", "protagonist"]);
 
@@ -104,10 +104,9 @@ export function scanSubjectContinuity(paragraphs, lingConfig, options = {}) {
   };
 
   paragraphs.forEach((para, paraIdx) => {
-    dialogueSpan.lastIndex = 0;
-    const hasDialogue = dialogueSpan.test(para.text);
-    dialogueSpan.lastIndex = 0;
-    const narration = para.text.replace(dialogueSpan, " ").trim();
+    const dialogueInfo = stripSpokenDialogue(para.text, lingConfig, " ");
+    const hasDialogue = dialogueInfo.hasSpokenDialogue;
+    const narration = dialogueInfo.narration.trim();
     if (!/\p{Script=Han}/u.test(narration)) {
       // 纯对白段：重置主语链，不打断起头方式的连击计数
       prevActor = null;

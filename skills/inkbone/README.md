@@ -10,7 +10,7 @@
 [![依赖: 0](https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-0-orange.svg)](package.json)
 [![版本: 1.1](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.1-lightgrey.svg)](package.json)
 
-[English](README.en.md) · 9 个题材包 · 17 条命令 · 20+ 项语体指纹指标 · 38 项测试
+[English](README.en.md) · 9 个题材包 · 19 条命令 · 20+ 项语体指纹指标 · 43 项测试
 
 ## 30 秒看到效果
 
@@ -133,7 +133,7 @@ warning 只提示不阻塞；error（格式残留、台账违规、退化、字�
 | `import-ledger` | 扫描已有章节，自动生成/合并台账 |
 | `packet` | 给下一章装配上下文，没到时候的真相自动隐去 |
 | `normalize` | 清理星号、分隔线、不规范省略号（零 token） |
-| `check-outline` | 查细纲占位符和要素缺失 |
+| `check-outline` | 查单章节拍细纲（Stage 1）的占位符和要素缺失 |
 | `audit` | 查单章 |
 | `doctor` | 递归查整个目录，自动识别题材和项目配置 |
 | `verify-review` | 核对审读 JSON 的引文是否真在正文里 |
@@ -169,13 +169,13 @@ prompts/           7 个阶段提示词（00–06）
 resources/         正反例、微技法、9 份题材手册、盲读说明
 benchmarks/        评估种子 + 第一章各版本检测记录（正文不公开）
 skills/inkbone/    打包好的 Skill（脚本生成，勿手改）
-tests/             38 项测试
+tests/             43 项测试
 ```
 
 ## 开发
 
 ```bash
-npm test               # 38 项测试（含 skill 同步检查；一项回归需私有语料，公开仓库自动跳过）
+npm test               # 43 项测试（含 skill 同步检查；一项回归需私有语料，公开仓库自动跳过）
 npm run build:skill    # 改了 bin/src/configs/prompts/resources 后重新打包
 npm run check:skill    # 只检查同步状态
 ```

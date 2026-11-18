@@ -13,6 +13,8 @@ export {
 export {
   maskWhitelistLiterals,
   maskQuotedText,
+  stripSpokenDialogue,
+  extractBodyParagraphLines,
   runDensityTics,
   runDegenerationChecks,
   checkOutlineCopy,

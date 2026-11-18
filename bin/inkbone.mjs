@@ -161,7 +161,7 @@ function printHelp() {
     "                                                    Scan existing chapters and merge non-destructively into ledger",
     "  inkbone normalize <file|dir>... [--check] [--strip-bold] [--fix-emdash] [--project <dir|novel.json>] [--no-project]",
     "                                                    Deterministic formatting & pause-punctuation cleaner (zero LLM tokens)",
-    "  inkbone check-outline <file|dir>...               Check chapter outlines for placeholders & required dramatic facets",
+    "  inkbone check-outline <file|dir>...               Check Stage 1 beat outlines for placeholders & required dramatic facets",
     "  inkbone verify-review <chapter.md> <review.json>  Verify verbatim quotes in logic & cold-reader reviews",
     "  inkbone review-save <chapter.md> <review.json> --kind <logic|reader> [--model <reviewer>] [--writer-model <writer>] [--dir <dir>] [--force]",
     "                                                    Verify then archive a review with the chapter hash (default <chapter dir>/_reviews)",

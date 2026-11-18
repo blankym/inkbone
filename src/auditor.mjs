@@ -279,12 +279,9 @@ export function auditChapterText(rawContent, options = {}) {
     });
   }
 
-  // 2e. 校验全章级口癖短语与器物复合词听觉疲劳复读（豁免台账角色人名）
+  // 2e. 校验全章级口癖短语与器物复合词听觉疲劳复读（豁免台账角色人名与别名）
   if (gates.maxChapterFourGramRepeat || gates.maxChapterThreeGramRepeat) {
-    const exemptNames = new Set(options.ledger?.characterNames || []);
-    if (options.ledger?.protagonist?.name) {
-      exemptNames.add(options.ledger.protagonist.name);
-    }
+    const exemptNames = new Set(characterNames);
     const isNameAdjacent = (term) => {
       for (const name of exemptNames) {
         if (name && (term.includes(name) || name.includes(term))) {

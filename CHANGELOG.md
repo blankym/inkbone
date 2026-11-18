@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### 修复与改进
+- 修复 `dialogueSpan` 混淆直角引号专名（`「...」`/`『...』`）与说话对白的问题，避免打断 `SUBJECT_AMBIGUITY` 主语追踪或误重置 `EXPOSITION_DIALOGUE_DROUGHT`
+- 修复 `doctor` 在中文分卷目录（第一卷/第二卷/第三卷）下按字典序乱序导致跨卷衔接回声漏检的问题，`collectTextFiles` 同步改用自然数字序
+- 扩展 `ledgerBracketNote` 以捕获纯中文数字和长前缀的括号算式注记
+- 修复 `normalizer` 剥离斜体时丢失 HTML 注释与书级白名单保护区间的漏洞
+- 统一 `profiler` 的 Frontmatter/代码块/注释跳过逻辑、白名单星号保护以及 `CHAPTER_TERM_FATIGUE` 主角别名豁免；启用 `advisoryMinHits` 规则门槛配置
+- 修正 README 命令数与测试数说明，补充 `check-outline` 适用范围提示并同步打包 Skill 目录
+
 ## 1.1.0 — 2026-11
 
 ### 新增

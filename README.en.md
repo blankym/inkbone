@@ -10,7 +10,7 @@ The model writes; InkBone checks. Does chapter 40 still honor a rule established
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-orange.svg)](package.json)
 [![Version: 1.1](https://img.shields.io/badge/version-1.1-lightgrey.svg)](package.json)
 
-[中文](README.md) · 9 genre packs · 17 commands · 20+ style-fingerprint metrics · 38 tests
+[中文](README.md) · 9 genre packs · 19 commands · 20+ style-fingerprint metrics · 43 tests
 
 > **Note:** The rule packs, prompts, and CLI output are in Chinese: the tool exists to write and revise Chinese novels. This README explains the architecture and workflow; you'll want Chinese reading ability (or an agent that has it) to use it.
 
@@ -133,7 +133,7 @@ The score doesn't measure readability; chasing it mostly measures noise. So InkB
 | `import-ledger` | scan existing chapters, build/merge a ledger |
 | `packet` | assemble next-chapter context; un-revealed truths stay hidden |
 | `normalize` | strip asterisks, separators, malformed ellipses (zero tokens) |
-| `check-outline` | outline placeholders & missing beats |
+| `check-outline` | Stage 1 chapter beat-outline placeholders & missing beats |
 | `audit` | check one chapter |
 | `doctor` | recursive directory checkup, auto-detects genre & project config |
 | `verify-review` | validate review quotes against the text |
@@ -163,7 +163,7 @@ Full flags: `node bin/inkbone.mjs --help`.
 ## Development
 
 ```bash
-npm test               # 38 tests (one regression needs a private corpus; auto-skips in the public repo)
+npm test               # 43 tests (one regression needs a private corpus; auto-skips in the public repo)
 npm run build:skill    # repackage skills/inkbone after touching bin/src/configs/prompts/resources
 npm run check:skill    # sync check only
 ```
