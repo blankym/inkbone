@@ -8,7 +8,8 @@
 - 扩展 `ledgerBracketNote` 以捕获纯中文数字和长前缀的括号算式注记
 - 修复 `normalizer` 剥离斜体时丢失 HTML 注释与书级白名单保护区间的漏洞
 - 统一 `profiler` 的 Frontmatter/代码块/注释跳过逻辑、白名单星号保护以及 `CHAPTER_TERM_FATIGUE` 主角别名豁免；启用 `advisoryMinHits` 规则门槛配置
-- 修正 README 命令数与测试数说明，补充 `check-outline` 适用范围提示并同步打包 Skill 目录
+- 扩充 `micro_techniques.md` 伏笔与换地图规则，补强历史权谋、传统武侠、悬疑推理、科幻废土剧本卡及历史称谓/武侠模板检测规则
+- 重写中英文 README（精简聚焦上手演示、19 条命令与 44 项测试，补齐写作方法库说明）并同步打包 Skill 目录
 
 ## 1.1.0 — 2026-11
 

@@ -147,6 +147,13 @@
           "category": "anachronism",
           "pattern": "蕾丝(?:花边)?|雪纺|百褶超短裙",
           "remedy": "Replace modern textile anachronisms with period-authentic fabrics."
+        },
+        {
+          "id": "reg_historical_title_anachronism",
+          "category": "title_anachronism",
+          "scope": "all",
+          "pattern": "皇后(?:殿下|陛下)",
+          "remedy": "An empress is addressed as 皇后 or 娘娘 in Chinese historical settings, not 殿下 or 陛下."
         }
       ],
       "clicheRules": [
@@ -155,6 +162,11 @@
           "category": "anachronism",
           "scope": "all",
           "pattern": "拉胯|赋能|逻辑闭环|降维打击|心态崩了|秒懂|颗粒度|底层逻辑"
+        },
+        {
+          "id": "cliche_historical_overlord",
+          "category": "stale_cliche",
+          "pattern": "虎躯一震|娇躯一颤|王霸之气"
         }
       ]
     },
@@ -194,6 +206,12 @@
           "category": "anachronism",
           "scope": "all",
           "pattern": "拉胯|赋能|逻辑闭环|降维打击|心态崩了|秒懂|颗粒度|底层逻辑"
+        },
+        {
+          "id": "cliche_wuxia_inn_template",
+          "category": "stale_cliche",
+          "scope": "all",
+          "pattern": "悦来客栈|两斤熟牛肉|上等女儿红|虎躯一震"
         }
       ]
     },

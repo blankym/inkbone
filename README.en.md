@@ -1,8 +1,6 @@
-# InkBone（墨骨）
+# InkBone
 
-**An Agent Skill + zero-dependency local QA CLI for writing Chinese long-form fiction.**
-
-The model writes; InkBone checks. Does chapter 40 still honor a rule established in chapter 3? Did a xianxia chapter slip in modern internet slang? When a sentence drops its subject, whose action does the reader see? These are the mistakes a model can't catch in its own output. InkBone runs them through deterministic tools, line by line.
+**A persistent ledger, style contract, and zero-dependency local QA CLI for writing Chinese long-form fiction with LLMs.**
 
 [![test](https://github.com/blankym/inkbone/actions/workflows/test.yml/badge.svg)](https://github.com/blankym/inkbone/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -10,58 +8,85 @@ The model writes; InkBone checks. Does chapter 40 still honor a rule established
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-orange.svg)](package.json)
 [![Version: 1.1](https://img.shields.io/badge/version-1.1-lightgrey.svg)](package.json)
 
-[中文](README.md) · 9 genre packs · 19 commands · 20+ style-fingerprint metrics · 43 tests
+[中文](README.md) · 9 genre packs · 19 commands · 44 tests · zero external dependencies
 
-> **Note:** The rule packs, prompts, and CLI output are in Chinese: the tool exists to write and revise Chinese novels. This README explains the architecture and workflow; you'll want Chinese reading ability (or an agent that has it) to use it.
+> **Language note:** Prompts, rule patterns, and CLI findings target **Chinese fiction**. This README documents the design and workflow in English.
+
+Long-form LLM fiction usually breaks down around chapter 15:
+
+- A setup planted in chapter 3 gets forgotten or spoiled in narration forty chapters later.
+- Classical xianxia prose starts slipping in corporate jargon, impossible traditional time counts, or repetitive stock reactions.
+- Subject-dropped Chinese action sentences silently switch actors right after another character's line.
+- Ask a model to review its own draft and it often invents quotes that never appeared in the chapter while telling you to "add more sensory adjectives."
+
+Prompting alone stops working once earlier rules fall out of context. InkBone separates drafting guidance (staged prompts) from deterministic checks (local Node scripts running regexes, lexicons, ledger boundaries, and continuity rules).
+
+---
 
 ## See it work in 30 seconds
 
-A deliberately broken opening (`ch01.md`, abridged):
+Save a 9-line sample chapter (`ch01.md`):
 
 ```markdown
 子时三刻，药园的木门被人拍响。
 
 陆青瞳孔骤缩，起身去开门。
-…
+
+门外站着执事孙岳，雨水落到他身上就散成白雾。孙岳没进门，把一块铁牌丢在桌上：
+
 “寅时十刻之前，把渠里的符拔干净。”
 
 孙岳转身靠在门柱上，合上了眼。从袖子里摸出一把小刀，挑开了渠边的泥。
 ```
 
-Plus a character roster `ledger.json` (subject checks need to know who's in the book):
+Add a character roster (`ledger.json`):
 
 ```json
 { "characterNames": ["陆青", "孙岳"] }
 ```
 
+Run `doctor` locally (no API key or `npm install` needed):
+
 ```bash
-node bin/inkbone.mjs audit ch01.md --genre classical-xianxia --ledger ledger.json --skip-length
+node bin/inkbone.mjs doctor ch01.md --genre classical-xianxia --ledger ledger.json --skip-length
 ```
 
-| line | rule | hit | why |
-| ---: | :--- | :--- | :--- |
-| 3 | `FORBIDDEN_AI_CLICHE` | 瞳孔骤缩 ("pupils contracted") | a stock phrase that fits every novel ever written |
-| 7 | `REGISTER_COLLISION` | 寅时十刻 ("the tenth quarter of yin") | a traditional Chinese hour has at most eight quarters |
-| 9 | `SUBJECT_AMBIGUITY` | 从袖子里摸出一把小刀… | the previous sentence opened with Sun Yue; this one has no subject; readers will assume *he* pulled the knife |
+Output:
 
-That third check isn't keyword matching: it tracks the previous sentence's actor, then re-reads the subject-less sentence in that light. A model can't do this for itself. It forgets the last sentence's grammatical role as soon as it's written. InkBone remembers for it.
+```markdown
+## ch01.md
+- **L3**: `cliche_pupil_shrink` (瞳孔骤缩)
+- **L7**: `reg_impossible_ke_count` (寅时十刻)
+- **L9**: `subject_ambiguity` (previous actor 孙岳: 从袖子里摸出一把小刀，挑开了渠边的泥。)
+```
 
-## How it differs from prompt-only writing skills
+- **Line 3**: flags a stock AI cliché in narration while leaving quoted dialogue alone.
+- **Line 7**: catches a calendar error (a traditional *shichen* only has 8 *ke*, never 10).
+- **Line 9**: tracks that the previous sentence opened with Sun Yue (`孙岳`), sees a subjectless action right after it, and warns that readers will read it as Sun Yue pulling the knife.
 
-Most fiction-writing skills are one big prompt: "avoid clichés, stay consistent." The problem is that models are bad at self-review and have no persistent memory. By chapter 40, the chapter-3 contract has fallen out of context.
+---
 
-InkBone splits the work:
+## Installation & Quickstart
 
-- **Before writing**, staged prompts establish contracts: register, information placement, beat layout, shown to the author for approval first;
-- **After writing**, a local CLI runs deterministic checks: regex, dictionaries, ledger diffing, statistical fingerprints. Zero tokens, reproducible, same input → same output;
-- **During review**, every flagged issue must quote the source text verbatim; reviews whose quotes can't be found are rejected (`verify-review`);
-- **After revising**, `rule-stats` measures each rule's false-positive rate against human-written text, and blind A/B packets let real readers pick the winner, not vibes.
+Requires **Node.js 18+**. No `npm install` needed.
 
-## Install
+### Option 1: Install as an Agent Skill
 
-Node.js 18+, **zero third-party dependencies**.
+`skills/inkbone/` is self-contained and bundles `SKILL.md`, the CLI, configs, prompts, and resources. Copy it into your agent's skills folder (Claude Code, Codex, Antigravity, etc.):
 
-**CLI only (simplest):**
+```bash
+git clone https://github.com/blankym/inkbone.git
+cp -R inkbone/skills/inkbone <your-skills-dir>/inkbone
+```
+
+Once loaded, you can ask your agent directly:
+- "Set up a mystery novel project with InkBone and generate `novel.json` and `ledger.json`."
+- "Compile the chapter 12 packet from `ledger.json` and outline the scene beats before drafting."
+- "Import `chapters/` into a ledger and run `doctor` across all volumes."
+
+*(If your agent runtime blocks shell execution, the prompt stages in `prompts/` and `resources/` still work standalone; local checks simply won't run automatically.)*
+
+### Option 2: Standalone CLI
 
 ```bash
 git clone https://github.com/blankym/inkbone.git
@@ -69,111 +94,150 @@ cd inkbone
 node bin/inkbone.mjs --help
 ```
 
-**As an Agent Skill:** copy `skills/inkbone/` into your agent's skills directory (self-contained: SKILL.md ships with the CLI, configs, prompts, and knowledge base). Paths in SKILL.md are written as `$SKILL_DIR/...`. If your platform can't execute commands, the prompt stages still work standalone.
+Or install globally:
 
 ```bash
-cp -R skills/inkbone <your skills dir>/inkbone
+npm install -g .
+inkbone --help
 ```
 
-## Workflow
+Two common starting points:
 
-Seven staged prompts in `prompts/`, with the CLI checking between stages:
+1. **Starting a new book**
+   ```bash
+   node bin/inkbone.mjs init ./my-novel --genre classical-xianxia --title "BookTitle"
+   # Build next-chapter context with un-revealed secrets masked out
+   node bin/inkbone.mjs packet --ledger ./my-novel/ledger.json --chapter 4 --prev ./my-novel/ch03.md
+   ```
+2. **Taking over an existing draft**
+   ```bash
+   # Scan existing chapters (handles Chinese numerals and multi-volume folders) into a ledger
+   node bin/inkbone.mjs import-ledger ./my-novel/chapters --out ./my-novel/ledger.json --title "BookTitle"
+   # Run a full directory checkup sorted by chapter number
+   node bin/inkbone.mjs doctor ./my-novel/chapters
+   # Strip leftover Markdown bold/dividers and malformed ellipses deterministically (zero LLM tokens)
+   node bin/inkbone.mjs normalize ./my-novel/chapters --strip-bold
+   ```
 
-1. **Register contract** (`00`): read the outline, produce the book's style contract and `novel.json`;
-2. **Beat plan** (`01`): each piece of information gets exactly one slot; no exposition dump before the opening conflict; stops for author sign-off;
-3. **Draft** (`02`);
-4. **Local checks**: `audit` per chapter, `doctor` recursively over a directory;
-5. **Reviews**: logic review (`04`) + cold-reader simulation (`05`), both emitting JSON; `verify-review` validates quotes, `review-save` archives;
-6. **Targeted rewrite** (`03`), back to step 4;
-7. *(Optional)* `detect` — one Zhuque AIGC scan after freeze (record-only).
+---
 
-For a book already in progress: `import-ledger` scans chapters to build the ledger → `doctor` for a full checkup → enter at step 5.
+## Workflow & Core Checks
 
-## What it checks
+The `prompts/` directory defines seven stages (`00`–`06`), with the CLI checking between stages:
 
-| category | examples |
-| :--- | :--- |
-| ledger continuity | required anchors missing, foreshadowing revealed early, chapter re-opening the previous ending |
-| genre register | modern internet slang in a historical setting, fake traditional calendars, wuxia terms in sci-fi |
-| clichés & syntax | "pupils contracted"-tier stock phrases, repeated symmetric skeletons, same paragraph opening three times |
-| rhetorical density | similes, reasoning chains, micro-actions, exclamation marks — fires only past the per-chapter threshold |
-| model degeneration | repetition loops, truncated endings, "as an AI" leakage, engineering terms ("chapter 6 outline") in prose |
-| subject continuity | subject-dropped sentences whose action lands on the wrong character |
-| format & word count | Markdown residue, claimed-vs-actual length mismatch |
-| statistical fingerprint | lexical entropy, sentence-length variance, 的-chain density: 20+ metrics vs. human reference ranges |
+1. **Register contract (`00-style-architect.md`)**: derives the book's genre pack, three-tier character voice matrix, and banned terms into `novel.json`.
+2. **Beat plan (`01-beat-planner.md`)**: pulls context via `packet`, lays out information placement and scene beats, and pauses for author sign-off before drafting. `check-outline` verifies beat sheets against `[待补充]` placeholders and required dramatic elements.
+3. **Drafting (`02-paratactic-renderer.md`)**: continues directly from the end of the prior chapter without copying beat-sheet prose verbatim.
+4. **Local audit (`audit` / `doctor`)**: reports blocking errors and line-level warnings.
+5. **Grounded review (`04`, `05` + `verify-review` / `review-save`)**:
+   - `04-evidence-reviewer.md` checks plot continuity, timelines, physical logic, and character motivation.
+   - `05-reader-simulator.md` runs two passes: a cold reader with zero lore background, and a genre veteran scanning for drag or register slips.
+   - `verify-review` rejects any review item whose quote cannot be found verbatim in the chapter or whose feedback tries to meddle with prose aesthetics ("add sensory adjectives").
+6. **Targeted revision (`03-targeted-rewriter.md`)**: edits only verified review items and flagged lines, then re-audits.
+7. **Post-freeze scan (`detect`, optional)**: records one Zhuque AIGC scan after the chapter is locked.
 
-Warnings inform; errors (format residue, ledger violations, degeneration, word-count fraud) exit non-zero — CI-ready.
+### What it checks
 
-## Three rule layers — your taste stays yours
-
-| layer | location | scope |
+| Area | Examples | Default level |
 | :--- | :--- | :--- |
-| universal | `configs/` | clichés and filler that fail across genres |
-| genre | `configs/genres.json` — 9 packs | register collisions a genre shares |
-| project | `novel.json` in your book directory | this book's voice contract and banned phrases; `disabledRuleIds` can switch off inherited rules |
+| Ledger continuity | Missing required anchors, premature spoilers before `revealChapter`, deprecated terms, opening echoing the prior ending | `error` (fails check) |
+| Format & length claims | Markdown asterisks, inline ledger notes like `(余13滴)`, mismatched quote-length claims | `error` (fails check) |
+| Model degeneration | Verbatim line/sentence loops, truncated endings, garbled characters, AI refusal/meta-leakage | `error` / `warning` |
+| Subject continuity | Subjectless action right after another character's action; three consecutive paragraphs opening the same way | `warning` |
+| Genre register | Modern slang in period settings, invalid traditional time counts, archaic phrasing in urban fiction | `warning` (escalates on high density) |
+| Clichés & density | Stock micro-acting phrases, symmetric skeletons, excessive similes/exclamation marks/ellipses, telegraphic over-compression guard | `warning` (escalates on high density) |
+| Statistical fingerprint | 20+ metrics (MATTR-50, sentence-length CV, `的`-modifier density) compared against human reference ranges | `info` (diagnostic only) |
 
-Before adding a rule, ask: does it still hold for a different book? Then run `rule-stats` against human text. What human authors also write is taste, not error — project layer only.
+Warnings exit `0` so authors review them in context; hard errors and high-frequency blocking violations exit non-zero for CI. Pass `--strict` to fail on all gates.
 
-## Why AIGC detector scores aren't the target
+### Three-layer rules
 
-A lesson bought with a dozen revisions of one chapter. Early versions chased the Zhuque score; measured results:
+`audit` and `doctor` walk upward from chapter files to find `novel.json` and merge three rule layers:
 
-- A draft that spelled out every noun and repeated each conclusion three times: **judged 100% human** — and unreadable;
-- The same chapter with redundancy cut: 80.95% "likely AI";
-- Two adjacent drafts differing by ~2% of characters: score jumped 0.37 → 0.55.
+1. **Universal (`configs/`)**: clichés, filler phrases, dialogue punctuation, and syntax checks that apply across genres.
+2. **Genre (`configs/genres.json`)**: 9 built-in genre packs catching cross-genre leakage.
+3. **Project (`novel.json` + `.inkbone-whitelist`)**: book-specific vocabulary, banned patterns, literal whitelists, and `disabledRuleIds` to turn off any inherited rule you intentionally break.
 
-The score doesn't measure readability; chasing it mostly measures noise. So InkBone manages plot and reader experience, treats statistics as diagnostics only, runs detection at most once post-freeze, and lets real blind readers decide whether a change helped. Raw log: `benchmarks/shoushi-wenxian/manifest.json`.
+Before promoting a rule above the project layer, run `rule-stats --human <human-corpus> --ai <ai-drafts>` to check how often human authors write the same pattern. Patterns common in human prose are stylistic choices and stay in project rules.
 
-## Commands
+---
 
-| command | what it does |
-| :--- | :--- |
-| `genres` | list the 9 genre packs |
-| `init` | scaffold a novel project |
-| `import-ledger` | scan existing chapters, build/merge a ledger |
-| `packet` | assemble next-chapter context; un-revealed truths stay hidden |
-| `normalize` | strip asterisks, separators, malformed ellipses (zero tokens) |
-| `check-outline` | Stage 1 chapter beat-outline placeholders & missing beats |
-| `audit` | check one chapter |
-| `doctor` | recursive directory checkup, auto-detects genre & project config |
-| `verify-review` | validate review quotes against the text |
-| `review-save` / `review-stats` | archive reviews (chapter hash + model name) & stats |
-| `eval-pack` / `eval-score` | blind A/B packets & ballot tally (with sign-test p) |
-| `profile` | 20+ style-fingerprint metrics for a chapter |
-| `rule-stats` | per-rule hit rates in human vs AI text |
-| `mine` | find collocations AI drafts overuse vs human prose |
-| `calibrate` | build human reference ranges |
-| `detect` | single Zhuque scan (bring your own API key), record-only |
-| `benchmark` | corpus comparison |
+## Built-in Fiction Craft & Revision Library (`resources/`)
 
-Full flags: `node bin/inkbone.mjs --help`.
+Beyond mechanical linting, InkBone ships practical plotting and editing handbooks distilled from classic fiction breakdowns and web-novel editorial standards (loaded on demand per stage so prompts stay lean):
 
-## Evaluation
+- **[Micro-Techniques & Revision Lookup (`resources/micro_techniques.md`)](resources/micro_techniques.md)**: concrete execution formulas covering action-reaction "two-press, one-lift" beats, 80/20 climax framing (80% physical fallout and bystander benchmarks, 20% lethal strike), multi-purpose foreshadowing and pre-map-switch anchoring, post-climax three-part loot settlements, anti-bloat pacing rules, and a 9-symptom troubleshooting table.
+- **[8 Before/After Case Studies (`resources/bad_vs_good_cases.md`)](resources/bad_vs_good_cases.md)**: side-by-side rewrites showing how to cut multi-step micro-action bloat, apply late-in/early-out dialogue, weave worldbuilding stakes into concrete characters, and avoid over-trimming into telegraphic prose.
+- **[9 Genre Playbooks (`resources/genre_playbooks/`)](resources/genre_playbooks/)**: dedicated playbooks for xianxia, historical court, wuxia, mystery/thriller, urban realism, sci-fi wasteland, light fantasy, romance, and clean general fiction covering core tension drivers, stale trope traps, physical props, and chapter hooks.
 
-`benchmarks/eval-set/` ships 4 original opening seeds (xianxia / mystery / urban / romance) and the full protocol: same model, two skill versions → `eval-pack` produces anonymized packets → human readers vote → `eval-score` tallies. To compare models, fix the skill version and swap models.
+---
 
-## Known limits
+## Genre Packs & Command Reference
 
-- Most rules and examples come from the author's own xianxia novel; the other 8 genre packs are thin and uncalibrated on large human corpora — which is exactly why the project layer exists;
-- Some universal rules may be taste (e.g., counting "heart sank" as filler) pending more human-text validation;
-- Subject-continuity needs a character roster and misses pronoun/honorific references;
-- Blind-read tooling exists; a full human evaluation round hasn't been run yet;
-- No human-authored text is distributed — bring your own corpus (and rights) for `calibrate`/`rule-stats`/`mine`.
+<details>
+<summary>9 built-in genre packs (run <code>node bin/inkbone.mjs genres</code> to inspect)</summary>
 
-## Development
+- `classical-xianxia`: classical cultivation and xianxia
+- `historical-court`: historical intrigue and period drama
+- `wuxia-jianghu`: traditional martial-arts fiction
+- `mystery-thriller`: crime, folklore horror, and rule-based suspense
+- `urban-realism`: contemporary urban, workplace, and realistic drama
+- `scifi-wasteland`: sci-fi, cyberpunk, and post-apocalyptic survival
+- `light-fantasy`: brisk light-novel / system comedy
+- `romance-emotional`: historical and contemporary romance
+- `general-clean`: neutral cross-genre baseline
 
-```bash
-npm test               # 43 tests (one regression needs a private corpus; auto-skips in the public repo)
-npm run build:skill    # repackage skills/inkbone after touching bin/src/configs/prompts/resources
-npm run check:skill    # sync check only
+</details>
+
+| Group | Command | Purpose |
+| :--- | :--- | :--- |
+| Setup & context | `genres` | List all 9 built-in genre packs and default presets |
+| | `init` | Scaffold `novel.json` and `ledger.json` in a project directory |
+| | `import-ledger` | Scan existing chapters (including Chinese numerals) and merge into a ledger non-destructively |
+| | `packet` | Compile next-chapter context with un-revealed `fullTruth` entries hidden |
+| Format & QA | `normalize` | Deterministically clean bold/italic asterisks, dividers, and malformed ellipses/dashes |
+| | `check-outline` | Check Stage 1 beat outlines for `[待补充]` placeholders and missing dramatic facets |
+| | `audit` | Audit a single chapter against boundary, register, rhetoric, density, and continuity rules |
+| | `doctor` | Recursively scan a directory sorted by chapter number, auto-detecting genre and project config |
+| Review & blind eval | `verify-review` | Verify that review quotes exist verbatim in the chapter and reject style meddling |
+| | `review-save` | Verify and archive a review JSON with chapter SHA-256 and reviewer/writer model metadata |
+| | `review-stats` | Compare issue counts and skip points across saved review revisions |
+| | `eval-pack` | Build an anonymized X/Y blind reading packet alongside a private `key.json` |
+| | `eval-score` | Tally blind reader ballots with win rates, sign-test p-values, and skip-quote verification |
+| Calibration & logs | `profile` | Compute 20+ linguistic fingerprint metrics for a chapter |
+| | `calibrate` | Generate statistics-only p10/median/p90 reference ranges from a human corpus |
+| | `rule-stats` | Measure per-rule hit rates per 10k characters across human vs. AI texts |
+| | `mine` | Extract 3/4-gram phrases overused in AI drafts compared to human prose |
+| | `detect` | Run a single cached Zhuque AIGC scan (requires `.env` API key), record-only |
+| | `benchmark` | Compare corpus metrics against manifest entries |
+
+Run `node bin/inkbone.mjs --help` for full flag details.
+
+---
+
+## Layout & Development
+
+```text
+bin/  src/         CLI and core checking modules (plain Node, zero dependencies)
+configs/           Universal rules, 9 genre packs, presets, and severity levels
+prompts/           7 staged drafting & review prompts (00–06)
+resources/         Before/after examples, micro-techniques, 9 genre playbooks, eval guide
+benchmarks/        4 blind-eval opening seeds + chapter-1 test log (private drafts omitted)
+evals/             Runtime-agnostic skill trigger eval set
+skills/inkbone/    Generated self-contained skill package (do not edit directly)
+tests/             44 unit tests
 ```
 
-## Acknowledgments
+```bash
+npm test               # Run all 44 tests (includes zero-Han-literal check and skill sync check; 1 private-corpus test auto-skips)
+npm run build:skill    # Repackage skills/inkbone after editing bin/src/configs/prompts/resources
+npm run check:skill    # Verify skills/inkbone matches sources (enforced in CI)
+```
 
-- Chapter-boundary handling and "reviews must quote the text": [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin);
-- Chinese sentence-trunk and symmetric-construction handling: [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei);
-- Rhetorical-density grading, degeneration & engineering-term leakage checks: [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode).
+## Acknowledgments & License
 
-## License
+- Chapter boundary isolation and verbatim-quote review checks inspired by [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)
+- Chinese clause-trunk and symmetric-frame checks inspired by [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)
+- Rhetorical density grading, degeneration detection, and meta-leak checks inspired by [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)
 
-MIT — the rule files too. Fork them and build your own genre pack.
+Released under the [MIT License](LICENSE), including all rule configurations.

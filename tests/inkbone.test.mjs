@@ -1336,3 +1336,22 @@ test("profiler skips frontmatter/comments/codeblocks, respects whitelist on aste
     false
   );
 });
+
+// 历史权谋与传统武侠扩展规则：拦下“皇后殿下”、陈旧“虎躯一震”与“悦来客栈/熟牛肉/女儿红”模板
+test("historical-court and wuxia-jianghu catch stale genre tropes and title anachronisms", () => {
+  const hist = auditChapterText(fixtures.historicalWuxiaGenreSample.historical, {
+    genre: "historical-court",
+    skipLengthGate: true,
+  });
+  const histReg = hist.violations.find((v) => v.code === "REGISTER_COLLISION");
+  const histCli = hist.violations.find((v) => v.code === "FORBIDDEN_AI_CLICHE");
+  assert.ok(histReg && histReg.hits.some((h) => h.id === "reg_historical_title_anachronism"));
+  assert.ok(histCli && histCli.hits.some((h) => h.id === "cliche_historical_overlord"));
+
+  const wuxia = auditChapterText(fixtures.historicalWuxiaGenreSample.wuxia, {
+    genre: "wuxia-jianghu",
+    skipLengthGate: true,
+  });
+  const wuxiaCli = wuxia.violations.find((v) => v.code === "FORBIDDEN_AI_CLICHE");
+  assert.ok(wuxiaCli && wuxiaCli.hits.filter((h) => h.id === "cliche_wuxia_inn_template").length >= 3);
+});
