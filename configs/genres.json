@@ -247,8 +247,16 @@
         {
           "id": "reg_omniscient_spoiler_tell",
           "category": "pov_leak",
-          "pattern": "殊不知|他做梦也没想到|只是此刻他还不知道",
+          "pattern": "殊不知|他做梦也没想到|只是此刻他还不知道|谁也没有注意到角落里|命运早已(?:悄然)?写好",
           "remedy": "Keep strict limited POV; never spoil future turns via omniscient commentary."
+        }
+      ],
+      "clicheRules": [
+        {
+          "id": "cliche_mystery_trope",
+          "category": "mystery_cliche",
+          "scope": "narration",
+          "pattern": "案发现场[^，。！？\\r\\n]{0,6}干净得可怕|死者嘴角(?:挂着|带着)[^，。！？\\r\\n]{0,4}微笑|背后一定隐藏着(?:什么)?(?:惊天)?秘密"
         }
       ]
     },
@@ -281,6 +289,20 @@
           "pattern": "此乃|断不会|尔等|老夫|一息之?间|拱手道|拂袖而去|莫要自误|半炷香",
           "remedy": "Remove classical/costume-drama phrasing from modern urban narrative."
         }
+      ],
+      "clicheRules": [
+        {
+          "id": "cliche_urban_trope",
+          "category": "urban_cliche",
+          "scope": "all",
+          "pattern": "(?:千万级|亿万级)大单|整个(?:商界|业界)震动|他可是堂堂|区区一个小(?:小)?职员"
+        },
+        {
+          "id": "cliche_urban_reaction",
+          "category": "purple_reaction",
+          "scope": "narration",
+          "pattern": "(?:浑身|全身)血液(?:瞬间|仿佛)?凝固|大脑(?:瞬间)?一片空白"
+        }
       ]
     },
     "scifi-wasteland": {
@@ -312,6 +334,14 @@
           "pattern": "拱手道|洒家|小二|客官|丹田气海|掐诀|老夫",
           "remedy": "Remove classical wuxia/xianxia idioms from sci-fi setting."
         }
+      ],
+      "clicheRules": [
+        {
+          "id": "cliche_scifi_lecture",
+          "category": "scifi_cliche",
+          "scope": "narration",
+          "pattern": "根据(?:量子力学|相对论)(?:的)?原理|高达百分之九十九点九的?致死率|警报声响彻整个(?:空间站|飞船|基地)"
+        }
       ]
     },
     "light-fantasy": {
@@ -340,6 +370,14 @@
           "category": "stale_cliche",
           "pattern": "恐怖如斯|倒吸一口凉气|此子断不可留",
           "remedy": "Replace overused webnovel cliches with fresh comedic or concrete reactions."
+        }
+      ],
+      "clicheRules": [
+        {
+          "id": "cliche_light_system_bloat",
+          "category": "light_cliche",
+          "scope": "narration",
+          "pattern": "宿主请再接再厉|本系统出品必属精品|恭喜宿主(?:成功)?绑定[^，。！？\\r\\n]{0,8}系统"
         }
       ]
     },

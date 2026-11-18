@@ -12,6 +12,7 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
 - **路径约定**：本文件所在的目录记作 `SKILL_DIR`。下文所有 `$SKILL_DIR/...` 路径都相对这个目录，不相对小说项目目录。执行命令前先设置一次，例如 `SKILL_DIR=/path/to/skills/inkbone`。
 - **运行要求**：命令行工具需要 Node.js 18 或更高版本，没有第三方依赖，不需要 `npm install`。检查方法：`node --version`。
 - **不能执行命令时**：只用提示词部分（`$SKILL_DIR/prompts/` 与 `$SKILL_DIR/resources/`），规划、写作、审读照常进行。格式与台账检查、引文核对、规则统计、盲读计分这些代码检查都做不了，交付时要说明这一点，不要假装已经检查过。
+- **按阶段按需读取**：一次只读当前环节所需的 1 份阶段提示词和 1 份对应题材的 `genre_playbooks/<genre>.md`，不要一开头就把 `00`～`06` 和所有参考文档一次性全部读进上下文，避免冗余耗时与注意力稀释。
 - **项目文件**：小说自己的 `novel.json`、`ledger.json`、语体合同和项目层规则放在小说项目目录里，不放进 `SKILL_DIR`。
 
 ## 文件索引
@@ -50,6 +51,19 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
 
 1. 定完语体、建完台账，或者排完节拍表以后，先停下来，等作者确认，再写正文。规划没定下来，不要直接写出整章。
 2. 作者只要求检查或审读时，只跑 `doctor` / `audit` 和审读，列出问题清单，等作者确认要改哪些，再动手改。
+
+## 轻量快改（不建台账、单段或单章救急）
+
+当作者只丢来一段话或单独一章，明确要求“去一下 AI 味”“改干瘪对话”“顺一下标点”且目录尚未建立 `novel.json` 时，**不要强迫作者先 `init` 和建全书大纲**，直接走快改通道：
+
+1. 直接对当前文件跑零配置清理检查与单章审计：
+   ```bash
+   node "$SKILL_DIR/bin/inkbone.mjs" normalize <chapter.md> --check --strip-bold
+   node "$SKILL_DIR/bin/inkbone.mjs" audit <chapter.md> [--genre <id>] --no-project --no-ledger --skip-length
+   ```
+   （不传 `--genre` 时可先对照 `genres` 选最贴近题材，或用 `general-clean`。）
+2. 只读 `$SKILL_DIR/prompts/03-targeted-rewriter.md`，对照报告行号局部砍水话、换套词、校对主语和对话标点，不动原本通顺的段落。
+3. 改完复跑一遍 `audit` 确认 `error` 为 0、主要警告清干净即可交付；只有作者进一步想连载扩展或接管整本书时，再补 `init` 或 `import-ledger`。
 
 ## 写新书或新章节
 

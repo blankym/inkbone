@@ -1,6 +1,6 @@
 {
   "name": "inkbone",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Agent skill and zero-dependency CLI for writing and revising Chinese long-form fiction: staged prompts plus local checks for continuity, genre register, stock phrases and unclear subjects.",
   "type": "module",
   "bin": {
@@ -27,6 +27,8 @@
     "benchmark": "node ./bin/inkbone.mjs benchmark",
     "build:skill": "node scripts/build-skill.mjs",
     "check:skill": "node scripts/build-skill.mjs --check",
+    "build:docs": "node scripts/build-docs.mjs",
+    "check:docs": "node scripts/build-docs.mjs --check",
     "export:public": "node scripts/export-public.mjs"
   },
   "engines": {

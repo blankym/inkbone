@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>InkBone（墨骨）· 中文长篇小说本地质检试跑台</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231c1b18'/><text x='16' y='22' text-anchor='middle' font-size='18' fill='%23f6f3ec'>墨</text></svg>" />
+  <style>
+    :root {
+      --bg: #f6f3ec;
+      --surface: #fffdf8;
+      --surface-muted: #efeae0;
+      --border: #ddd5c7;
+      --text: #1c1b18;
+      --text-muted: #666055;
+      --accent: #b33a2b;
+      --accent-soft: #faeae7;
+      --warn: #a86414;
+      --warn-soft: #fdf3e2;
+      --info: #2d597a;
+      --info-soft: #e8f1f7;
+      --ok: #236846;
+      --ok-soft: #e6f4ec;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, "PingFang SC", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 18px 48px;
+    }
+
+    header.topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 1.45rem;
+      letter-spacing: 0.02em;
+    }
+
+    .trust-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--ok-soft);
+      color: var(--ok);
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid #b8dfca;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .top-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .link-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .link-btn:hover {
+      border-color: var(--text-muted);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--surface-muted);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--text);
+      color: #fff;
+      border-color: var(--text);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .preset-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .preset-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .chip-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--surface-muted);
+      color: var(--text);
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .chip-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px 14px;
+      margin-bottom: 12px;
+    }
+
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    select, input[type="text"], input[type="number"], textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      padding: 8px 10px;
+    }
+
+    textarea {
+      min-height: 220px;
+      line-height: 1.7;
+      resize: vertical;
+      font-size: 0.95rem;
+    }
+
+    textarea.code-input {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.55;
+      min-height: 310px;
+    }
+
+    .genre-meta {
+      padding: 9px 12px;
+      border-radius: 8px;
+      background: var(--surface-muted);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+
+    .badge-error { background: var(--accent-soft); color: var(--accent); }
+    .badge-warning { background: var(--warn-soft); color: var(--warn); }
+    .badge-info { background: var(--info-soft); color: var(--info); }
+    .badge-ok { background: var(--ok-soft); color: var(--ok); }
+    .badge-muted { background: var(--surface-muted); color: var(--text-muted); }
+
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .checks-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .checks-inline label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .btns-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      appearance: none;
+      border: 0;
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .kpi-val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-family: var(--mono);
+      line-height: 1.2;
+    }
+
+    .kpi-label {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .split-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pane-title {
+      margin: 0 0 10px;
+      font-size: 0.94rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .annotated-lines {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+      font-family: var(--serif);
+      font-size: 0.94rem;
+    }
+
+    .aline {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      border-bottom: 1px solid #f0ece3;
+      transition: background 0.15s ease;
+    }
+
+    .aline:last-child { border-bottom: 0; }
+
+    .aline-num {
+      padding: 7px 8px;
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      background: #faf7f0;
+      border-right: 1px solid #f0ece3;
+      user-select: none;
+    }
+
+    .aline-text {
+      padding: 7px 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .aline.sev-error { background: #fdf0ee; }
+    .aline.sev-error .aline-num { background: #fbe2de; color: var(--accent); font-weight: 700; }
+    .aline.sev-warning { background: #fef9ee; }
+    .aline.sev-warning .aline-num { background: #fcefd4; color: var(--warn); font-weight: 700; }
+    .aline.flash { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .findings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .finding-item {
+      border: 1px solid var(--border);
+      border-left-width: 4px;
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #fff;
+      font-size: 0.86rem;
+    }
+
+    .finding-item.clickable { cursor: pointer; }
+    .finding-item.clickable:hover { background: #fcfaf5; }
+    .finding-item.sev-error { border-left-color: var(--accent); }
+    .finding-item.sev-warning { border-left-color: var(--warn); }
+    .finding-item.sev-info { border-left-color: var(--info); }
+
+    .finding-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .finding-title {
+      font-weight: 600;
+    }
+
+    .finding-detail {
+      color: var(--text);
+      margin-top: 3px;
+      word-break: break-word;
+    }
+
+    .finding-remedy {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    .status-banner {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      margin-bottom: 12px;
+    }
+
+    .status-banner.ok { background: var(--ok-soft); color: var(--ok); border: 1px solid #b8dfca; }
+    .status-banner.err { background: var(--accent-soft); color: var(--accent); border: 1px solid #edc2bc; }
+    .status-banner.info { background: var(--info-soft); color: var(--info); border: 1px solid #c3d8e8; }
+
+    pre.json-out {
+      margin: 0;
+      padding: 12px;
+      border-radius: 8px;
+      background: #1d1c19;
+      color: #f4efe4;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    footer.cli-note {
+      margin-top: 22px;
+      padding: 14px 16px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    footer.cli-note code {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      background: #e6dfd2;
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-row">
+          <h1>InkBone（墨骨）在线试跑台</h1>
+          <span class="trust-pill">100% 浏览器本地运算 · 正文绝不上传服务器</span>
+        </div>
+        <p>把长篇小说质检尺子与防剧透台账搬进浏览器，直接运行与 Node CLI 同源的零依赖检测引擎。</p>
+      </div>
+      <div class="top-links">
+        <a class="link-btn" href="https://github.com/blankym/inkbone" target="_blank" rel="noopener">GitHub 仓库</a>
+        <a class="link-btn" href="https://github.com/blankym/inkbone#readme" target="_blank" rel="noopener">CLI / Skill 安装</a>
+      </div>
+    </header>
+
+    <div id="loadErrorBanner" class="status-banner err" style="display:none;"></div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="audit">1. 正文体检（doctor / normalize）</button>
+      <button class="tab-btn" data-tab="packet">2. 台账防剧透打包（packet）</button>
+      <button class="tab-btn" data-tab="review">3. 审读引文核验（verify-review）</button>
+    </nav>
+
+    <!-- Tab 1: 正文体检 -->
+    <section id="tab-audit" class="panel active">
+      <div class="card">
+        <div class="preset-bar">
+          <span class="preset-label">一键样例：</span>
+          <div id="auditPresetBtns" class="btns-inline"></div>
+        </div>
+
+        <div class="controls-grid">
+          <label class="field">
+            题材语域包
+            <select id="genreSelect"></select>
+          </label>
+          <label class="field">
+            出场角色名单（逗号或空格分隔，用于查省略主语歧义）
+            <input id="charactersInput" type="text" placeholder="例如：陆青, 孙岳" />
+          </label>
+          <label class="field">
+            主角名（可选，豁免主角动作链误报）
+            <input id="protagonistInput" type="text" placeholder="例如：陆青" />
+          </label>
+        </div>
+
+        <div id="genreMetaBox" class="genre-meta"></div>
+
+        <textarea id="chapterInput" placeholder="在这里粘贴待检章节正文（支持 Markdown 格式与中文对白引号）..."></textarea>
+
+        <div class="actions-row">
+          <div class="checks-inline">
+            <label><input id="skipLengthCheck" type="checkbox" checked /> 跳过单章字数区间门禁（短片段试跑建议勾选）</label>
+            <label><input id="strictModeCheck" type="checkbox" /> 严格模式（--strict）</label>
+          </div>
+          <div class="btns-inline">
+            <button id="normalizeBtn" class="btn-secondary" type="button">一键清理格式（normalize）</button>
+            <button id="runAuditBtn" class="btn-primary" type="button">立即体检</button>
+          </div>
+        </div>
+        <div id="normalizeNotice" class="status-banner info" style="display:none; margin-top:10px; margin-bottom:0;"></div>
+      </div>
+
+      <div id="kpiGrid" class="kpi-grid"></div>
+
+      <div class="split-grid">
+        <div class="card">
+          <h3 class="pane-title"><span>逐行原文对照</span><span id="lineStatsHint" class="badge badge-muted"></span></h3>
+          <div id="annotatedLines" class="annotated-lines"></div>
+        </div>
+        <div class="card">
+          <h3 class="pane-title"><span>诊断清单</span><span id="findingCountBadge" class="badge badge-muted"></span></h3>
+          <div id="auditBanner"></div>
+          <div id="findingsList" class="findings-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: 台账防剧透打包 -->
+    <section id="tab-packet" class="panel">
+      <div class="card">
+        <div class="preset-bar">
+          <span class="preset-label">切换视角章节：</span>
+          <div id="packetPresetBtns" class="btns-inline"></div>
+        </div>
+        <div class="split-grid">
+          <div>
+            <h3 class="pane-title">
+              <span>全书台账输入（ledger.json）</span>
+              <span style="font-size:0.8rem; color:var(--text-muted); font-weight:400;">修改第 N 章对比 `[REDACTED]` 与 `fullTruth` 遮蔽效果</span>
+            </h3>
+            <div style="display:flex; gap:10px; align-items:end; margin-bottom:10px;">
+              <label class="field" style="max-width:160px;">
+                当前撰写章号
+                <input id="packetChapterInput" type="number" min="1" value="4" />
+              </label>
+              <button id="runPacketBtn" class="btn-primary" type="button">编译本章上下文包</button>
+            </div>
+            <textarea id="ledgerInput" class="code-input" spellcheck="false"></textarea>
+          </div>
+          <div>
+            <h3 class="pane-title"><span>`packet` 输出结果（传给写手模型的边界）</span></h3>
+            <div id="packetStatusBanner"></div>
+            <pre id="packetOutput" class="json-out"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: 审读引文核验 -->
+    <section id="tab-review" class="panel">
+      <div class="card">
+        <div class="preset-bar">
+          <span class="preset-label">审读示例：</span>
+          <div id="reviewPresetBtns" class="btns-inline"></div>
+          <button id="runReviewBtn" class="btn-primary" type="button" style="margin-left:auto;">运行引文核验</button>
+        </div>
+        <div class="split-grid">
+          <div>
+            <h3 class="pane-title"><span>章节正文</span></h3>
+            <textarea id="reviewChapterInput" style="min-height:150px; margin-bottom:12px;"></textarea>
+            <h3 class="pane-title"><span>模型审读输出 JSON</span></h3>
+            <textarea id="reviewJsonInput" class="code-input" style="min-height:200px;" spellcheck="false"></textarea>
+          </div>
+          <div>
+            <h3 class="pane-title"><span>`verify-review` 核验结果</span></h3>
+            <div id="reviewStatusBanner"></div>
+            <pre id="reviewOutput" class="json-out"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="cli-note">
+      <strong>需要整本多卷体检、存量章节自动建台账（<code>import-ledger</code>）或真人盲读统计（<code>eval-pack</code>）？</strong>
+      完整版无需第三方依赖，只需 Node.js 18+：<br />
+      <code>git clone https://github.com/blankym/inkbone.git &amp;&amp; node inkbone/bin/inkbone.mjs doctor ./chapters</code>
+      （或复制 <code>inkbone/skills/inkbone</code> 到 Claude Code / Codex / Antigravity 的 skills 目录使用）。
+    </footer>
+  </div>
+
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

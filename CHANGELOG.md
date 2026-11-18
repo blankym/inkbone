@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 — 2026-11
+
+### 新增与改进
+- 补强 `mystery-thriller`、`urban-realism`、`scifi-wasteland`、`light-fantasy` 四个题材包的内置 `clicheRules` / `registerRules` 与剧本卡细则，并在 `general-clean`、`classical-xianxia` 等剧本卡补充因果触发门禁与节奏抗打断规则（禁止无前提动作的手机/道具自爆巧合、禁止紧张推进中段插境界科普）
+- 在 `SKILL.md` 新增「轻量快改（不建台账、单段/单章救急）」入口与“按阶段按需读取”守则，降低短任务摩擦与首轮上下文开销
+- 中英文 README 新增“150 字实测改前/改后直观对照”与单章 30 秒零配置快检示例，同步纳入 `docs/` 纯浏览器静态试跑台（含 `build:docs` / `check:docs`）
+- 改进 `eval-pack`（`buildBlindPack`）：多对样本采用受 seed 控制的半数均衡洗牌，消除小样本全落同侧偏差；改进 `doctor`（`diagnoseProject`）：未指定题材且无 `novel.json` 扫描混题材目录时输出 `mixedGenreFiles` 告警提示
+
 ## 1.1.1 — 2026-11
 
 ### 修复与改进

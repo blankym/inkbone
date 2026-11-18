@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![依赖: 0](https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-0-orange.svg)](package.json)
-[![版本: 1.1](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.1-lightgrey.svg)](package.json)
+[![版本: 1.2](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.2-lightgrey.svg)](package.json)
 
-[English](README.en.md) · 9 个题材包 · 19 条命令 · 46 项测试 · 零第三方依赖
+[English](README.en.md) · 9 个题材包 · 19 条命令 · 51 项测试 · 零第三方依赖
 
 用大模型写长篇连载，头三章看着还行，写到十几章毛病就全出来了：
 
@@ -62,6 +62,16 @@ node bin/inkbone.mjs doctor ch01.md --genre classical-xianxia --ledger ledger.js
 - **第 7 行**：古代一个时辰只有八刻，“寅时十刻”直接标出历法穿帮；
 - **第 9 行**：上一句开头是“孙岳”，这一句没写主语就接着写动作，程序顺着主语链往回读一遍，标出“这里读者会以为摸刀的是孙岳”。
 
+### 顺手看一段实际改稿效果
+
+```markdown
+改前（常见 AI 起手）：
+周建民今年四十三岁，退伍后一直守在老城区外卖站，心里盘算着月底前必须把差评压下去。他深吸一口气，嘴角露出一丝苦笑，推开玻璃门走了出去，免得被人看出异样。
+
+改后（砍掉履历旁白、微动作套词和解释尾巴）：
+屏幕右上角差评率挂在 0.62%，离片区红线还高一截。周建民把退单申诉表按平，扯下挂钩上的黄雨衣套上。门外胡飞正蹲在雨棚下抽烟，手机接单声刚响了两下就按了挂起。
+```
+
 ---
 
 ## 安装与上手
@@ -99,15 +109,19 @@ npm install -g .
 inkbone --help
 ```
 
-两条最常用的起步路径：
+三条最常用的起步路径：
 
-1. **新书开局**
+1. **不想建台账？单章 30 秒快检**
+   ```bash
+   node bin/inkbone.mjs audit ch01.md --genre urban-realism --no-project --no-ledger --skip-length
+   ```
+2. **新书开局**
    ```bash
    node bin/inkbone.mjs init ./my-novel --genre classical-xianxia --title "书名"
    # 写第 N 章前组装上下文（未到 revealChapter 的设定真相会自动隐去）
    node bin/inkbone.mjs packet --ledger ./my-novel/ledger.json --chapter 4 --prev ./my-novel/ch03.md
    ```
-2. **存量书稿接管与批量清洗**
+3. **存量书稿接管与批量清洗**
    ```bash
    # 扫描已有章节（支持中文/阿拉伯数字章号与分卷目录），无损生成台账骨架
    node bin/inkbone.mjs import-ledger ./my-novel/chapters --out ./my-novel/ledger.json --title "书名"
@@ -218,18 +232,21 @@ InkBone 不只做字面质检，还随 Skill 附带了一套面向长篇连载�
 ```text
 bin/  src/         CLI 入口与核心检查引擎（纯 Node，零依赖）
 configs/           通用规则、9 个题材包、预设门禁与违规分级
+docs/              浏览器纯前端静态试跑台（核心引擎零依赖运行）
 prompts/           7 个分阶段写作与审读提示词（00–06）
 resources/         正反例对照、微技法、9 份题材手册、盲读说明
 benchmarks/        4 组盲读评估种子 + 第 1 章多版本实测记录（不含私有正文）
 evals/             跨运行时 Skill 触发评测集
 skills/inkbone/    自包含 Skill 发布目录（由脚本生成，勿直接修改）
-tests/             46 项单元测试
+tests/             51 项单元测试
 ```
 
 ```bash
-npm test               # 运行 46 项测试（含代码零汉字字面量检查与 skill 同步检查；一项私有语料回归在公开仓库自动跳过）
+npm test               # 运行 51 项测试（含代码零汉字字面量检查、docs 与 skill 同步检查；一项私有语料回归在公开仓库自动跳过）
 npm run build:skill    # 修改 bin/src/configs/prompts/resources 后重新生成 skills/inkbone
 npm run check:skill    # 检查 skills/inkbone 同步状态（CI 强制检查）
+npm run build:docs     # 修改 src/core 或 configs 后同步静态试跑台 docs/vendor
+npm run check:docs     # 检查 docs/vendor 同步状态（CI 强制检查）
 ```
 
 ## 致谢与许可

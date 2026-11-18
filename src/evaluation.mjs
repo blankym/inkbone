@@ -48,12 +48,29 @@ export function buildBlindPack(aFiles, bFiles, options = {}) {
     keys = ["1"];
   }
   keys.sort((x, y) => Number(x.replace("#", "")) - Number(y.replace("#", "")));
+  // 样本对数大于等于 2 时采用受 seed 控制的半数均衡洗牌，防止小样本盲读包全部落入同侧
+  const slots = [];
+  if (keys.length === 1) {
+    slots.push(rng() < 0.5);
+  } else if (keys.length > 1) {
+    const half = Math.floor(keys.length / 2);
+    for (let i = 0; i < half; i += 1) {
+      slots.push(true, false);
+    }
+    if (keys.length % 2 === 1) {
+      slots.push(rng() < 0.5);
+    }
+    for (let i = slots.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rng() * (i + 1));
+      [slots[i], slots[j]] = [slots[j], slots[i]];
+    }
+  }
   const pairs = keys.map((key, idx) => {
     const aFile = mapA.get(key);
     const bFile = mapB.get(key);
     const aText = fs.readFileSync(aFile, "utf8");
     const bText = fs.readFileSync(bFile, "utf8");
-    const xIsA = rng() < 0.5;
+    const xIsA = slots[idx];
     return {
       pair: `pair-${String(idx + 1).padStart(2, "0")}`,
       chapterKey: key,

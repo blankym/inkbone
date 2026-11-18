@@ -1,0 +1,208 @@
+{
+  "auditPresets": [
+    {
+      "id": "xianxia",
+      "label": "古典仙侠 · 药园夜叩",
+      "genre": "classical-xianxia",
+      "characters": "陆青, 孙岳",
+      "protagonist": "陆青",
+      "text": "子时三刻，药园的木门被人拍响。\n\n陆青瞳孔骤缩，起身去开门。\n\n门外站着执事孙岳，雨水落到他身上就散成白雾。孙岳没进门，把一块铁牌丢在桌上：\n\n“寅时十刻之前，把渠里的符拔干净。”\n\n孙岳转身靠在门柱上，合上了眼。从袖子里摸出一把小刀，挑开了渠边的泥。"
+    },
+    {
+      "id": "court",
+      "label": "历史权谋 · 宫闱奏对",
+      "genre": "historical-court",
+      "characters": "谢延, 崔令仪",
+      "protagonist": "谢延",
+      "text": "子时九刻，暖阁里的铜炉早凉透了。\n\n谢延捧着**凤印**木匣跪在丹墀下，听见帘后传来一句：“皇后殿下让你查的盐引案，怎么拖到今日？”\n\n他虎躯一震，不敢抬头，心里却把这桩差事的性价比算了一遍。\n\n---"
+    },
+    {
+      "id": "mystery",
+      "label": "悬疑刑侦 · 雾港证物",
+      "genre": "mystery-thriller",
+      "characters": "沈栀, 陈队",
+      "protagonist": "沈栀",
+      "text": "冷库门刚拉起半尺，一股恐怖如斯的气息便扑面而来。\n\n沈栀摸了摸腰间的配枪（余三发子弹），蹲下查看死者衣袖上的干涸盐渍。\n\n“别动”。陈队在门边喝止了一句，“先拍现场。”\n\n殊不知，这件外套早在三天前就已经随棺下葬了。"
+    },
+    {
+      "id": "urban",
+      "label": "现代都市 · 加班长廊",
+      "genre": "urban-realism",
+      "characters": "陈默, 周总监",
+      "protagonist": "陈默",
+      "text": "他推开会议室玻璃门，把季度报表放在长桌上。\n\n他没急着落座，只盯着投影幕布上那条掉头向下的折线。\n\n他心里清楚，这并不是单纯的预算削减，而是部门裁撤的信号。\n\n周总监端起咖啡抿了一口：“陈默，此乃权宜之计，老夫劝你莫要自误。”\n\n周总监说完便起身走向电梯间。从文件夹里抽出一张离职申请，压在键盘底下。"
+    }
+  ],
+  "packetDemo": {
+    "ledger": {
+      "projectTitle": "药园试炼",
+      "protagonist": {
+        "name": "陆青"
+      },
+      "characterNames": ["陆青", "孙岳"],
+      "immutableWorldRules": [
+        "外门杂役不得私自进入后山药窟",
+        "灵泉改道会直接导致外门药草枯死"
+      ],
+      "chapters": [
+        {
+          "chapterNumber": 4,
+          "title": "渠底异动",
+          "coreSummary": "陆青夜巡发现灵泉水渠暗中被改道",
+          "requiredAnchors": ["铁牌", "灵泉改道"],
+          "futureForbiddenTerms": []
+        },
+        {
+          "chapterNumber": 5,
+          "title": "暗账对数",
+          "coreSummary": "陆青核对前三个月药草损耗账册",
+          "requiredAnchors": []
+        },
+        {
+          "chapterNumber": 12,
+          "title": "幽冥丹炉",
+          "coreSummary": "揭露三长老在后山私炼幽冥丹，截走外门灵泉",
+          "requiredAnchors": ["幽冥丹"]
+        }
+      ],
+      "knowledgeLedger": [
+        {
+          "entity": "药园水渠改道",
+          "firstChapter": 1,
+          "readerKnown": "灵泉流量每月莫名少三成",
+          "revealChapter": 12,
+          "fullTruth": "三长老在后山私炼幽冥丹，暗中凿穿石壁截水",
+          "revealForbiddenTerms": ["幽冥丹", "三长老"]
+        }
+      ]
+    },
+    "presets": [
+      { "chapter": 4, "label": "第 4 章（未到揭露章 · 自动打码防剧透）" },
+      { "chapter": 12, "label": "第 12 章（到达揭露章 · 解锁完整真相）" }
+    ]
+  },
+  "reviewDemo": {
+    "chapterText": "子时三刻，药园的木门被人拍响。\n\n陆青起身去开门。门外站着执事孙岳，雨水落到他身上就散成白雾。\n\n孙岳没进门，把一块铁牌丢在桌上：“丑正之前，把渠里的符拔干净。”\n\n孙岳转身靠在门柱上，合上了眼。",
+    "presets": {
+      "hallucinated": {
+        "label": "模拟翻车审读（编造假引文 + 越权劝改文风）",
+        "payload": {
+          "items": [
+            {
+              "category": "plot_continuity",
+              "severity": "warning",
+              "quote": "陆青冷冷一笑，空气仿佛凝固",
+              "description": "此处气氛不够压抑，建议增加五感描写与心理形容词"
+            }
+          ]
+        }
+      },
+      "grounded": {
+        "label": "模拟合格审读（原文逐字定位 + 客观因果问题）",
+        "payload": {
+          "items": [
+            {
+              "category": "causal_motivation",
+              "severity": "warning",
+              "quote": "孙岳转身靠在门柱上，合上了眼。",
+              "description": "孙岳交代完限时任务却未离开，也未说明为何留在门外监视，建议补出盯防或等回话的意图"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "genreTruthNotes": {
+    "classical-xianxia": { "status": "已深度实测", "note": "含历法刻数、修仙套话与现代管理词表" },
+    "historical-court": { "status": "已深度实测", "note": "含称谓穿帮、古历法、现代职场词与修仙串味" },
+    "wuxia-jianghu": { "status": "已扩充规则", "note": "含武侠客栈模板词与现代科技术语拦截" },
+    "mystery-thriller": { "status": "已扩充规则", "note": "含全知剧透词、凶案套路句与空洞恐怖标签拦截" },
+    "urban-realism": { "status": "已扩充规则", "note": "含古装串味、商战装逼套话与夸张生理套词拦截" },
+    "scifi-wasteland": { "status": "已扩充规则", "note": "含古武串味、伪科学科普腔与飞船警报套话拦截" },
+    "light-fantasy": { "status": "已扩充规则", "note": "含老套玄幻狠话与系统播报套词拦截" },
+    "romance-emotional": { "status": "已扩充规则", "note": "含油腻霸总语录与华丽套话词表" },
+    "general-clean": { "status": "通用洁净基座", "note": "启用全部跨题材通用去 AI 味、标点与主语追踪规则" }
+  },
+  "violationLabels": {
+    "FORMATTING_OR_LEDGER_ARTIFACTS": "Markdown 星号 / 括号算账注记残留",
+    "LEDGER_BOUNDARY_VIOLATION": "台账硬边界违规（遗漏锚点 / 剧透 / 旧词）",
+    "PREVIOUS_ENDING_ECHO": "开篇复述上一章结尾",
+    "DEGENERATION_DETECTED": "模型退化（复读 / 截断 / 占位符 / 自指）",
+    "CHAR_COUNT_CLAIM_MISMATCH": "引号旁宣称字数与实际不符",
+    "REGISTER_COLLISION": "题材语域穿帮 / 历法称谓错误",
+    "NARRATIVE_FILLER": "寒暄 / 解释尾巴 / 说书腔水话",
+    "PRONOUN_HEAD_STREAK": "连续多段代词起头",
+    "FORBIDDEN_AI_CLICHE": "高频 AI 套话与雕花词",
+    "EM_DASH_OVERUSE": "叙述破折号过密",
+    "NARRATIVE_RHETORICAL_QUESTIONS": "叙述层反问句收尾",
+    "MECHANICAL_SYMMETRIC_SKELETON": "机械对称句（不是……而是……）",
+    "RHETORICAL_AI_PATTERN": "否定排比 / 预告腔等 AI 修辞模板",
+    "PROSE_DENSITY_TIC": "局部密度异常（微动作 / 感叹号 / 电报体等）",
+    "ENGINEERING_META_LEAK": "大纲或工程结构词泄漏进正文",
+    "OUTLINE_COPY_DETECTED": "照搬细纲原句",
+    "PARAGRAPH_TOO_LONG": "单段字数过长",
+    "OVERLOADED_ACTION_CHAIN_SENTENCE": "单句逗号过载动作清单",
+    "PARAGRAPH_TERM_STUFFING": "同段专名全称机械复读",
+    "CHAPTER_TERM_FATIGUE": "全章口癖或复合词高频疲劳",
+    "EXPOSITION_DIALOGUE_DROUGHT": "长跨度无对白纯设定/独白",
+    "DIALOGUE_PUNCTUATION_ERROR": "对话标点错误（居中冒号 / 引号外句号）",
+    "SUBJECT_AMBIGUITY": "省略主语导致动作归属歧义",
+    "OPENING_PATTERN_STREAK": "连续多段同一种起头句式",
+    "WORD_COUNT_OUT_OF_RANGE": "章节总字数不在预设区间",
+    "HIGH_LEXICAL_ENTROPY_MATTR": "词汇熵 MATTR-50 偏高（换词洁癖）",
+    "EXCESSIVE_HAPAX_SYNONYM_CHURN": "一次性装饰词占比过高",
+    "LOW_TOPIC_ANCHOR_RECURRENCE": "相邻句话题衔接偏松",
+    "EXCESSIVE_TOPIC_ANCHOR_STUFFING": "笔录式高频重复同一主语",
+    "FLAT_BURSTINESS_CV": "句长过于均匀缺少节奏起伏",
+    "INSUFFICIENT_FLOWING_PARATAXIS": "长流意合句占比偏低",
+    "INSUFFICIENT_ULTRA_SHORT_CUTS": "极短冷切句占比偏低",
+    "MONOTONOUS_CADENCE_WINDOW": "连续 6 句长度单调区间",
+    "EXCESSIVE_DE_MODIFIER_DENSITY": "“的”字修饰密度过高",
+    "HEAVY_LEFT_BRANCHING_MODIFIERS": "欧化超长左分支定语",
+    "NESTED_DE_CHAINS": "嵌套“的…的…”长链",
+    "UNNATURAL_PARAGRAPH_DENSITY": "段落句数均值偏离自然节奏",
+    "SINGLE_SENTENCE_PARAGRAPH_STREAK": "连续多行一句一段机器排版",
+    "FLOATING_OPENING_DIALOGUE": "开场台词缺少说话人锚定"
+  },
+  "layerLabels": {
+    "universal": "通用层",
+    "genre": "题材层",
+    "project": "项目层"
+  },
+  "severityLabels": {
+    "error": "阻断错误",
+    "warning": "写法提示",
+    "info": "统计参考"
+  },
+  "metricLabels": {
+    "totalHan": "有效汉字",
+    "paragraphCount": "自然段数",
+    "sentenceCount": "总句数",
+    "sentLenMean": "平均句长",
+    "sentLenCV": "句长变异 CV",
+    "mattr50": "词汇熵 MATTR-50",
+    "dePer100Han": "每百字“的”数",
+    "emDashPer1kHan": "每千字破折号",
+    "maxPronounHeadStreak": "最大连续代词起头",
+    "formattingArtifactCount": "格式/注记硬伤"
+  },
+  "uiMessages": {
+    "allClearTitle": "本次体检全部通过（0 项告警）",
+    "allClearSub": "未命中当前题材规则、套话词表、退化或主语歧义检查。",
+    "passWithWarnings": "默认模式通过（0 项阻断错误；以下写法提示与统计参考请结合上下文酌情修改）",
+    "failDefault": "未通过（存在阻断级错误 error，需先处理硬伤）",
+    "failStrict": "严格模式未通过（--strict 下存在写法提示或统计越界告警）",
+    "normalizeChanged": "已按 InkBone 规则清理文本（保留对话破折号与白名单）。",
+    "normalizeUnchanged": "当前正文格式干净，无需清理。",
+    "jsonParseError": "JSON 格式有误，请检查括号、引号或逗号：",
+    "packetMaskedHint": "当前章节早于 revealChapter，里层 fullTruth 已隐去，且 futureBlueprints 中的剧透词已自动脱敏为 [REDACTED]。",
+    "packetRevealedHint": "当前章节已到达或超过 revealChapter，里层 fullTruth 已解锁释放。",
+    "reviewValid": "校验通过：每条引文都能在正文中逐字定位，且未包含越权改文风的评语。",
+    "reviewInvalid": "已拦截：存在原文找不到的编造引文、越权文评或非法审读分类。",
+    "linePrefix": "第 ",
+    "lineSuffix": " 行",
+    "matchLabel": "命中：",
+    "remedyLabel": "建议：",
+    "loadError": "本地引擎或配置加载失败。如直接通过 file:// 双击打开，请改用静态服务器（如 python3 -m http.server）或访问 GitHub Pages。"
+  }
+}

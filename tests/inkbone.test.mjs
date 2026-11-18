@@ -1027,12 +1027,21 @@ test("romance-emotional genre, dialogue punctuation hygiene, and pure-quote stre
 // 验证工程内所有可执行代码模块除中文注释外不包含任何中文字符字面量
 test("all JavaScript source files strictly separate code from Chinese data literals", () => {
   const hanRegex = /\p{Script=Han}/u;
+  const collectMjs = (dir) => {
+    const out = [];
+    for (const entry of fs.readdirSync(dir)) {
+      const full = path.join(dir, entry);
+      const stat = fs.statSync(full);
+      if (stat.isDirectory()) out.push(...collectMjs(full));
+      else if (entry.endsWith(".mjs")) out.push(full);
+    }
+    return out;
+  };
   const dirsToScan = ["bin", "src", "tests"];
   for (const dir of dirsToScan) {
     const absDir = path.resolve(rootDir, dir);
-    for (const entry of fs.readdirSync(absDir)) {
-      if (!entry.endsWith(".mjs")) continue;
-      const fullPath = path.resolve(absDir, entry);
+    for (const fullPath of collectMjs(absDir)) {
+      const rel = path.relative(rootDir, fullPath);
       const lines = fs.readFileSync(fullPath, "utf8").split(/\r?\n/u);
       lines.forEach((line, idx) => {
         // 剥离单行中文注释后检查剩余可执行代码部分是否含汉字
@@ -1040,11 +1049,23 @@ test("all JavaScript source files strictly separate code from Chinese data liter
         assert.equal(
           hanRegex.test(codePart),
           false,
-          `Unexpected Chinese literal in ${dir}/${entry}:${idx + 1}`
+          `Unexpected Chinese literal in ${rel}:${idx + 1}`
         );
       });
     }
   }
+  // 校验浏览器页面控制脚本也保持零汉字字面量
+  const appLines = fs
+    .readFileSync(path.resolve(rootDir, "docs/app.mjs"), "utf8")
+    .split(/\r?\n/u);
+  appLines.forEach((line, idx) => {
+    const codePart = line.replace(/\/\/.*$/u, "");
+    assert.equal(
+      hanRegex.test(codePart),
+      false,
+      `Unexpected Chinese literal in docs/app.mjs:${idx + 1}`
+    );
+  });
 });
 
 // 主语歧义：上一句主语是别的角色、下一句无主语动作，应报 SUBJECT_AMBIGUITY；补上主语后不报
@@ -1414,4 +1435,137 @@ test("compileBoundaryPacket redacts locked knowledge terms inside futureBlueprin
   const ch4Packet = compileBoundaryPacket(sample.ledger, 4);
   assert.equal(ch4Packet.knowledgeLedger[0].revealed, true);
   assert.ok(ch4Packet.knowledgeLedger[0].fullTruth.includes(sample.secretA));
+});
+
+// 浏览器静态试跑目录必须与核心引擎和 JSON 配置保持严格同步，且支持纯内存无文件系统运行
+test("packaged docs directory is self-contained and in sync with sources", async () => {
+  const { checkDocs } = await import("../scripts/build-docs.mjs");
+  const sync = checkDocs();
+  assert.equal(
+    sync.inSync,
+    true,
+    "docs/vendor is out of date, run npm run build:docs: " +
+      JSON.stringify({ missing: sync.missing, different: sync.different, extra: sync.extra })
+  );
+
+  // 确保 core 模块完全不引入 node: 内置模块或 config-loader
+  const coreDir = path.resolve(rootDir, "docs/vendor/core");
+  for (const entry of fs.readdirSync(coreDir)) {
+    const code = fs.readFileSync(path.join(coreDir, entry), "utf8");
+    assert.equal(/from\s+["']node:/u.test(code), false, `node import found in ${entry}`);
+    assert.equal(code.includes("config-loader.mjs"), false, `config-loader import found in ${entry}`);
+  }
+});
+
+// 纯内存核心入口：不依赖本地文件加载，供浏览器静态试跑台复用
+test("core browser-safe engine runs from pure JSON configs without filesystem access", async () => {
+  const { compileLinguisticsConfig, compileGenresConfig, compileSeverityConfig } = await import(
+    "../docs/vendor/core/config-compiler.mjs"
+  );
+  const { auditChapterText: auditCore } = await import("../docs/vendor/core/auditor.mjs");
+  const { normalizeProseText: normalizeCore } = await import("../docs/vendor/core/normalizer.mjs");
+  const ling = compileLinguisticsConfig(
+    JSON.parse(fs.readFileSync(path.resolve(rootDir, "docs/vendor/configs/zh-linguistics.json"), "utf8"))
+  );
+  const genres = compileGenresConfig(
+    JSON.parse(fs.readFileSync(path.resolve(rootDir, "docs/vendor/configs/genres.json"), "utf8"))
+  );
+  const presets = JSON.parse(
+    fs.readFileSync(path.resolve(rootDir, "docs/vendor/configs/presets.json"), "utf8")
+  );
+  const severity = compileSeverityConfig(
+    JSON.parse(fs.readFileSync(path.resolve(rootDir, "docs/vendor/configs/severity.json"), "utf8"))
+  );
+  const samples = JSON.parse(
+    fs.readFileSync(path.resolve(rootDir, "docs/samples.json"), "utf8")
+  );
+
+  for (const preset of samples.auditPresets) {
+    const res = auditCore(preset.text, {
+      genre: preset.genre,
+      skipLengthGate: true,
+      characterNames: preset.characters.split(/[,，\s]+/u).filter(Boolean),
+      ledger: preset.protagonist ? { protagonist: { name: preset.protagonist } } : undefined,
+      linguisticsConfig: ling,
+      genresConfig: genres,
+      presetsConfig: presets,
+      severityConfig: severity,
+    });
+    assert.ok(res.surgeryTargets.length > 0, `expected findings for preset ${preset.id}`);
+  }
+
+  const norm = normalizeCore(samples.auditPresets[1].text, {
+    lingConfig: ling,
+    stripMarkdownEmphasis: true,
+  });
+  assert.equal(norm.changed, true);
+});
+
+// 四个扩展题材包规则回归：悬疑、都市、科幻、轻小说各自准确命中题材套路
+test("expanded genre packs catch mystery, urban, scifi, and light-fantasy tropes cleanly", () => {
+  const s = fixtures.expandedGenrePackSamples;
+  const mys = auditChapterText(s.mysteryBad, { genre: "mystery-thriller", skipLengthGate: true });
+  assert.ok(mys.violations.some((v) => v.code === "FORBIDDEN_AI_CLICHE" && v.hits.some((h) => h.id === "cliche_mystery_trope")));
+  assert.ok(mys.violations.some((v) => v.code === "REGISTER_COLLISION" && v.hits.some((h) => h.id === "reg_omniscient_spoiler_tell")));
+
+  const urb = auditChapterText(s.urbanBad, { genre: "urban-realism", skipLengthGate: true });
+  const urbCli = urb.violations.find((v) => v.code === "FORBIDDEN_AI_CLICHE");
+  assert.ok(urbCli && urbCli.hits.some((h) => h.id === "cliche_urban_trope") && urbCli.hits.some((h) => h.id === "cliche_urban_reaction"));
+
+  const sci = auditChapterText(s.scifiBad, { genre: "scifi-wasteland", skipLengthGate: true });
+  assert.ok(sci.violations.some((v) => v.code === "FORBIDDEN_AI_CLICHE" && v.hits.some((h) => h.id === "cliche_scifi_lecture")));
+
+  const lgt = auditChapterText(s.lightBad, { genre: "light-fantasy", skipLengthGate: true });
+  assert.ok(lgt.violations.some((v) => v.code === "FORBIDDEN_AI_CLICHE" && v.hits.some((h) => h.id === "cliche_light_system_bloat")));
+});
+
+// 盲读包平衡洗牌：多对样本下 X=A 与 X=B 严格各占一半且同一 seed 可复现
+test("buildBlindPack balances X/Y side assignments across multiple pairs reproducibly", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "inkbone-bal-"));
+  try {
+    const dirA = path.join(tmp, "a");
+    const dirB = path.join(tmp, "b");
+    fs.mkdirSync(dirA);
+    fs.mkdirSync(dirB);
+    const aFiles = [];
+    const bFiles = [];
+    for (let i = 1; i <= 4; i += 1) {
+      const af = path.join(dirA, `0${i}-s.md`);
+      const bf = path.join(dirB, `0${i}-s.md`);
+      fs.writeFileSync(af, fixtures.evalVersionA);
+      fs.writeFileSync(bf, fixtures.evalVersionB);
+      aFiles.push(af);
+      bFiles.push(bf);
+    }
+    const p1 = buildBlindPack(aFiles, bFiles, { seed: 20261118 });
+    const p2 = buildBlindPack(aFiles, bFiles, { seed: 20261118 });
+    assert.deepEqual(
+      p1.pairs.map((p) => p.X),
+      p2.pairs.map((p) => p.X)
+    );
+    assert.equal(p1.pairs.filter((p) => p.X === "A").length, 2);
+    assert.equal(p1.pairs.filter((p) => p.X === "B").length, 2);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// 未配置题材的多文件目录如果混放不同题材，doctor 给出 mixedGenreFiles 提示；同题材不误报
+test("diagnoseProject warns on mixed-genre unconfigured folders without breaking explicit runs", async () => {
+  const { formatDoctorMarkdown } = await import("../src/index.mjs");
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "inkbone-mix-"));
+  try {
+    fs.writeFileSync(path.join(tmp, "ch01.md"), fixtures.mixedDoctorFolderSample.xianxiaText);
+    fs.writeFileSync(path.join(tmp, "ch02.md"), fixtures.mixedDoctorFolderSample.urbanText);
+    const diag = diagnoseProject([tmp], { skipLengthGate: true });
+    assert.ok(Array.isArray(diag.genre.mixedGenreFiles));
+    assert.equal(diag.genre.mixedGenreFiles.length, 1);
+    const md = formatDoctorMarkdown(diag);
+    assert.ok(md.includes("Mixed genres detected in unconfigured folder"));
+
+    const explicitDiag = diagnoseProject([tmp], { genre: "classical-xianxia", skipLengthGate: true });
+    assert.deepEqual(explicitDiag.genre.mixedGenreFiles, []);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });

@@ -19,3 +19,4 @@ jobs:
       - run: npm test
       - run: node bin/inkbone.mjs --help > /dev/null
       - run: npm run check:skill
+      - run: npm run check:docs

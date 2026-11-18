@@ -129,6 +129,21 @@ export function diagnoseProject(targetPaths, options = {}) {
     ? resolveGenre(options.genre, options.genresPath)
     : resolveGenre(inferred.genreId, options.genresPath);
 
+  // 未显式指定或从项目配置读取题材时，顺手检查目录内是否存在明确匹配到其他题材的章稿
+  const mixedGenreFiles = [];
+  if (!options.genre && sortedFiles.length > 1) {
+    for (let idx = 0; idx < sortedFiles.length; idx += 1) {
+      const single = inferGenreFromTexts([chapterTexts[idx]], options.genresPath);
+      if (single.autoDetected && single.genreId !== genrePack.id) {
+        mixedGenreFiles.push({
+          file: path.basename(sortedFiles[idx]),
+          inferredGenre: single.genreId,
+          matchedSignals: single.matchedSignals.slice(0, 4).map((s) => s.term),
+        });
+      }
+    }
+  }
+
   const totals = {
     chaptersScanned: sortedFiles.length,
     hardErrors: 0,
@@ -233,6 +248,7 @@ export function diagnoseProject(targetPaths, options = {}) {
         options.genreSource ||
         (options.genre ? "explicit" : inferred.autoDetected ? "inferred" : "default"),
       matchedSignals: inferred.matchedSignals,
+      mixedGenreFiles,
       defaultPreset: genrePack.defaultPreset,
       registerFormula: genrePack.registerFormula,
       voiceMatrix: genrePack.voiceMatrix,
@@ -250,6 +266,11 @@ export function formatDoctorMarkdown(diagnosis) {
     `- **Genre Pack**: \`${diagnosis.genre.id}\` (${diagnosis.genre.title}) [${diagnosis.genre.source}]`,
     `- **Preset**: \`${diagnosis.genre.defaultPreset}\``,
     `- **Register Formula**: ${diagnosis.genre.registerFormula}`,
+    ...(diagnosis.genre.mixedGenreFiles && diagnosis.genre.mixedGenreFiles.length > 0
+      ? [
+          `- **Warning**: Mixed genres detected in unconfigured folder (${diagnosis.genre.mixedGenreFiles.map((m) => `${m.file} -> ${m.inferredGenre}`).join(", ")}); pass \`--genre\` or add \`novel.json\` per book.`,
+        ]
+      : []),
     `- **Totals**: ${diagnosis.totals.chaptersScanned} chapter(s) | Hard Errors: ${diagnosis.totals.hardErrors} | Register Clash: ${diagnosis.totals.registerCollisions} | Fillers: ${diagnosis.totals.narrativeFillers} | AI Cliches: ${diagnosis.totals.aiCliches} | Rhetorical: ${diagnosis.totals.rhetoricalPatterns} | Density Tics: ${diagnosis.totals.densityTics} | Degeneration: ${diagnosis.totals.degenerationErrors} | Meta Leaks: ${diagnosis.totals.metaLeaks} | Pronoun Streaks: ${diagnosis.totals.pronounStreaks}`,
     ``,
     `| File | Han | Errors | RegClash | Fillers | Cliches | Rhet/Tics | ProStreak |`,

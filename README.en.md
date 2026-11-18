@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-orange.svg)](package.json)
-[![Version: 1.1](https://img.shields.io/badge/version-1.1-lightgrey.svg)](package.json)
+[![Version: 1.2](https://img.shields.io/badge/version-1.2-lightgrey.svg)](package.json)
 
-[中文](README.md) · 9 genre packs · 19 commands · 46 tests · zero external dependencies
+[中文](README.md) · 9 genre packs · 19 commands · 51 tests · zero external dependencies
 
 > **Language note:** Prompts, rule patterns, and CLI findings target **Chinese fiction**. This README documents the design and workflow in English.
 
@@ -64,6 +64,16 @@ Output:
 - **Line 7**: catches a calendar error (a traditional *shichen* only has 8 *ke*, never 10).
 - **Line 9**: tracks that the previous sentence opened with Sun Yue (`孙岳`), sees a subjectless action right after it, and warns that readers will read it as Sun Yue pulling the knife.
 
+### Before / After in Practice
+
+```markdown
+Before (typical AI draft):
+Forty-three-year-old veteran Zhou Jianmin ran the old-town delivery station and worried about cutting complaints before month-end. Taking a deep breath with a bitter smile, he pushed open the glass door so no one would see his unease.
+
+After (cut resume dump, stock tics, and explanatory tail):
+The complaint rate sat at 0.62%, well above the district cutoff. Zhou flattened the appeal sheets, pulled his yellow raincoat off the hook. Outside under the awning, Hu Fei tapped "decline" two rings into a dispatch alert.
+```
+
 ---
 
 ## Installation & Quickstart
@@ -101,15 +111,19 @@ npm install -g .
 inkbone --help
 ```
 
-Two common starting points:
+Three common starting points:
 
-1. **Starting a new book**
+1. **No setup? 30-second standalone chapter check**
+   ```bash
+   node bin/inkbone.mjs audit ch01.md --genre urban-realism --no-project --no-ledger --skip-length
+   ```
+2. **Starting a new book**
    ```bash
    node bin/inkbone.mjs init ./my-novel --genre classical-xianxia --title "BookTitle"
    # Build next-chapter context with un-revealed secrets masked out
    node bin/inkbone.mjs packet --ledger ./my-novel/ledger.json --chapter 4 --prev ./my-novel/ch03.md
    ```
-2. **Taking over an existing draft**
+3. **Taking over an existing draft**
    ```bash
    # Scan existing chapters (handles Chinese numerals and multi-volume folders) into a ledger
    node bin/inkbone.mjs import-ledger ./my-novel/chapters --out ./my-novel/ledger.json --title "BookTitle"
@@ -220,18 +234,21 @@ Run `node bin/inkbone.mjs --help` for full flag details.
 ```text
 bin/  src/         CLI and core checking modules (plain Node, zero dependencies)
 configs/           Universal rules, 9 genre packs, presets, and severity levels
+docs/              Browser-only static playground (zero-dependency core)
 prompts/           7 staged drafting & review prompts (00–06)
 resources/         Before/after examples, micro-techniques, 9 genre playbooks, eval guide
 benchmarks/        4 blind-eval opening seeds + chapter-1 test log (private drafts omitted)
 evals/             Runtime-agnostic skill trigger eval set
 skills/inkbone/    Generated self-contained skill package (do not edit directly)
-tests/             46 unit tests
+tests/             51 unit tests
 ```
 
 ```bash
-npm test               # Run all 46 tests (includes zero-Han-literal check and skill sync check; 1 private-corpus test auto-skips)
+npm test               # Run all 51 tests (includes zero-Han-literal, docs sync, and skill sync checks; 1 private-corpus test auto-skips)
 npm run build:skill    # Repackage skills/inkbone after editing bin/src/configs/prompts/resources
 npm run check:skill    # Verify skills/inkbone matches sources (enforced in CI)
+npm run build:docs     # Sync browser playground docs/vendor after editing src/core or configs
+npm run check:docs     # Verify docs/vendor matches sources (enforced in CI)
 ```
 
 ## Acknowledgments & License
