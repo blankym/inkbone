@@ -319,5 +319,42 @@
         }
       ]
     }
+  },
+  "packetRedactionSample": {
+    "ledger": {
+      "projectTitle": "镇抚司测试",
+      "knowledgeLedger": [
+        {
+          "entity": "主谋所在",
+          "firstChapter": 1,
+          "readerKnown": "有人在暗中夹带私银",
+          "fullTruth": "真凶是裴玄度，藏在旧砖窑。",
+          "revealChapter": 4,
+          "revealForbiddenTerms": ["裴玄度", "旧砖窑"]
+        }
+      ],
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "铁匣四饼",
+          "coreSummary": "开匣点数",
+          "futureForbiddenTerms": ["裴玄度", "旧砖窑"]
+        },
+        {
+          "chapterNumber": 4,
+          "title": "旧砖窑真主",
+          "coreSummary": "直扑旧砖窑捉拿裴玄度。",
+          "futureForbiddenTerms": []
+        },
+        {
+          "chapterNumber": 5,
+          "title": "审讯收网",
+          "coreSummary": "当堂对质。",
+          "futureForbiddenTerms": []
+        }
+      ]
+    },
+    "secretA": "裴玄度",
+    "secretB": "旧砖窑"
   }
 }

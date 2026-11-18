@@ -8,7 +8,7 @@
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-orange.svg)](package.json)
 [![Version: 1.1](https://img.shields.io/badge/version-1.1-lightgrey.svg)](package.json)
 
-[中文](README.md) · 9 genre packs · 19 commands · 45 tests · zero external dependencies
+[中文](README.md) · 9 genre packs · 19 commands · 46 tests · zero external dependencies
 
 > **Language note:** Prompts, rule patterns, and CLI findings target **Chinese fiction**. This README documents the design and workflow in English.
 
@@ -225,11 +225,11 @@ resources/         Before/after examples, micro-techniques, 9 genre playbooks, e
 benchmarks/        4 blind-eval opening seeds + chapter-1 test log (private drafts omitted)
 evals/             Runtime-agnostic skill trigger eval set
 skills/inkbone/    Generated self-contained skill package (do not edit directly)
-tests/             45 unit tests
+tests/             46 unit tests
 ```
 
 ```bash
-npm test               # Run all 45 tests (includes zero-Han-literal check and skill sync check; 1 private-corpus test auto-skips)
+npm test               # Run all 46 tests (includes zero-Han-literal check and skill sync check; 1 private-corpus test auto-skips)
 npm run build:skill    # Repackage skills/inkbone after editing bin/src/configs/prompts/resources
 npm run check:skill    # Verify skills/inkbone matches sources (enforced in CI)
 ```

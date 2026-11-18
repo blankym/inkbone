@@ -8,7 +8,7 @@
 [![依赖: 0](https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-0-orange.svg)](package.json)
 [![版本: 1.1](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.1-lightgrey.svg)](package.json)
 
-[English](README.en.md) · 9 个题材包 · 19 条命令 · 45 项测试 · 零第三方依赖
+[English](README.en.md) · 9 个题材包 · 19 条命令 · 46 项测试 · 零第三方依赖
 
 用大模型写长篇连载，头三章看着还行，写到十几章毛病就全出来了：
 
@@ -223,11 +223,11 @@ resources/         正反例对照、微技法、9 份题材手册、盲读说�
 benchmarks/        4 组盲读评估种子 + 第 1 章多版本实测记录（不含私有正文）
 evals/             跨运行时 Skill 触发评测集
 skills/inkbone/    自包含 Skill 发布目录（由脚本生成，勿直接修改）
-tests/             45 项单元测试
+tests/             46 项单元测试
 ```
 
 ```bash
-npm test               # 运行 45 项测试（含代码零汉字字面量检查与 skill 同步检查；一项私有语料回归在公开仓库自动跳过）
+npm test               # 运行 46 项测试（含代码零汉字字面量检查与 skill 同步检查；一项私有语料回归在公开仓库自动跳过）
 npm run build:skill    # 修改 bin/src/configs/prompts/resources 后重新生成 skills/inkbone
 npm run check:skill    # 检查 skills/inkbone 同步状态（CI 强制检查）
 ```

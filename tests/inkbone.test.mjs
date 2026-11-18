@@ -1399,3 +1399,19 @@ test("audit catches bracket author notes, post-tagged outside periods, standalon
   assert.equal(boldSpoilerRes.pass, false);
   assert.deepEqual(boldSpoilerRes.spoilerHits, s.boundaryLedger.chapters[0].futureForbiddenTerms);
 });
+
+// 连载隔离补洞回归：未到揭露章时，packet 的 futureBlueprints 也会联动脱敏禁止词
+test("compileBoundaryPacket redacts locked knowledge terms inside futureBlueprints until revealChapter", () => {
+  const sample = fixtures.packetRedactionSample;
+  const ch1Packet = compileBoundaryPacket(sample.ledger, 1);
+  assert.equal(ch1Packet.futureBlueprints.length, 2);
+  assert.equal(ch1Packet.futureBlueprints[0].chapterNumber, 4);
+  assert.equal(ch1Packet.futureBlueprints[0].title.includes(sample.secretB), false);
+  assert.equal(ch1Packet.futureBlueprints[0].coreSummary.includes(sample.secretA), false);
+  assert.equal(ch1Packet.futureBlueprints[0].coreSummary.includes(sample.secretB), false);
+  assert.ok(ch1Packet.futureBlueprints[0].coreSummary.includes("[REDACTED]"));
+
+  const ch4Packet = compileBoundaryPacket(sample.ledger, 4);
+  assert.equal(ch4Packet.knowledgeLedger[0].revealed, true);
+  assert.ok(ch4Packet.knowledgeLedger[0].fullTruth.includes(sample.secretA));
+});

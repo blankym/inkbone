@@ -46,6 +46,36 @@ function compileKnowledgeEntries(knowledgeLedger, numChapter) {
     });
 }
 
+// 收集当前章节仍处于锁定状态的禁泄底词（含本章 futureForbiddenTerms 与未到揭露章的 knowledgeLedger 禁止词）
+function collectLockedForbiddenTerms(ledger, chapterSpec, numChapter) {
+  const locked = new Set();
+  for (const forbiddenTerm of chapterSpec?.futureForbiddenTerms || []) {
+    if (forbiddenTerm) locked.add(forbiddenTerm);
+  }
+  for (const entry of ledger?.knowledgeLedger || []) {
+    if (!entry) continue;
+    const notRevealedYet =
+      entry.revealChapter == null || numChapter < Number(entry.revealChapter);
+    if (!notRevealedYet) continue;
+    for (const forbiddenTerm of entry.revealForbiddenTerms || []) {
+      if (forbiddenTerm) locked.add(forbiddenTerm);
+    }
+  }
+  return Array.from(locked).sort((a, b) => b.length - a.length);
+}
+
+// 在传递给写作端的只读后续细纲里脱敏仍处于锁定状态的剧透词
+function redactLockedTerms(text, lockedTerms) {
+  let out = String(text || "");
+  if (!out || !lockedTerms || lockedTerms.length === 0) return out;
+  for (const term of lockedTerms) {
+    if (out.includes(term)) {
+      out = out.split(term).join("[REDACTED]");
+    }
+  }
+  return out;
+}
+
 // 从全书台账配置中提取指定章节的硬边界创作数据包（借鉴 Pagekin 上下文隔离机制）
 export function compileBoundaryPacket(
   ledger,
@@ -62,14 +92,16 @@ export function compileBoundaryPacket(
     );
   }
 
-  // 提取后续章节大纲作为只读预告围栏，防止大模型提前泄底剧透
+  // 提取后续章节大纲作为只读预告围栏，并对未解锁秘密词做联动脱敏，防止侧路剧透
+  const lockedTerms = collectLockedForbiddenTerms(ledger, chapterSpec, numChapter);
   const futureBlueprints = (ledger.chapters || [])
     .filter((ch) => ch.chapterNumber > numChapter)
+    .sort((a, b) => a.chapterNumber - b.chapterNumber)
     .slice(0, 3)
     .map((ch) => ({
       chapterNumber: ch.chapterNumber,
-      title: ch.title,
-      coreSummary: ch.coreSummary,
+      title: redactLockedTerms(ch.title, lockedTerms),
+      coreSummary: redactLockedTerms(ch.coreSummary, lockedTerms),
     }));
 
   // 截取上一章末尾 600 字符作为只读起点状态边界（严禁在本章开篇重演回放）
@@ -174,31 +206,11 @@ export function verifyChapterBoundaries(
   const plainChapterText = stripMarkdownEmphasis(chapterText, [], cfg);
 
   // 2. 扫描是否违规提前出现后续章节才允许解锁的剧透词（防剧情抢跑）
-  const spoilerHits = [];
-  const spoilerSet = new Set();
-  const recordSpoiler = (term) => {
-    if (
-      term &&
-      (chapterText.includes(term) || plainChapterText.includes(term)) &&
-      !spoilerSet.has(term)
-    ) {
-      spoilerSet.add(term);
-      spoilerHits.push(term);
-    }
-  };
-  for (const forbiddenTerm of chapterSpec.futureForbiddenTerms || []) {
-    recordSpoiler(forbiddenTerm);
-  }
-  // 同时校验双栏知识台账中未到揭露章节的里层禁止词
   const numChapter = Number(chapterNumber);
-  for (const entry of ledger.knowledgeLedger || []) {
-    if (!entry) continue;
-    const notRevealedYet =
-      entry.revealChapter == null || numChapter < Number(entry.revealChapter);
-    if (notRevealedYet) {
-      for (const forbiddenTerm of entry.revealForbiddenTerms || []) {
-        recordSpoiler(forbiddenTerm);
-      }
+  const spoilerHits = [];
+  for (const term of collectLockedForbiddenTerms(ledger, chapterSpec, numChapter)) {
+    if (chapterText.includes(term) || plainChapterText.includes(term)) {
+      spoilerHits.push(term);
     }
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "inkbone",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Agent skill and zero-dependency CLI for writing and revising Chinese long-form fiction: staged prompts plus local checks for continuity, genre register, stock phrases and unclear subjects.",
   "type": "module",
   "bin": {
