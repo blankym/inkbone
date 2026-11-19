@@ -1,40 +1,75 @@
 # InkBone
 
-**A persistent ledger, style contract, and zero-dependency local QA CLI for writing Chinese long-form fiction with LLMs.**
+**A living ledger, style contract, and zero-dependency QA engine for writing Chinese long-form fiction with LLMs.**
 
+[![npm version](https://img.shields.io/npm/v/inkbone?color=cb3837&label=npm)](https://www.npmjs.com/package/inkbone)
+[![Online Playground](https://img.shields.io/badge/Live_Playground-Browser_Only_%C2%B7_Zero_Upload-2ea44f)](https://blankym.github.io/inkbone/)
 [![test](https://github.com/blankym/inkbone/actions/workflows/test.yml/badge.svg)](https://github.com/blankym/inkbone/actions/workflows/test.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-orange.svg)](package.json)
-[![Version: 2.0](https://img.shields.io/badge/version-2.0-lightgrey.svg)](package.json)
+[![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[中文](README.md) · **[Live Playground & Browser Doctor (client-side)](https://blankym.github.io/inkbone/)** · 9 genre packs · Simplified + Traditional Chinese · 25 commands · Full MCP Server · VS Code Extension · 66 tests · zero dependencies
+[中文](README.md) · **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** · **[npm](https://www.npmjs.com/package/inkbone)** · **[Discussions](https://github.com/blankym/inkbone/discussions)** · 9 genre packs · Simplified + Traditional Chinese · Full MCP Server · VS Code Extension · 66 tests
 
-> **Language note:** Prompts, rule patterns, and CLI findings target **Chinese fiction**. This README documents the design and workflow in English.
-
-Long-form LLM fiction usually breaks down around chapter 15:
-
-- A setup planted in chapter 3 gets forgotten or spoiled in narration forty chapters later.
-- Classical xianxia prose starts slipping in corporate jargon, impossible traditional time counts, or repetitive stock reactions.
-- Subject-dropped Chinese action sentences silently switch actors right after another character's line.
-- Ask a model to review its own draft and it often invents quotes that never appeared in the chapter while telling you to "add more sensory adjectives."
-
-Prompting alone stops working once earlier rules fall out of context. InkBone separates drafting guidance (staged prompts) from deterministic checks (local Node scripts running regexes, lexicons, ledger boundaries, and continuity rules).
+> **Language note:** Prompts, rule patterns, and CLI findings target **Chinese long-form fiction** (both Simplified and Traditional Chinese). This README documents the architecture and workflow in English.
 
 ---
 
-## See it work in 30 seconds
+## Pick Your Entry Point in 10 Seconds
 
-> **Want to try without cloning, or check a whole novel in your browser?** Open the **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** — pure client-side ES Modules with zero server uploads, supporting single-chapter inline `<mark>` highlights, auto Simplified/Traditional Chinese detection, one-click targeted rewrite prompts, **multi-chapter Browser Doctor (drop an entire `chapters/` folder for cross-chapter echo checks, Top 10 cliché rankings, auto-mined `ledger.json`, and platform `.txt` export)**, plus live `packet` / `check-ledger` / `verify-review` demos.
+| How you write | Fastest way to start | What you get immediately |
+| :--- | :--- | :--- |
+| **Web LLMs (DeepSeek / Claude / Gemini)**<br/>*(zero setup)* | Open **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** | Drop a chapter or an entire `chapters/` folder (**100% client-side, zero uploads**) → word-level highlights, cross-chapter echo ranking, **one-click targeted rewrite prompt**, and clean `.txt` export for Qidian / Fanqie / Qimao / JJWXC |
+| **Claude Code / Codex / Antigravity / OpenCode** | `npx skills add blankym/inkbone` | 8-stage fiction workflow + spoiler-safe living ledger + local linting + 9 genre playbooks |
+| **Claude Desktop / Cursor / Windsurf (MCP)** | Add `npx -y inkbone mcp` | One config loads **9 Tools + 8 Prompts + 11 Resources** — no separate skill setup needed |
+| **VS Code / Cursor & Terminal CLI** | `npx inkbone audit ch01.md` or install [VS Code Extension](editors/vscode-inkbone/) | Clone-free CLI checkups, copyright-safe style profiling, and live squiggly diagnostics (ESLint for Chinese fiction) |
+
+---
+
+## Why InkBone?
+
+Long-form LLM fiction usually breaks down around chapter 15:
+
+- Setups planted in chapter 3 get forgotten or spoiled in narration forty chapters later, or a character killed in chapter 12 casually walks back into dialogue in chapter 38.
+- Classical xianxia prose starts slipping in modern slang, impossible traditional time counts, and repetitive stock tics.
+- Subject-dropped Chinese action sentences silently shift actors right after another character's line.
+- Ask a model to review its own draft and it often invents quotes that never existed while nudging you to "add more sensory adjectives."
+
+Longer prompts cannot enforce themselves once rules drift out of context. **InkBone separates generative drafting from deterministic verification**: staged prompts align pacing and voice before writing, while a zero-dependency local engine verifies lexicons, ledger boundaries, calendars, and subject chains line by line afterward.
+
+### Client-Side Playground & Whole-Book Browser Doctor (Zero Uploads)
 
 ![InkBone Browser Playground: inline word-level highlights, rhythm strip, and one-click targeted rewrite prompt](docs/assets/playground-audit.png)
 
-<details>
-<summary>Expand Tab 4 screenshot: Browser Doctor multi-chapter checkup & platform exporter</summary>
+> **Tab 1 (Single Chapter Audit)** runs pure ES Modules inside your browser: drag-and-drop `.md`/`.txt`, automatic Simplified/Traditional Chinese rule switching, inline `<mark>` highlights, paragraph rhythm strip, and a **one-click targeted rewrite prompt** ready to paste back into any web LLM.
 
 ![InkBone Browser Doctor: multi-chapter sorting, cross-chapter echo detection, Top 10 clichés, and auto-mined ledger](docs/assets/playground-book-doctor.png)
 
-</details>
+> **Tab 4 (Browser Doctor)** accepts an entire `chapters/` directory: automatically sorts chapters (Arabic or Chinese numerals), scores cross-chapter echo rate and book-wide Top 10 clichés, exports an auto-mined `ledger.json`, and cleans chapters into platform-ready `.txt` bundles.
+
+### How It Differs from Pure-Prompt Writing Kits
+
+| Area | Typical Prompt-Only Kits | InkBone v2.0 |
+| :--- | :--- | :--- |
+| **Register & Cliché Control** | Relies on LLM willpower; drifts after a few thousand characters | **Deterministic code linter** with 9 genre packs, Simplified/Traditional auto-detection, and project overrides |
+| **Continuity & Anti-Spoiler** | Stuffs the entire outline into context and leaks twists early | **Living Ledger (`packet` + `settle` + `check-ledger`)**: redacts un-revealed `fullTruth` as `[REDACTED]` and guards against deceased characters reappearing |
+| **Review Grounding** | Models hallucinate quotes and rewrite your voice | **`verify-review` hard gate**: rejects any review item missing verbatim text or giving stylistic meddling advice |
+| **Friction & Privacy** | Locked to one IDE or requires cloud uploads | **Static zero-upload web app** + `npx` CLI + zero-dependency MCP server + VS Code linter |
+| **Quality Metric** | Easily degenerates into gaming AIGC detectors | **Never edits to chase detector scores**; optimizes for human blind reading (`eval-pack` / `eval-score`) |
+
+---
+
+## See It Catch Real Issues in 30 Seconds
+
+```mermaid
+flowchart LR
+    A["Pre-draft packet<br/>Redact un-revealed truth / flag due setups"] --> B["Scene-by-scene draft<br/>Stage 1-2"]
+    B --> C["Local linter audit / doctor<br/>Register / clichés / loops / subject chain / deceased guard"]
+    C --> D["Evidence review + verify-review<br/>Reject fake quotes & style meddling"]
+    D --> E["Targeted surgery Stage 4<br/>Edit flagged lines only"]
+    E --> F["Post-chapter settle + check-ledger<br/>Merge snapshots & setup states"]
+    F --> A
+```
 
 Save a 9-line sample chapter (`ch01.md`):
 
@@ -56,10 +91,10 @@ Add a character roster (`ledger.json`):
 { "characterNames": ["陆青", "孙岳"] }
 ```
 
-Run `doctor` locally (no API key or `npm install` needed):
+Run directly via `npx` (Node.js 18+, no clone or API key needed):
 
 ```bash
-node bin/inkbone.mjs doctor ch01.md --genre classical-xianxia --ledger ledger.json --skip-length
+npx inkbone doctor ch01.md --genre classical-xianxia --ledger ledger.json --skip-length --lang en
 ```
 
 Output:
@@ -71,9 +106,9 @@ Output:
 - **L9**: `subject_ambiguity` (previous actor 孙岳: 从袖子里摸出一把小刀，挑开了渠边的泥。)
 ```
 
-- **Line 3**: flags a stock AI cliché in narration while leaving quoted dialogue alone.
+- **Line 3**: flags a stock AI cliché in narration while leaving quoted dialogue untouched.
 - **Line 7**: catches a calendar error (a traditional *shichen* only has 8 *ke*, never 10).
-- **Line 9**: tracks that the previous sentence opened with Sun Yue (`孙岳`), sees a subjectless action right after it, and warns that readers will read it as Sun Yue pulling the knife.
+- **Line 9**: sees Sun Yue (`孙岳`) opened the prior sentence and warns that the following subjectless action reads as Sun Yue pulling the knife.
 
 ### Before / After in Practice
 
@@ -99,35 +134,44 @@ Run `node scripts/run-public-eval.mjs` to reproduce [benchmarks/public-report.md
 
 ---
 
-## Installation & Quickstart
+## 4 Ways to Get Started
 
-Requires **Node.js 18+**. No `npm install` needed.
+### Path 1: Browser Playground (Zero Setup)
 
-### Option 1: One-Line Agent Skill Install (Recommended)
+Open **[https://blankym.github.io/inkbone/](https://blankym.github.io/inkbone/)**:
 
-`skills/inkbone/` follows the open `agentskills` layout and bundles `SKILL.md`, the CLI, configs, 8 stage prompts, and craft resources. Install directly into Claude Code, Codex, Cursor, or Antigravity:
+1. **Single-Chapter Audit (Tab 1)**: paste or drop a `.md`/`.txt` chapter, pick a genre (Traditional Chinese switches automatically), inspect inline highlights and rhythm strip;
+2. **Targeted Rewrite**: click **Copy Targeted Rewrite Prompt** and paste it into DeepSeek / Claude / Gemini so the model only patches flagged line numbers;
+3. **Whole-Book Browser Doctor (Tab 4)**: select an entire `chapters/` folder to inspect cross-chapter echoes, book-wide Top 10 clichés, download an auto-mined `ledger.json`, or export clean `.txt` files for Qidian / Fanqie / Qimao / JJWXC.
+
+### Path 2: One-Line Agent Skill (`npx skills add`)
+
+`skills/inkbone/` follows the open `agentskills` spec and bundles `SKILL.md`, the CLI, configs, 8 stage prompts, and craft playbooks:
 
 ```bash
 npx skills add blankym/inkbone
 ```
 
-Or copy manually offline:
+Or copy offline:
 
 ```bash
 git clone https://github.com/blankym/inkbone.git
 cp -R inkbone/skills/inkbone <your-skills-dir>/inkbone
 ```
 
-Once loaded, you can ask your agent directly:
+Then just talk to your agent:
 - "Set up a mystery novel project with InkBone and generate `novel.json` and `ledger.json`."
 - "Compile the chapter 12 packet from `ledger.json`, outline the scene beats, and settle the ledger once drafted."
 - "Import `chapters/` into a ledger with auto-mined character names and run `doctor` across all volumes."
 
-*(If your agent runtime blocks shell execution, the prompt stages in `prompts/` and `resources/` still work standalone; local checks simply won't run automatically.)*
+### Path 3: Zero-Dependency MCP Server, Hooks & VS Code Extension
 
-### Option 2: Full Zero-Dependency MCP Server (Tools + Prompts + Resources) & Editor Integration
+InkBone ships a **zero-dependency stdio MCP server** exposing:
+- **9 Tools**: `inkbone_audit`, `inkbone_doctor`, `inkbone_packet`, `inkbone_settle`, `inkbone_check_ledger`, `inkbone_verify_review`, `inkbone_rewrite_prompt`, `inkbone_style_profile`, `inkbone_export`;
+- **8 Stage Prompts**: `inkbone/style-architect` through `inkbone/chapter-settler` (passing `genre` automatically attaches the matching playbook);
+- **11 Read-Only Resources**: `inkbone://playbooks/<genre>` (9 playbooks), micro-techniques guide, and 8 before/after cases.
 
-InkBone ships a **zero-dependency stdio MCP Server** exposing **9 structured tools** (including `inkbone_style_profile` & `inkbone_export`), **8 stage prompts** (`inkbone/beat-planner`, etc. — passing `genre` auto-attaches the matching playbook), and **11 read-only craft resources** (`inkbone://playbooks/<genre>`, micro-techniques, before/after cases). See [examples/mcp-config.json](examples/mcp-config.json):
+Add to Claude Desktop / Cursor / Windsurf (see [examples/mcp-config.json](examples/mcp-config.json)):
 
 ```json
 {
@@ -140,105 +184,110 @@ InkBone ships a **zero-dependency stdio MCP Server** exposing **9 structured too
 }
 ```
 
-- For automatic post-edit chapter auditing in Claude Code, see [examples/claude-code-hooks.json](examples/claude-code-hooks.json).
-- For real-time squiggly diagnostics and Quick Fixes inside **VS Code / Cursor**, see the standalone zero-dependency extension in [editors/vscode-inkbone/](editors/vscode-inkbone/).
+- **Claude Code auto-gate**: run audits automatically on chapter edits via [examples/claude-code-hooks.json](examples/claude-code-hooks.json).
+- **VS Code / Cursor real-time linter**: inline squigglies, Quick Fixes (strip asterisks / add to whitelist), rewrite prompt copy, and platform export in [editors/vscode-inkbone/](editors/vscode-inkbone/).
 
-### Option 3: Standalone CLI
+### Path 4: Standalone CLI (`npx` / Global Install / Offline Clone)
+
+Requires **Node.js 18+**, zero dependencies:
 
 ```bash
-# Run directly via npx (once published to npm) or install globally:
-npx inkbone audit ch01.md --genre classical-xianxia --format md --skip-length
+# Run immediately via npx
+npx inkbone --help
 
-# Or run offline from git clone (no npm install required):
-git clone https://github.com/blankym/inkbone.git
-cd inkbone
-node bin/inkbone.mjs --help       # Daily writing, revision & publishing commands
-node bin/inkbone.mjs --help-all   # All 25 commands
+# Or install globally
+npm install -g inkbone
+
+# Or run offline from git clone (no npm install required)
+git clone https://github.com/blankym/inkbone.git && cd inkbone
+node bin/inkbone.mjs --help
 ```
 
-Four common starting points:
+Four everyday workflows (replace `npx inkbone` with `inkbone` if installed globally):
 
 1. **30-second chapter check & rewrite prompt (Simplified + Traditional Chinese auto-detected)**
    ```bash
-   node bin/inkbone.mjs audit ch01.md --genre urban-realism --format md --lang en --no-project --no-ledger --skip-length
-   node bin/inkbone.mjs rewrite-prompt ch01.md --genre urban-realism --lang en --no-project --no-ledger --skip-length
+   npx inkbone audit ch01.md --genre urban-realism --format md --lang en --no-project --no-ledger --skip-length
+   npx inkbone rewrite-prompt ch01.md --genre urban-realism --lang en --no-project --no-ledger --skip-length
    ```
 2. **Copyright-safe style profiling + living ledger loop**
    ```bash
-   node bin/inkbone.mjs style-profile ./ref-samples --out ./my-novel/style.json
-   node bin/inkbone.mjs init ./my-novel --genre classical-xianxia --title "BookTitle"
-   node bin/inkbone.mjs packet --ledger ./my-novel/ledger.json --chapter 4 --prev ./my-novel/ch03.md
-   node bin/inkbone.mjs settle --ledger ./my-novel/ledger.json --patch ./my-novel/ch04-settlement.json
-   node bin/inkbone.mjs check-ledger ./my-novel/ledger.json --current 4
+   # Extracts statistics-only pacing profiles & customGates without copying source prose
+   npx inkbone style-profile ./ref-samples --out ./my-novel/style.json
+   npx inkbone init ./my-novel --genre classical-xianxia --title "BookTitle"
+   npx inkbone packet --ledger ./my-novel/ledger.json --chapter 4 --prev ./my-novel/ch03.md
+   npx inkbone settle --ledger ./my-novel/ledger.json --patch ./my-novel/ch04-settlement.json
+   npx inkbone check-ledger ./my-novel/ledger.json --current 4
    ```
 3. **Incremental long-form checkup (`--chapters` / `--changed`)**
    ```bash
-   node bin/inkbone.mjs import-ledger ./my-novel/chapters --auto-characters --out ./my-novel/ledger.json --title "BookTitle"
-   node bin/inkbone.mjs doctor ./my-novel/chapters --chapters 40-45 --lang en
-   node bin/inkbone.mjs doctor ./my-novel/chapters --changed --lang en
+   npx inkbone import-ledger ./my-novel/chapters --auto-characters --out ./my-novel/ledger.json --title "BookTitle"
+   npx inkbone doctor ./my-novel/chapters --chapters 40-45 --lang en
+   npx inkbone doctor ./my-novel/chapters --changed --lang en
    ```
-4. **Export clean chapters for Chinese web-fiction platforms (`qidian`, `fanqie`, `qimao`, `jjwxc`)**
+4. **Export clean chapters for web-fiction platforms (`qidian`, `fanqie`, `qimao`, `jjwxc`)**
    ```bash
-   node bin/inkbone.mjs export ./my-novel/chapters --platform qidian --out ./dist/qidian --merge-out ./dist/vol1.txt
+   npx inkbone export ./my-novel/chapters --platform qidian --out ./dist/qidian --merge-out ./dist/vol1.txt
    ```
 
 ---
 
-## Workflow & Core Checks
+## Workflow & Core Engine
 
-The `prompts/` directory defines seven stages (`00`–`06`), with the CLI checking between stages:
+The `prompts/` directory defines eight stages (`00`–`07`), with CLI/MCP enforcing deterministic gates between stages:
 
-1. **Register contract (`00-style-architect.md`)**: derives the book's genre pack, three-tier character voice matrix, and banned terms into `novel.json`.
-2. **Beat plan (`01-beat-planner.md`)**: pulls context via `packet`, lays out information placement and scene beats, and pauses for author sign-off before drafting. `check-outline` verifies beat sheets against `[待补充]` placeholders and required dramatic elements.
-3. **Drafting (`02-paratactic-renderer.md`)**: continues directly from the end of the prior chapter without copying beat-sheet prose verbatim.
-4. **Local audit (`audit` / `doctor`)**: reports blocking errors and line-level warnings.
+1. **Register contract (`00-style-architect.md`)**: derives the genre pack, three-tier character voice matrix, and banned terms into `novel.json`.
+2. **Beat plan (`01-beat-planner.md`)**: pulls spoiler-safe context via `packet`, lays out information placement and scene beats, and pauses for author sign-off before drafting. `check-outline` catches leftover `[待补充]` placeholders.
+3. **Drafting (`02-paratactic-renderer.md`)**: continues directly from the prior chapter's ending state without echoing the previous ending or copying beat-sheet prose.
+4. **Local audit (`audit` / `doctor`)**: reports blocking errors and line-level warnings (Chinese default, `--lang en` supported, auto Simplified/Traditional detection).
 5. **Grounded review (`04`, `05` + `verify-review` / `review-save`)**:
-   - `04-evidence-reviewer.md` checks plot continuity, timelines, physical logic, and character motivation.
-   - `05-reader-simulator.md` runs two passes: a cold reader with zero lore background, and a genre veteran scanning for drag or register slips.
-   - `verify-review` rejects any review item whose quote cannot be found verbatim in the chapter or whose feedback tries to meddle with prose aesthetics ("add sensory adjectives").
-6. **Targeted revision (`03-targeted-rewriter.md`)**: edits only verified review items and flagged lines, then re-audits.
-7. **Post-freeze scan (`detect`, optional)**: records one Zhuque AIGC scan after the chapter is locked.
+   - `04-evidence-reviewer.md` audits causality, timelines, physics, and character motivation.
+   - `05-reader-simulator.md` runs two passes: a cold reader with zero lore context, and a genre veteran scanning for drag or register slips.
+   - `verify-review` rejects any item whose quote is absent from the chapter or whose feedback meddles with prose style.
+6. **Targeted revision (`03-targeted-rewriter.md`)**: edits only verified review items and flagged line numbers, then re-audits.
+7. **Post-chapter settlement & ledger health (`07-chapter-settler.md` + `settle` / `check-ledger`)**: non-destructively merges chapter summaries, 8-field character snapshots, and foreshadowing state transitions into `ledger.json`, flagging overdue setups before the next chapter starts.
+8. **Post-freeze scan (`detect`, optional)**: records one external scan after locking the chapter; never loops to chase detector scores.
 
-### What it checks
+### What It Checks
 
 | Area | Examples | Default level |
 | :--- | :--- | :--- |
-| Ledger continuity | Missing required anchors, premature spoilers before `revealChapter`, deprecated terms, opening echoing the prior ending | `error` (fails check) |
+| Ledger & character state | Missing required anchors, premature spoilers before `revealChapter`, deprecated terms, opening echoing the prior ending; **deceased/departed characters acting or speaking outside flashbacks** | `error` / `warning` |
 | Format & length claims | Markdown asterisks, inline ledger notes like `(余13滴)`, mismatched quote-length claims | `error` (fails check) |
 | Model degeneration | Verbatim line/sentence loops, truncated endings, garbled characters, AI refusal/meta-leakage | `error` / `warning` |
 | Subject continuity | Subjectless action right after another character's action; three consecutive paragraphs opening the same way | `warning` |
-| Genre register | Modern slang in period settings, invalid traditional time counts, archaic phrasing in urban fiction | `warning` (escalates on high density) |
+| Register & script variant | Modern slang in period settings, invalid traditional time counts, archaic phrasing in urban fiction; **auto Simplified/Traditional Chinese & HK/TW web-novel rules** | `warning` (escalates on high density) |
 | Clichés & density | Stock micro-acting phrases, symmetric skeletons, excessive similes/exclamation marks/ellipses, telegraphic over-compression guard | `warning` (escalates on high density) |
 | Statistical fingerprint | 20+ metrics (MATTR-50, sentence-length CV, `的`-modifier density) compared against human reference ranges | `info` (diagnostic only) |
 
-Warnings exit `0` so authors review them in context; hard errors and high-frequency blocking violations exit non-zero for CI. Pass `--strict` to fail on all gates.
+Warnings exit `0` for human judgment; hard errors and high-frequency blocking violations exit non-zero for CI. Pass `--strict` to fail on all gates.
 
-### Three-layer rules
+### Three-Layer Rules
 
-`audit` and `doctor` walk upward from chapter files to find `novel.json` and merge three rule layers:
+`audit` and `doctor` walk upward from chapter files to discover `novel.json` and merge three rule layers:
 
-1. **Universal (`configs/`)**: clichés, filler phrases, dialogue punctuation, and syntax checks that apply across genres.
-2. **Genre (`configs/genres.json`)**: 9 built-in genre packs catching cross-genre leakage.
-3. **Project (`novel.json` + `.inkbone-whitelist`)**: book-specific vocabulary, banned patterns, literal whitelists, and `disabledRuleIds` to turn off any inherited rule you intentionally break.
+1. **Universal (`configs/zh-linguistics.json`, `configs/zh-traditional.json`)**: cross-genre clichés, filler phrases, punctuation, and Simplified/Traditional hygiene.
+2. **Genre (`configs/genres.json`)**: 9 built-in genre packs catching cross-genre register leakage.
+3. **Project (`novel.json` + `.inkbone-whitelist`)**: book-specific vocabulary, `customGates` from `style-profile`, literal whitelists, and `disabledRuleIds`.
 
-Before promoting a rule above the project layer, run `rule-stats --human <human-corpus> --ai <ai-drafts>` to check how often human authors write the same pattern. Patterns common in human prose are stylistic choices and stay in project rules.
-
----
-
-## Built-in Fiction Craft & Revision Library (`resources/`)
-
-Beyond mechanical linting, InkBone ships practical plotting and editing handbooks distilled from classic fiction breakdowns and web-novel editorial standards (loaded on demand per stage so prompts stay lean):
-
-- **[Micro-Techniques & Revision Lookup (`resources/micro_techniques.md`)](resources/micro_techniques.md)**: concrete execution formulas covering action-reaction "two-press, one-lift" beats, 80/20 climax framing (80% physical fallout and bystander benchmarks, 20% lethal strike), multi-purpose foreshadowing and pre-map-switch anchoring, post-climax three-part loot settlements, anti-bloat pacing rules, and a 9-symptom troubleshooting table.
-- **[8 Before/After Case Studies (`resources/bad_vs_good_cases.md`)](resources/bad_vs_good_cases.md)**: side-by-side rewrites showing how to cut multi-step micro-action bloat, apply late-in/early-out dialogue, weave worldbuilding stakes into concrete characters, and avoid over-trimming into telegraphic prose.
-- **[9 Genre Playbooks (`resources/genre_playbooks/`)](resources/genre_playbooks/)**: dedicated playbooks for xianxia, historical court, wuxia, mystery/thriller, urban realism, sci-fi wasteland, light fantasy, romance, and clean general fiction covering core tension drivers, stale trope traps, physical props, and chapter hooks.
+Before promoting a rule above the project layer, run `npx inkbone rule-stats --human <human-corpus> --ai <ai-drafts>` to confirm human authors do not write the same pattern frequently.
 
 ---
 
-## Genre Packs & Command Reference
+## Built-in Fiction Craft Library (`resources/`)
+
+Beyond deterministic linting, InkBone bundles practical plotting and editing guides (loaded on demand per stage so prompts stay lean):
+
+- **[Micro-Techniques & Revision Lookup (`resources/micro_techniques.md`)](resources/micro_techniques.md)**: action-reaction "two-press, one-lift" beats, 80/20 climax framing, multi-purpose foreshadowing, post-climax three-part loot settlements, anti-bloat discipline, and a 9-symptom revision lookup table.
+- **[8 Before/After Case Studies (`resources/bad_vs_good_cases.md`)](resources/bad_vs_good_cases.md)**: side-by-side rewrites covering micro-action trimming, late-in/early-out dialogue, grounded worldbuilding, and avoiding telegraphic over-compression.
+- **[9 Genre Playbooks (`resources/genre_playbooks/`)](resources/genre_playbooks/)**: dedicated playbooks for xianxia, historical court, wuxia, mystery/thriller, urban realism, sci-fi wasteland, light fantasy, romance, and clean general fiction.
+
+---
+
+## Genre Packs & 25-Command Reference
 
 <details>
-<summary>9 built-in genre packs (run <code>node bin/inkbone.mjs genres</code> to inspect)</summary>
+<summary>Expand 9 built-in genre packs (run <code>npx inkbone genres</code> to inspect)</summary>
 
 - `classical-xianxia`: classical cultivation and xianxia
 - `historical-court`: historical intrigue and period drama
@@ -254,22 +303,23 @@ Beyond mechanical linting, InkBone ships practical plotting and editing handbook
 
 | Group | Command | Purpose |
 | :--- | :--- | :--- |
-| Living ledger | `genres` | List all 9 built-in genre packs and default presets |
-| | `init` | Scaffold `novel.json` and `ledger.json` in a project directory |
+| Living ledger | `genres` / `init` | List all 9 genre packs / scaffold `novel.json` and `ledger.json` |
 | | `import-ledger` | Scan existing chapters, heuristically mine candidate character names, and merge ledger non-destructively |
-| | `packet` | Compile next-chapter context with un-revealed `fullTruth` hidden, closed foreshadowing filtered, and optional snapshot pruning |
-| | `check-ledger` | Validate ledger health (duplicate/missing chapters, invalid reveal order, empty roster, overdue foreshadowing) |
-| | `settle` | Non-destructively merge post-chapter settlement JSON into `ledger.json` with diff and health check |
-| Format & QA | `normalize` | Deterministically clean bold/italic asterisks, dividers, and malformed ellipses/dashes |
-| | `check-outline` | Check Stage 1 beat outlines for `[待补充]` placeholders and missing dramatic facets |
-| | `audit` | Audit a single chapter (supports `--format md`, `--variant auto\|zh-hans\|zh-hant`, deceased-character guard) |
-| | `doctor` | Full or incremental directory checkup (`--chapters 40-45` / `--changed`, preserving boundary echo checks) |
+| | `packet` | Compile spoiler-safe context with un-revealed `fullTruth` redacted and optional snapshot pruning |
+| | `check-ledger` / `settle` | Validate ledger health & overdue setups / merge post-chapter settlement JSON cleanly |
+| Format & QA | `normalize` / `check-outline` | Strip asterisks & normalize dashes / verify Stage 1 beat outlines |
+| | `audit` / `doctor` | Single-chapter audit (Simplified/Traditional + deceased guard) / full or incremental checkup (`--chapters` / `--changed`) |
 | | `rewrite-prompt` | Audit a chapter and emit a copy-ready targeted rewrite prompt for web LLMs |
-| Style & publish | `style-profile` | Copyright-safe statistical style profile, nearest preset match & `customGates` generator |
-| | `export` | Clean Markdown & format chapters for `qidian`, `fanqie`, `qimao`, or `jjwxc` (single files or merged volume) |
+| Style & publish | `style-profile` / `export` | Copyright-safe statistical style profiler / clean `.txt` export for `qidian`, `fanqie`, `qimao`, `jjwxc` |
 | Protocol | `mcp` | Start the zero-dependency stdio MCP server (9 tools, 8 prompts, 11 resources) |
+
+<details>
+<summary>Expand review, blind evaluation & rule calibration commands (11 advanced commands)</summary>
+
+| Group | Command | Purpose |
+| :--- | :--- | :--- |
 | Review & blind eval | `verify-review` | Verify that review quotes exist verbatim in the chapter and reject style meddling |
-| | `review-save` | Verify and archive a review JSON with chapter SHA-256 and reviewer/writer model metadata |
+| | `review-save` | Verify and archive a review JSON with chapter SHA-256 and model metadata |
 | | `review-stats` | Compare issue counts and skip points across saved review revisions |
 | | `eval-pack` | Build an anonymized X/Y blind reading packet alongside a private `key.json` |
 | | `eval-score` | Tally blind reader ballots with win rates, sign-test p-values, and skip-quote verification |
@@ -277,10 +327,12 @@ Beyond mechanical linting, InkBone ships practical plotting and editing handbook
 | | `calibrate` | Generate statistics-only p10/median/p90 reference ranges from a human corpus |
 | | `rule-stats` | Measure per-rule hit rates per 10k characters across human vs. AI texts |
 | | `mine` | Extract 3/4-gram phrases overused in AI drafts compared to human prose |
-| | `detect` | Run a single cached Zhuque AIGC scan (requires `.env` API key), record-only |
+| | `detect` | Run a single cached external scan (requires `.env` API key), record-only |
 | | `benchmark` | Compare corpus metrics against manifest entries |
 
-Run `node bin/inkbone.mjs --help` for daily commands, or `--help-all` for all 25 commands.
+</details>
+
+Run `npx inkbone --help` for daily commands, or `npx inkbone --help-all` for all 25 commands.
 
 ---
 
@@ -302,17 +354,22 @@ tests/             66 unit tests
 
 ```bash
 npm test               # Run all 66 tests (zero-Han-literal, full MCP, zh-hant, VS Code core, docs & skill sync)
-npm run build:skill    # Repackage skills/inkbone after editing bin/src/configs/prompts/resources
+npm run build:skill    # Repackage skills/inkbone after editing sources/configs/prompts/README
 npm run check:skill    # Verify skills/inkbone matches sources (enforced in CI)
 npm run build:docs     # Sync browser playground docs/vendor after editing src/core or configs
 npm run check:docs     # Verify docs/vendor matches sources (enforced in CI)
 ```
 
-## Acknowledgments & License
+## Contributing, Acknowledgments & License
 
-- Chapter boundary isolation and verbatim-quote review checks inspired by [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)
-- Chinese clause-trunk and symmetric-frame checks inspired by [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)
-- Rhetorical density grading, degeneration detection, and meta-leak checks inspired by [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)
-- Community & feedback: [GitHub Discussions](https://github.com/blankym/inkbone/discussions) · [Report False Positive / Propose Rule](https://github.com/blankym/inkbone/issues/new/choose) · [LINUX DO](https://linux.do/)
+Try a real draft in the **[Live Playground](https://blankym.github.io/inkbone/)**, and feel free to report false positives or propose new genre rules:
 
-Released under the [MIT License](LICENSE), including all rule configurations.
+- **Discussions & Showcase**: [GitHub Discussions](https://github.com/blankym/inkbone/discussions)
+- **Report False Positive / Propose Rule**: [Issue Forms](https://github.com/blankym/inkbone/issues/new/choose)
+- **Inspirations**:
+  - Chapter boundary isolation and verbatim-quote review checks inspired by [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)
+  - Chinese clause-trunk and symmetric-frame checks inspired by [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)
+  - Rhetorical density grading, degeneration detection, and meta-leak checks inspired by [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)
+  - Thanks to early testers from the [LINUX DO](https://linux.do/) community
+
+Released under the [MIT License](LICENSE), including all rule configurations and playbooks.
