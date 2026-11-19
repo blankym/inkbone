@@ -79,7 +79,8 @@ function redactLockedTerms(text, lockedTerms) {
 export function compileBoundaryPacket(
   ledger,
   chapterNumber,
-  previousChapterText = ""
+  previousChapterText = "",
+  options = {}
 ) {
   const numChapter = Number(chapterNumber);
   const chapterSpec = (ledger.chapters || []).find(
@@ -125,16 +126,78 @@ export function compileBoundaryPacket(
   if (compiledKnowledge !== undefined) {
     packet.knowledgeLedger = compiledKnowledge;
   }
+
+  // 若指定本章出场角色（options.activeCharacters 或 chapterSpec.activeCharacters），按需裁剪角色快照以控制长篇上下文体积
   if (ledger.characterSnapshots !== undefined) {
-    packet.characterSnapshots = ledger.characterSnapshots;
+    const activeList = Array.isArray(options.activeCharacters)
+      ? options.activeCharacters
+      : Array.isArray(chapterSpec.activeCharacters)
+        ? chapterSpec.activeCharacters
+        : null;
+    if (
+      activeList &&
+      activeList.length > 0 &&
+      ledger.characterSnapshots &&
+      typeof ledger.characterSnapshots === "object" &&
+      !Array.isArray(ledger.characterSnapshots)
+    ) {
+      const keepSet = new Set(activeList.filter(Boolean));
+      const pName =
+        typeof ledger.protagonist === "string"
+          ? ledger.protagonist
+          : ledger.protagonist?.name;
+      if (pName) keepSet.add(pName);
+      const filteredSnapshots = {};
+      let omitted = 0;
+      for (const [key, snap] of Object.entries(ledger.characterSnapshots)) {
+        const snapName = snap?.name || key;
+        if (keepSet.has(key) || keepSet.has(snapName)) {
+          filteredSnapshots[key] = snap;
+        } else {
+          omitted += 1;
+        }
+      }
+      packet.characterSnapshots = filteredSnapshots;
+      if (omitted > 0) {
+        packet.omittedCharacterSnapshotsCount = omitted;
+      }
+    } else {
+      packet.characterSnapshots = ledger.characterSnapshots;
+    }
   }
+
+  // 透传截至本章已埋下的活跃伏笔（默认过滤已回收/放弃条目），并单列本章到期或超期未收伏笔提醒
   if (Array.isArray(ledger.foreshadowing)) {
-    packet.foreshadowing = ledger.foreshadowing.filter(
-      (item) =>
-        item &&
-        (item.plantedChapter == null ||
-          Number(item.plantedChapter) <= numChapter)
-    );
+    const includeClosed = Boolean(options.includeClosedForeshadowing);
+    const overdueThreshold =
+      Number.isFinite(Number(options.overdueThreshold)) && Number(options.overdueThreshold) > 0
+        ? Number(options.overdueThreshold)
+        : 20;
+    const closedStatuses = new Set(["paid_off", "abandoned"]);
+    const visibleForeshadowing = ledger.foreshadowing.filter((item) => {
+      if (!item) return false;
+      if (item.plantedChapter != null && Number(item.plantedChapter) > numChapter) {
+        return false;
+      }
+      if (!includeClosed && closedStatuses.has(item.status)) {
+        return false;
+      }
+      return true;
+    });
+    packet.foreshadowing = visibleForeshadowing;
+
+    const dueForeshadowing = visibleForeshadowing.filter((item) => {
+      if (closedStatuses.has(item.status)) return false;
+      const target = item.targetChapter != null ? Number(item.targetChapter) : null;
+      const planted = item.plantedChapter != null ? Number(item.plantedChapter) : null;
+      return (
+        (target !== null && target <= numChapter) ||
+        (planted !== null && numChapter - planted >= overdueThreshold)
+      );
+    });
+    if (dueForeshadowing.length > 0) {
+      packet.dueForeshadowing = dueForeshadowing;
+    }
   }
 
   return packet;

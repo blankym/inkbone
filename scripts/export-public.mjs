@@ -23,6 +23,7 @@ export const PUBLIC_ITEMS = [
   "configs",
   "docs",
   "evals",
+  "examples",
   "prompts",
   "resources",
   "scripts",

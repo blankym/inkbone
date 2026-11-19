@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "inkbone": {
+      "command": "npx",
+      "args": ["-y", "inkbone", "mcp"]
+    },
+    "inkbone-local": {
+      "command": "node",
+      "args": ["/ABS/PATH/TO/inkbone/bin/inkbone.mjs", "mcp"]
+    }
+  }
+}

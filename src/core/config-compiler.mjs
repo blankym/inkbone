@@ -183,10 +183,36 @@ function compileAuxiliaryRules(raw) {
       }
     : null;
 
+  const charExtRaw = raw.characterExtraction || null;
+  const compiledCharExtraction = charExtRaw
+    ? {
+        ...charExtRaw,
+        surnameSet: new Set(charExtRaw.commonSurnames || []),
+        compoundSurnames: [...(charExtRaw.compoundSurnames || [])].sort(
+          (a, b) => b.length - a.length
+        ),
+        titleSuffixes: [...(charExtRaw.titleSuffixes || [])].sort(
+          (a, b) => b.length - a.length
+        ),
+        stopwordSet: new Set([
+          ...(raw.commonTwoCharStopwords || []),
+          ...(charExtRaw.nonPersonStopwords || []),
+        ]),
+        speechActionRegex:
+          charExtRaw.boundaryLeadPattern && charExtRaw.speechActionPattern
+            ? new RegExp(
+                `${charExtRaw.boundaryLeadPattern}([\\p{Script=Han}]{2,4})(?=${charExtRaw.speechActionPattern})`,
+                "gu"
+              )
+            : null,
+      }
+    : null;
+
   return {
     compiledDensity,
     compiledDegeneration,
     compiledCrossParallel,
+    compiledCharExtraction,
   };
 }
 
@@ -259,6 +285,7 @@ export function compileLinguisticsConfig(raw) {
       crossParagraphParallel: aux.compiledCrossParallel,
       densityRules: aux.compiledDensity,
       degeneration: aux.compiledDegeneration,
+      characterExtraction: aux.compiledCharExtraction,
     },
   };
 }

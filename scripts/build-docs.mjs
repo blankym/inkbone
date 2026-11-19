@@ -15,6 +15,7 @@ const CONFIG_FILES = [
   "configs/genres.json",
   "configs/presets.json",
   "configs/severity.json",
+  "configs/messages.json",
 ];
 
 // 列出目录下所有文件名（按字典序）

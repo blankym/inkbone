@@ -5,6 +5,7 @@ import { collectTextFiles } from "./calibrator.mjs";
 import { loadLinguisticsConfig } from "./config-loader.mjs";
 import { countHan } from "./profiler.mjs";
 import { parseChineseOrArabicNumber } from "./rule-engine.mjs";
+import { extractCandidateCharacters } from "./core/ledger-manager.mjs";
 
 export { parseChineseOrArabicNumber };
 
@@ -97,6 +98,7 @@ export function importLedgerFromChapters(targetPaths, options = {}) {
   const parsedEntries = [];
   const skippedFiles = [];
   const termFreq = new Map();
+  const matchedTexts = [];
 
   for (const filePath of files) {
     const rawContent = fs.readFileSync(filePath, "utf8");
@@ -106,6 +108,7 @@ export function importLedgerFromChapters(targetPaths, options = {}) {
       continue;
     }
 
+    matchedTexts.push(rawContent);
     const hanCount = countHan(rawContent, hanRegex);
     const bookTerms = extractChapterBookTerms(rawContent, bookTitleRegex);
     for (const term of bookTerms) {
@@ -157,11 +160,36 @@ export function importLedgerFromChapters(targetPaths, options = {}) {
     (a, b) => Number(a.chapterNumber) - Number(b.chapterNumber)
   );
 
+  // 零依赖启发式挖掘高频角色名候选，解决存量书稿 characterNames 默认为空导致主语歧义不触发的问题
+  const candidateCharacters = extractCandidateCharacters(matchedTexts, lingConfig, {
+    minTotalCount: options.minCharacterCount,
+    maxCandidates: options.maxCharacterCandidates,
+  });
+  const baseCharacterNames = Array.isArray(existing.characterNames)
+    ? [...existing.characterNames]
+    : [];
+  let autoPopulatedCharacters = [];
+  if (options.autoPopulateCharacters && candidateCharacters.length > 0) {
+    const existingSet = new Set(baseCharacterNames);
+    const minConfidence = options.minCharacterConfidence || "medium";
+    const eligible = candidateCharacters.filter(
+      (c) => minConfidence === "medium" || c.confidence === "high"
+    );
+    for (const c of eligible) {
+      if (!existingSet.has(c.name)) {
+        baseCharacterNames.push(c.name);
+        existingSet.add(c.name);
+        autoPopulatedCharacters.push(c.name);
+      }
+    }
+  }
+
   // 深浅保真地克隆其余台账字段，并补全双栏知识与伏笔空壳
   const ledger = {
     ...existing,
     projectTitle: existing.projectTitle || options.projectTitle || "",
     protagonist: existing.protagonist || "",
+    characterNames: baseCharacterNames,
     immutableWorldRules: Array.isArray(existing.immutableWorldRules)
       ? existing.immutableWorldRules
       : [],
@@ -195,6 +223,8 @@ export function importLedgerFromChapters(targetPaths, options = {}) {
       addedChapters,
       skippedFiles,
       candidateTerms: candidateTerms.slice(0, 60),
+      candidateCharacters,
+      autoPopulatedCharacters,
     },
   };
 }

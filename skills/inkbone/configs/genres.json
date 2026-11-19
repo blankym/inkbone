@@ -198,6 +198,18 @@
           "category": "anachronism",
           "pattern": "肾上腺素|多巴胺|条件反射|物理定律|概率论|基因",
           "remedy": "Replace modern scientific terms with somatic martial sensations."
+        },
+        {
+          "id": "reg_xianxia_leak_in_wuxia",
+          "category": "genre_leak",
+          "pattern": "灵石|筑基|金丹期|元婴|储物袋|神识扫过|飞升渡劫",
+          "remedy": "Remove high-fantasy xianxia cultivation terms leaked into grounded wuxia."
+        },
+        {
+          "id": "reg_modern_office_in_wuxia",
+          "category": "anachronism",
+          "pattern": "性价比|情绪价值|信息差|KPI|时间节点|逻辑闭环",
+          "remedy": "Replace modern corporate jargon with jianghu vernacular."
         }
       ],
       "clicheRules": [
@@ -212,6 +224,20 @@
           "category": "stale_cliche",
           "scope": "all",
           "pattern": "悦来客栈|两斤熟牛肉|上等女儿红|虎躯一震"
+        },
+        {
+          "id": "cliche_wuxia_blade_hyperbole",
+          "category": "stale_cliche",
+          "scope": "narration",
+          "pattern": "剑气纵横(?:数|十|百|千|三万)[丈里]|内力如(?:决堤|奔涌)(?:的)?(?:江河|洪水)|电光火石(?:之)?间"
+        }
+      ],
+      "fillerRules": [
+        {
+          "id": "filler_wuxia_storyteller",
+          "category": "narrator_intrusion",
+          "scope": "narration",
+          "pattern": "江湖人称[^，。！？\\r\\n]{2,10}，端的是|说时迟那时快"
         }
       ]
     },
@@ -249,6 +275,13 @@
           "category": "pov_leak",
           "pattern": "殊不知|他做梦也没想到|只是此刻他还不知道|谁也没有注意到角落里|命运早已(?:悄然)?写好",
           "remedy": "Keep strict limited POV; never spoil future turns via omniscient commentary."
+        },
+        {
+          "id": "reg_mystery_instinct_shortcut",
+          "category": "logic_shortcut",
+          "scope": "narration",
+          "pattern": "直觉告诉(?:他|她|我)这绝非偶然|第六感(?:疯狂)?预警|空气中弥漫着(?:阴谋|死亡)的味道",
+          "remedy": "Replace vague detective intuition with observable physical discrepancies or forensic evidence."
         }
       ],
       "clicheRules": [
@@ -257,6 +290,20 @@
           "category": "mystery_cliche",
           "scope": "narration",
           "pattern": "案发现场[^，。！？\\r\\n]{0,6}干净得可怕|死者嘴角(?:挂着|带着)[^，。！？\\r\\n]{0,4}微笑|背后一定隐藏着(?:什么)?(?:惊天)?秘密"
+        },
+        {
+          "id": "cliche_mystery_freeze_cliche",
+          "category": "mystery_cliche",
+          "scope": "narration",
+          "pattern": "时间仿佛(?:在这一刻)?静止|露出(?:一丝|一抹)意味深长的笑(?:容|意)|一股寒意从脚底直冲天灵盖"
+        }
+      ],
+      "fillerRules": [
+        {
+          "id": "filler_mystery_handholding",
+          "category": "explanatory_padding",
+          "scope": "narration",
+          "pattern": "这无疑印证了(?:他|她)心中的猜想|所有线索瞬间串联在了一起"
         }
       ]
     },
@@ -288,6 +335,13 @@
           "category": "archaic_clash",
           "pattern": "此乃|断不会|尔等|老夫|一息之?间|拱手道|拂袖而去|莫要自误|半炷香",
           "remedy": "Remove classical/costume-drama phrasing from modern urban narrative."
+        },
+        {
+          "id": "reg_bureaucratic_speech_in_urban",
+          "category": "register_clash",
+          "scope": "all",
+          "pattern": "抓好贯彻落实|赋能业务全链路|打造差异化护城河|全面深化战略协同",
+          "remedy": "Keep daily urban dialogue grounded instead of copying press-release jargon unless satirizing a meeting."
         }
       ],
       "clicheRules": [
@@ -302,6 +356,20 @@
           "category": "purple_reaction",
           "scope": "narration",
           "pattern": "(?:浑身|全身)血液(?:瞬间|仿佛)?凝固|大脑(?:瞬间)?一片空白"
+        },
+        {
+          "id": "cliche_urban_wealth_inflation",
+          "category": "urban_cliche",
+          "scope": "narration",
+          "pattern": "一身价值(?:不菲|连城)的手工高定|名震(?:全城|京圈|沪圈)的顶级(?:豪门|名流)|挥手间便是一掷千金"
+        }
+      ],
+      "fillerRules": [
+        {
+          "id": "filler_urban_smalltalk_exit",
+          "category": "pleasantry_filler",
+          "scope": "all",
+          "pattern": "那行，有空再聚|改天请你吃饭啊|路上注意安全，到家发个微信"
         }
       ]
     },
@@ -333,6 +401,13 @@
           "category": "genre_leak",
           "pattern": "拱手道|洒家|小二|客官|丹田气海|掐诀|老夫",
           "remedy": "Remove classical wuxia/xianxia idioms from sci-fi setting."
+        },
+        {
+          "id": "reg_scifi_pseudoscience_buzz",
+          "category": "pseudo_science",
+          "scope": "narration",
+          "pattern": "量子纠缠(?:瞬间)?改变了(?:他|她)的命运|突破了(?:人类)?物理法则的极限|未知的神秘暗物质能量",
+          "remedy": "Anchor sci-fi mechanisms in specific hardware limits, readings, or operational costs instead of vague buzzwords."
         }
       ],
       "clicheRules": [
@@ -341,6 +416,20 @@
           "category": "scifi_cliche",
           "scope": "narration",
           "pattern": "根据(?:量子力学|相对论)(?:的)?原理|高达百分之九十九点九的?致死率|警报声响彻整个(?:空间站|飞船|基地)"
+        },
+        {
+          "id": "cliche_scifi_ai_voice",
+          "category": "scifi_cliche",
+          "scope": "narration",
+          "pattern": "冰冷的(?:机械|电子|合成)音毫无感情地响起|全息屏幕上疯狂闪烁着红色(?:警告|警报)|能量护盾剩余百分之[零一二三四五六七八九十0-9]+"
+        }
+      ],
+      "fillerRules": [
+        {
+          "id": "filler_scifi_hud_recap",
+          "category": "explanatory_padding",
+          "scope": "narration",
+          "pattern": "这也意味着整个(?:舰队|避难所|殖民地)正面临前所未有的危机"
         }
       ]
     },
@@ -370,6 +459,13 @@
           "category": "stale_cliche",
           "pattern": "恐怖如斯|倒吸一口凉气|此子断不可留",
           "remedy": "Replace overused webnovel cliches with fresh comedic or concrete reactions."
+        },
+        {
+          "id": "reg_light_translationese_tics",
+          "category": "translationese",
+          "scope": "narration",
+          "pattern": "不禁在心中暗自吐槽道|这难道就是传说中的|怎么想都很奇怪吧",
+          "remedy": "Deliver comedic beats directly through timing and action instead of translated anime narration tags."
         }
       ],
       "clicheRules": [
@@ -378,6 +474,20 @@
           "category": "light_cliche",
           "scope": "narration",
           "pattern": "宿主请再接再厉|本系统出品必属精品|恭喜宿主(?:成功)?绑定[^，。！？\\r\\n]{0,8}系统"
+        },
+        {
+          "id": "cliche_light_meme_filler",
+          "category": "light_cliche",
+          "scope": "narration",
+          "pattern": "直接好家伙|我直呼好家伙|主打的就是一个[^，。！？\\r\\n]{1,6}"
+        }
+      ],
+      "fillerRules": [
+        {
+          "id": "filler_light_system_manual",
+          "category": "explanatory_padding",
+          "scope": "narration",
+          "pattern": "简单来说就是只要完成任务就能获得丰厚奖励"
         }
       ]
     },
@@ -411,6 +521,13 @@
           "category": "purple_costume",
           "pattern": "逶迤拖地[^。！？\\r\\n]{2,16}百水裙|三千青丝(?:散落|如瀑)",
           "remedy": "Replace over-ornate costume roleplay cliches with concise period-accurate dress details."
+        },
+        {
+          "id": "reg_industrial_sugar_cliche",
+          "category": "romance_cliche",
+          "scope": "narration",
+          "pattern": "眼底闪过一丝不易察觉的宠溺|薄唇轻启[^，。！？\\r\\n]{0,8}吐出|修长的手指(?:轻轻)?挑起(?:她|他)的下巴",
+          "remedy": "Show emotional tension through choices, restraint, and concrete boundaries rather than stock micro-acting."
         }
       ],
       "clicheRules": [
@@ -418,13 +535,21 @@
           "id": "cliche_greasy_ceo_talk",
           "category": "romance_cliche",
           "scope": "all",
-          "pattern": "邪魅一笑|三分凉薄[^。！？\\r\\n]{0,8}四分漫不经心|扇形统计图|天凉王破"
+          "pattern": "邪魅一笑|三分凉薄[^。！？\\r\\n]{0,8}四分漫不经心|扇形统计图|天凉王破|女人你成功引起了我的注意"
         },
         {
           "id": "cliche_marysue_tears",
           "category": "romance_cliche",
           "scope": "narration",
-          "pattern": "晶莹的泪珠(?:像断了线的珍珠)?|梨花带雨地?(?:咬着下唇|望着)"
+          "pattern": "晶莹的泪珠(?:像断了线的珍珠)?|梨花带雨地?(?:咬着下唇|望着)|心脏漏跳了一拍"
+        }
+      ],
+      "fillerRules": [
+        {
+          "id": "filler_romance_overexplain",
+          "category": "explanatory_padding",
+          "scope": "narration",
+          "pattern": "这一刻(?:她|他)终于明白(?:自己|对方)早已动了心"
         }
       ]
     },

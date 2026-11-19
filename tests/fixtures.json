@@ -366,5 +366,108 @@
   "mixedDoctorFolderSample": {
     "xianxiaText": "# 第1章 青云录\n\n他摸出两块下品灵石放进储物袋，又催动练气期神识扫过宗门石阶，对道友低声交待了几句。",
     "urbanText": "# 第2章 写字楼\n\n她掏出手机翻开微信聊天记录，又核对了一遍地铁站旁的租房合同与医院挂号单。"
+  },
+  "v13Features": {
+    "ledgerHealthBad": {
+      "projectTitle": "体检台账",
+      "protagonist": {},
+      "characterNames": [],
+      "knowledgeLedger": [
+        {
+          "entity": "反向揭露错误",
+          "firstChapter": 10,
+          "revealChapter": 5,
+          "readerKnown": "测试"
+        }
+      ],
+      "foreshadowing": [
+        {
+          "id": "fs_overdue",
+          "clue": "旧钥匙失踪",
+          "plantedChapter": 1,
+          "targetChapter": 15,
+          "status": "planted"
+        },
+        {
+          "id": "fs_closed",
+          "clue": "已回收伏笔",
+          "plantedChapter": 1,
+          "targetChapter": 3,
+          "status": "paid_off",
+          "paidOffChapter": 3
+        }
+      ],
+      "chapters": [
+        { "chapterNumber": 1, "title": "开篇", "coreSummary": "埋下钥匙线索" },
+        { "chapterNumber": 1, "title": "重复章", "coreSummary": "" },
+        { "chapterNumber": 25, "title": "后期章", "coreSummary": "跳过多章" }
+      ]
+    },
+    "settlementBaseLedger": {
+      "projectTitle": "活账本测试",
+      "protagonist": { "name": "陆青" },
+      "characterNames": ["陆青"],
+      "knowledgeLedger": [
+        {
+          "entity": "暗渠秘密",
+          "firstChapter": 1,
+          "readerKnown": "流量减少",
+          "fullTruth": "三长老私炼丹",
+          "revealChapter": 12,
+          "revealForbiddenTerms": ["三长老"]
+        }
+      ],
+      "characterSnapshots": {
+        "陆青": { "name": "陆青", "location": "药园", "physicalState": "完好" },
+        "王管事": { "name": "王管事", "location": "账房", "physicalState": "完好" }
+      },
+      "foreshadowing": [
+        { "id": "fs_token", "clue": "铁牌刻痕", "plantedChapter": 1, "targetChapter": 4, "status": "planted" },
+        { "id": "fs_old", "clue": "已结线索", "plantedChapter": 1, "targetChapter": 2, "status": "paid_off" }
+      ],
+      "chapters": [
+        { "chapterNumber": 3, "title": "夜雨", "coreSummary": "铁牌现身" },
+        { "chapterNumber": 4, "title": "渠底", "coreSummary": "", "activeCharacters": ["陆青", "孙岳"] }
+      ]
+    },
+    "settlementPatch": {
+      "chapterNumber": 4,
+      "title": "渠底异动",
+      "coreSummary": "陆青验出渠底截流符，孙岳限时施压",
+      "requiredAnchors": ["截流符", "铁牌"],
+      "activeCharacters": ["陆青", "孙岳"],
+      "newCharacters": ["孙岳"],
+      "characterUpdates": {
+        "陆青": { "location": "东渠", "physicalState": "左掌割伤" },
+        "孙岳": { "location": "药园门口", "physicalState": "完好" }
+      },
+      "foreshadowingUpdates": [
+        { "id": "fs_token", "status": "paid_off" },
+        { "id": "fs_seal", "clue": "石缝红符", "plantedChapter": 4, "targetChapter": 12, "status": "planted" }
+      ],
+      "knowledgeUpdates": [
+        { "entity": "暗渠秘密", "readerKnown": "渠底确有人工暗埋截流符" }
+      ]
+    },
+    "characterMiningChapters": [
+      "# 第一章 雨夜\n\n门外下着大雨。陆青起身去开门，孙岳低声道：“东西带来了吗？”陆青点头把木匣递过去。孙岳皱眉打开木匣看了一眼，又把铁牌丢回桌上。\n\n孙岳转身靠在门柱上，合上了眼。从袖子里摸出一把小刀，挑开了渠边的泥。",
+      "# 第二章 对账\n\n次日清晨，陆青早早来到药园。孙岳冷笑道：“今早还没查清？”陆青没有说话，只把账册推到桌沿。周管事低声道：“这两笔数对不上。”"
+    ],
+    "minedCharA": "陆青",
+    "minedCharB": "孙岳",
+    "sixGenreV13": {
+      "wuxiaBad": "剑气纵横三万里，他催动筑基期灵石护体，说时迟那时快便一剑劈出。",
+      "wuxiaClean": "寒风掠过青石桥，他横剑挡开扑面而来的短刀，借势退了两步。",
+      "mysteryBad": "直觉告诉他这绝非偶然，时间仿佛在这一刻静止，这无疑印证了他心中的猜想。",
+      "mysteryClean": "门锁内侧有两道新鲜锉痕，门外地毯上却没有泥印，说明动锁的人本来就在屋里。",
+      "urbanBad": "他穿着一身价值连城的手工高定，开口便说要全面深化战略协同，临走补了一句“那行，有空再聚”。",
+      "urbanClean": "周总监合上季度报表，把签字笔放回托盘：“周三前把新方案发我邮件。”",
+      "scifiBad": "冰冷的电子音毫无感情地响起，能量护盾剩余百分之二十，这也意味着整个避难所正面临前所未有的危机。",
+      "scifiClean": "舱压表掉到 0.42 个大气压，气闸红灯开始一秒一闪，他反手扣死了备用阀。",
+      "lightBad": "林明不禁在心中暗自吐槽道，这难道就是传说中的外挂？我直呼好家伙，简单来说就是只要完成任务就能获得丰厚奖励。",
+      "lightClean": "林明盯着屏幕上弹出的扣款通知，把刚拆开的泡面盖子又按了回去。",
+      "romanceBad": "他眼底闪过一丝不易察觉的宠溺，修长的手指轻轻挑起她的下巴，这一刻她终于明白自己早已动了心。",
+      "romanceClean": "谢承把伞柄往她那边偏了半寸，自己左肩淋透了一片，却只问她明天还去不去户部交账。"
+    }
   }
 }

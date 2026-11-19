@@ -8,6 +8,8 @@ import {
 import { auditChapterText } from "./auditor.mjs";
 import { collectTextFiles } from "./calibrator.mjs";
 import { parseChapterNumberAndTitle } from "./importer.mjs";
+import { collectCharacterNames } from "./continuity.mjs";
+import { formatDoctorMarkdown as formatDoctorMarkdownLocalized } from "./formatter.mjs";
 
 // 列出所有内置题材语域包及其默认预设配置摘要
 export function listGenres(customGenresPath = null) {
@@ -239,6 +241,19 @@ export function diagnoseProject(targetPaths, options = {}) {
     };
   });
 
+  const { names: detectedCharacterNames } = collectCharacterNames(
+    options.ledger,
+    options.characterNames || []
+  );
+  const hints = [];
+  if (detectedCharacterNames.length === 0) {
+    hints.push({
+      code: "SUBJECT_CONTINUITY_DISABLED",
+      detail:
+        "No characterNames configured; SUBJECT_AMBIGUITY checks were skipped. Populate ledger.characterNames or run import-ledger --auto-characters.",
+    });
+  }
+
   return {
     pass: totals.hardErrors === 0,
     genre: {
@@ -253,57 +268,15 @@ export function diagnoseProject(targetPaths, options = {}) {
       registerFormula: genrePack.registerFormula,
       voiceMatrix: genrePack.voiceMatrix,
     },
+    hints,
     totals,
     chapters,
   };
 }
 
-// 将四维体检报告格式化为简洁易读的 Markdown 概览与行级手术单
-export function formatDoctorMarkdown(diagnosis) {
-  const lines = [
-    `# InkBone Doctor Report`,
-    ``,
-    `- **Genre Pack**: \`${diagnosis.genre.id}\` (${diagnosis.genre.title}) [${diagnosis.genre.source}]`,
-    `- **Preset**: \`${diagnosis.genre.defaultPreset}\``,
-    `- **Register Formula**: ${diagnosis.genre.registerFormula}`,
-    ...(diagnosis.genre.mixedGenreFiles && diagnosis.genre.mixedGenreFiles.length > 0
-      ? [
-          `- **Warning**: Mixed genres detected in unconfigured folder (${diagnosis.genre.mixedGenreFiles.map((m) => `${m.file} -> ${m.inferredGenre}`).join(", ")}); pass \`--genre\` or add \`novel.json\` per book.`,
-        ]
-      : []),
-    `- **Totals**: ${diagnosis.totals.chaptersScanned} chapter(s) | Hard Errors: ${diagnosis.totals.hardErrors} | Register Clash: ${diagnosis.totals.registerCollisions} | Fillers: ${diagnosis.totals.narrativeFillers} | AI Cliches: ${diagnosis.totals.aiCliches} | Rhetorical: ${diagnosis.totals.rhetoricalPatterns} | Density Tics: ${diagnosis.totals.densityTics} | Degeneration: ${diagnosis.totals.degenerationErrors} | Meta Leaks: ${diagnosis.totals.metaLeaks} | Pronoun Streaks: ${diagnosis.totals.pronounStreaks}`,
-    ``,
-    `| File | Han | Errors | RegClash | Fillers | Cliches | Rhet/Tics | ProStreak |`,
-    `| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |`,
-  ];
-
-  for (const ch of diagnosis.chapters) {
-    const rhetTics = ch.counts.rhetoricalPatterns + ch.counts.densityTics;
-    lines.push(
-      `| ${ch.file} | ${ch.totalHan} | ${ch.summary.error} | ${ch.counts.registerCollisions} | ${ch.counts.narrativeFillers} | ${ch.counts.aiCliches} | ${rhetTics} | ${ch.maxPronounHeadStreak} |`
-    );
-  }
-
-  for (const ch of diagnosis.chapters) {
-    if (ch.surgeryTargets.length === 0 && ch.summary.error === 0) continue;
-    lines.push(``, `## ${ch.file}`);
-    for (const v of ch.violations) {
-      if (v.severity === "error") {
-        lines.push(`- **[ERROR] ${v.code}**: ${JSON.stringify(v.details || v.remedy)}`);
-      }
-    }
-    for (const target of ch.surgeryTargets.slice(0, 25)) {
-      const desc = target.issues
-        .map((i) => {
-          const badge = i.level === "blocking" ? "[BLOCK]" : "";
-          return `${badge}\`${i.tag}\` (${i.detail})`;
-        })
-        .join("; ");
-      lines.push(`- **L${target.line}**: ${desc}`);
-    }
-  }
-
-  return lines.join("\n");
+// 将四维体检报告格式化为简洁易读的 Markdown 概览与行级手术单（支持 lang: "zh" | "en"，默认中文）
+export function formatDoctorMarkdown(diagnosis, options = {}) {
+  return formatDoctorMarkdownLocalized(diagnosis, options);
 }
 
 // 初始化新小说工程的通用配置与空白防吃书台账骨架

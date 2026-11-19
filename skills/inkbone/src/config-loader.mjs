@@ -19,11 +19,13 @@ const rootDir = path.resolve(srcDir, "..");
 const defaultLingPath = path.resolve(rootDir, "configs/zh-linguistics.json");
 const defaultPresetsPath = path.resolve(rootDir, "configs/presets.json");
 const defaultGenresPath = path.resolve(rootDir, "configs/genres.json");
+const defaultMessagesPath = path.resolve(rootDir, "configs/messages.json");
 
 let cachedLinguistics = null;
 let cachedPresets = null;
 let cachedGenres = null;
 let cachedSeverity = null;
+let cachedMessages = null;
 
 // 加载并缓存中文计算语言学配置与预编译正则表达式
 export function loadLinguisticsConfig(customPath = null) {
@@ -85,6 +87,19 @@ export function loadSeverityConfig(customPath = null) {
     cachedSeverity = compiled;
   }
   return compiled;
+}
+
+// 加载中英双语展示文案与精准改稿提示词模板配置
+export function loadMessagesConfig(customPath = null) {
+  if (!customPath && cachedMessages) {
+    return cachedMessages;
+  }
+  const targetPath = customPath ? path.resolve(customPath) : defaultMessagesPath;
+  const parsed = JSON.parse(fs.readFileSync(targetPath, "utf8"));
+  if (!customPath) {
+    cachedMessages = parsed;
+  }
+  return parsed;
 }
 
 // 根据预设名称解析对应的阈值配置对象

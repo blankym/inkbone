@@ -1,0 +1,30 @@
+name: 新题材规则 / 套话提案
+description: 为内置题材包补充高信噪比规则，或提议新增垂直题材包
+title: "[规则提案] 题材："
+labels: ["enhancement", "rules"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        InkBone 规则分三层：只属于单本书的请留在 `novel.json` 项目层；换一本同题材书也成立的放题材层；跨题材都成立的才进通用层。
+  - type: input
+    id: target_layer
+    attributes:
+      label: 目标层级与题材包
+      placeholder: "例如：题材层 / mystery-thriller，或提议新题材包"
+    validations:
+      required: true
+  - type: textarea
+    id: pattern
+    attributes:
+      label: 提议拦截的典型表达 / 穿帮模式
+      placeholder: "列出 3～5 个典型翻车例句，以及应限定在叙述层（narration）还是全段（all）"
+    validations:
+      required: true
+  - type: textarea
+    id: counter_examples
+    attributes:
+      label: 正常反例（确保不会误杀）
+      placeholder: "列出 2～3 个相近但不应被拦截的自然写法"
+    validations:
+      required: true

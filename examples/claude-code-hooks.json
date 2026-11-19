@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e 'const fs=require(\"fs\");const p=JSON.parse(fs.readFileSync(0,\"utf8\")).tool_input?.file_path||\"\";if(/\\.(md|txt)$/i.test(p)&&!/(_reviews|_原稿备份|README|CHANGELOG|SKILL\\.md)/i.test(p)){const {spawnSync}=require(\"child_process\");const r=spawnSync(\"inkbone\",[\"audit\",p,\"--format\",\"md\",\"--skip-length\"],{encoding:\"utf8\"});if(r.status&&r.status!==0){process.stderr.write(r.stdout||r.stderr);process.exit(2);}}'"
+          }
+        ]
+      }
+    ]
+  }
+}

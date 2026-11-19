@@ -143,13 +143,8 @@
       border-color: var(--text);
     }
 
-    .panel {
-      display: none;
-    }
-
-    .panel.active {
-      display: block;
-    }
+    .panel { display: none; }
+    .panel.active { display: block; }
 
     .card {
       background: var(--surface);
@@ -223,6 +218,13 @@
       line-height: 1.7;
       resize: vertical;
       font-size: 0.95rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    textarea.drag-over {
+      border: 2px dashed var(--accent);
+      background: #fff8f6;
+      box-shadow: 0 0 0 3px var(--accent-soft);
     }
 
     textarea.code-input {
@@ -288,6 +290,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      align-items: center;
     }
 
     .btn-primary {
@@ -311,6 +314,22 @@
       border-radius: 8px;
       font-size: 0.86rem;
       font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+    }
+
+    .btn-accent-outline {
+      appearance: none;
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
       cursor: pointer;
     }
 
@@ -341,6 +360,53 @@
       margin-top: 2px;
     }
 
+    .rhythm-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .rhythm-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .rhythm-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 54px;
+      padding-top: 4px;
+      overflow-x: auto;
+    }
+
+    .rbar {
+      flex: 1 1 8px;
+      min-width: 6px;
+      max-width: 24px;
+      border-radius: 3px 3px 0 0;
+      background: #9fb4c4;
+      cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.12s ease;
+    }
+
+    .rbar:hover {
+      opacity: 0.85;
+      transform: translateY(-2px);
+    }
+
+    .rbar.sev-error { background: var(--accent); }
+    .rbar.sev-warning { background: #d49032; }
+    .rbar.is-dialogue { background: #5a9c7a; }
+
     .split-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -360,6 +426,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .annotated-lines {
@@ -403,6 +471,23 @@
     .aline.sev-warning .aline-num { background: #fcefd4; color: var(--warn); font-weight: 700; }
     .aline.flash { outline: 2px solid var(--accent); outline-offset: -2px; }
 
+    mark.hit-mark {
+      border-radius: 3px;
+      padding: 0 2px;
+      color: inherit;
+      cursor: help;
+    }
+
+    mark.hit-mark.sev-error {
+      background: #f9cbc4;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    mark.hit-mark.sev-warning {
+      background: #fbe3b6;
+      border-bottom: 2px solid var(--warn);
+    }
+
     .findings-list {
       display: flex;
       flex-direction: column;
@@ -432,21 +517,9 @@
       margin-bottom: 4px;
     }
 
-    .finding-title {
-      font-weight: 600;
-    }
-
-    .finding-detail {
-      color: var(--text);
-      margin-top: 3px;
-      word-break: break-word;
-    }
-
-    .finding-remedy {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      margin-top: 4px;
-    }
+    .finding-title { font-weight: 600; }
+    .finding-detail { color: var(--text); margin-top: 3px; word-break: break-word; }
+    .finding-remedy { color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; }
 
     .status-banner {
       padding: 10px 12px;
@@ -457,7 +530,18 @@
 
     .status-banner.ok { background: var(--ok-soft); color: var(--ok); border: 1px solid #b8dfca; }
     .status-banner.err { background: var(--accent-soft); color: var(--accent); border: 1px solid #edc2bc; }
+    .status-banner.warn { background: var(--warn-soft); color: var(--warn); border: 1px solid #edd6ad; }
     .status-banner.info { background: var(--info-soft); color: var(--info); border: 1px solid #c3d8e8; }
+
+    .prompt-drawer {
+      margin-top: 10px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .prompt-drawer.open {
+      display: block;
+    }
 
     pre.json-out {
       margin: 0;
@@ -501,20 +585,20 @@
           <h1>InkBone（墨骨）在线试跑台</h1>
           <span class="trust-pill">100% 浏览器本地运算 · 正文绝不上传服务器</span>
         </div>
-        <p>把长篇小说质检尺子与防剧透台账搬进浏览器，直接运行与 Node CLI 同源的零依赖检测引擎。</p>
+        <p>把长篇小说质检尺子、防剧透活账本与精准改稿 Prompt 生成器搬进浏览器，直接运行与 Node CLI 同源的零依赖检测引擎。</p>
       </div>
       <div class="top-links">
         <a class="link-btn" href="https://github.com/blankym/inkbone" target="_blank" rel="noopener">GitHub 仓库</a>
-        <a class="link-btn" href="https://github.com/blankym/inkbone#readme" target="_blank" rel="noopener">CLI / Skill 安装</a>
-        <a class="link-btn" href="https://linux.do/" target="_blank" rel="noopener">LINUX DO</a>
+        <a class="link-btn" href="https://github.com/blankym/inkbone#readme" target="_blank" rel="noopener">CLI / MCP / Skill 安装</a>
+        <a class="link-btn" href="https://github.com/blankym/inkbone/discussions" target="_blank" rel="noopener">GitHub 讨论区</a>
       </div>
     </header>
 
     <div id="loadErrorBanner" class="status-banner err" style="display:none;"></div>
 
     <nav class="tabs" role="tablist">
-      <button class="tab-btn active" data-tab="audit">1. 正文体检（doctor / normalize）</button>
-      <button class="tab-btn" data-tab="packet">2. 台账防剧透打包（packet）</button>
+      <button class="tab-btn active" data-tab="audit">1. 正文体检与精准改稿（audit / normalize）</button>
+      <button class="tab-btn" data-tab="packet">2. 活账本防剧透与体检（packet / check-ledger）</button>
       <button class="tab-btn" data-tab="review">3. 审读引文核验（verify-review）</button>
     </nav>
 
@@ -524,6 +608,10 @@
         <div class="preset-bar">
           <span class="preset-label">一键样例：</span>
           <div id="auditPresetBtns" class="btns-inline"></div>
+          <div style="margin-left:auto;">
+            <input id="fileImportInput" type="file" accept=".md,.txt,text/markdown,text/plain" style="display:none;" />
+            <button id="fileImportBtn" class="btn-secondary" type="button" style="padding:5px 11px; font-size:0.82rem;">导入本地 .md / .txt</button>
+          </div>
         </div>
 
         <div class="controls-grid">
@@ -543,7 +631,7 @@
 
         <div id="genreMetaBox" class="genre-meta"></div>
 
-        <textarea id="chapterInput" placeholder="在这里粘贴待检章节正文（支持 Markdown 格式与中文对白引号）..."></textarea>
+        <textarea id="chapterInput" placeholder="在这里粘贴待检章节正文，或直接把本地 .md / .txt 文件拖进此框（纯浏览器本地处理，不上传）..."></textarea>
 
         <div class="actions-row">
           <div class="checks-inline">
@@ -560,38 +648,57 @@
 
       <div id="kpiGrid" class="kpi-grid"></div>
 
+      <div id="rhythmCard" class="rhythm-card">
+        <div class="rhythm-head">
+          <strong>段落篇幅与命中节奏心电图</strong>
+          <span id="rhythmSummaryHint"></span>
+        </div>
+        <div id="rhythmBars" class="rhythm-bars"></div>
+      </div>
+
       <div class="split-grid">
         <div class="card">
-          <h3 class="pane-title"><span>逐行原文对照</span><span id="lineStatsHint" class="badge badge-muted"></span></h3>
+          <h3 class="pane-title"><span>逐行原文对照（词级高亮）</span><span id="lineStatsHint" class="badge badge-muted"></span></h3>
           <div id="annotatedLines" class="annotated-lines"></div>
         </div>
         <div class="card">
-          <h3 class="pane-title"><span>诊断清单</span><span id="findingCountBadge" class="badge badge-muted"></span></h3>
+          <h3 class="pane-title">
+            <span>诊断清单 <span id="findingCountBadge" class="badge badge-muted"></span></span>
+            <span class="btns-inline">
+              <button id="copyPromptBtn" class="btn-accent-outline" type="button">复制精准改稿 Prompt</button>
+              <button id="togglePromptBtn" class="btn-secondary" type="button" style="padding:5px 10px; font-size:0.8rem;">预览 Prompt</button>
+            </span>
+          </h3>
+          <div id="promptCopyNotice" class="status-banner ok" style="display:none;"></div>
+          <div id="promptDrawer" class="prompt-drawer">
+            <pre id="promptPreview" class="json-out" style="max-height:240px;"></pre>
+          </div>
           <div id="auditBanner"></div>
           <div id="findingsList" class="findings-list"></div>
         </div>
       </div>
     </section>
 
-    <!-- Tab 2: 台账防剧透打包 -->
+    <!-- Tab 2: 台账防剧透打包与台账体检 -->
     <section id="tab-packet" class="panel">
       <div class="card">
         <div class="preset-bar">
           <span class="preset-label">切换视角章节：</span>
           <div id="packetPresetBtns" class="btns-inline"></div>
         </div>
+        <div id="ledgerHealthBanner"></div>
         <div class="split-grid">
           <div>
             <h3 class="pane-title">
               <span>全书台账输入（ledger.json）</span>
-              <span style="font-size:0.8rem; color:var(--text-muted); font-weight:400;">修改第 N 章对比 `[REDACTED]` 与 `fullTruth` 遮蔽效果</span>
+              <span style="font-size:0.8rem; color:var(--text-muted); font-weight:400;">切换章号对比 `[REDACTED]`、伏笔过滤与健康检查</span>
             </h3>
             <div style="display:flex; gap:10px; align-items:end; margin-bottom:10px;">
               <label class="field" style="max-width:160px;">
                 当前撰写章号
                 <input id="packetChapterInput" type="number" min="1" value="4" />
               </label>
-              <button id="runPacketBtn" class="btn-primary" type="button">编译本章上下文包</button>
+              <button id="runPacketBtn" class="btn-primary" type="button">编译上下文包并体检台账</button>
             </div>
             <textarea id="ledgerInput" class="code-input" spellcheck="false"></textarea>
           </div>
@@ -629,10 +736,9 @@
     </section>
 
     <footer class="cli-note">
-      <strong>需要整本多卷体检、存量章节自动建台账（<code>import-ledger</code>）或真人盲读统计（<code>eval-pack</code>）？</strong>
-      完整版无需第三方依赖，只需 Node.js 18+：<br />
-      <code>git clone https://github.com/blankym/inkbone.git &amp;&amp; node inkbone/bin/inkbone.mjs doctor ./chapters</code>
-      （或复制 <code>inkbone/skills/inkbone</code> 到 Claude Code / Codex / Antigravity 的 skills 目录使用）。社区交流：<a href="https://linux.do/" target="_blank" rel="noopener" style="color:inherit;">LINUX DO</a>。
+      <strong>需要整本多卷体检、存量章节自动挖掘角色建台账（<code>import-ledger --auto-characters</code>）、写后结算（<code>settle</code>）或接入 Claude Desktop / Cursor MCP？</strong><br />
+      完整版零第三方依赖，仅需 Node.js 18+：
+      <code>npx skills add blankym/inkbone</code> · <code>npx inkbone mcp</code> · <code>npx inkbone doctor ./chapters</code>
     </footer>
   </div>
 

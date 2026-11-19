@@ -38,7 +38,15 @@ import {
   signTestPValue,
   saveReview,
   summarizeReviews,
+  validateLedger,
+  applyChapterSettlement,
+  extractCandidateCharacters,
+  formatAuditMarkdown,
+  buildTargetedRewritePrompt,
+  handleMcpMessage,
+  MCP_TOOLS,
 } from "../src/index.mjs";
+import { execFileSync } from "node:child_process";
 
 // 加载外部测试夹具数据以保持测试代码纯英文零中文字符
 const currentFile = fileURLToPath(import.meta.url);
@@ -1560,12 +1568,220 @@ test("diagnoseProject warns on mixed-genre unconfigured folders without breaking
     const diag = diagnoseProject([tmp], { skipLengthGate: true });
     assert.ok(Array.isArray(diag.genre.mixedGenreFiles));
     assert.equal(diag.genre.mixedGenreFiles.length, 1);
-    const md = formatDoctorMarkdown(diag);
-    assert.ok(md.includes("Mixed genres detected in unconfigured folder"));
+    const mdEn = formatDoctorMarkdown(diag, { lang: "en" });
+    assert.ok(mdEn.includes("Mixed genres detected in unconfigured folder"));
+    const mdZh = formatDoctorMarkdown(diag, { lang: "zh" });
+    assert.ok(mdZh.includes("ch02.md -> urban-realism"));
+    assert.ok(diag.hints.some((h) => h.code === "SUBJECT_CONTINUITY_DISABLED"));
 
     const explicitDiag = diagnoseProject([tmp], { genre: "classical-xianxia", skipLengthGate: true });
     assert.deepEqual(explicitDiag.genre.mixedGenreFiles, []);
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
+});
+
+// CLI 版本与分层帮助检查：--version 与 package.json 严格一致，--help 与 --help-all 正常退出
+test("CLI --version matches package.json and layered --help / --help-all work", () => {
+  const pkg = JSON.parse(fs.readFileSync(path.resolve(rootDir, "package.json"), "utf8"));
+  const binPath = path.resolve(rootDir, "bin/inkbone.mjs");
+  const verOut = execFileSync(process.execPath, [binPath, "--version"], { encoding: "utf8" }).trim();
+  assert.equal(verOut, `inkbone ${pkg.version}`);
+
+  const helpOut = execFileSync(process.execPath, [binPath, "--help"], { encoding: "utf8" });
+  assert.ok(helpOut.includes(`InkBone CLI ${pkg.version}`));
+  assert.ok(helpOut.includes("inkbone mcp"));
+  assert.ok(helpOut.includes("--help-all"));
+
+  const helpAllOut = execFileSync(process.execPath, [binPath, "--help-all"], { encoding: "utf8" });
+  assert.ok(helpAllOut.includes("inkbone eval-pack"));
+  assert.ok(helpAllOut.includes("inkbone rule-stats"));
+});
+
+// 台账健康体检：准确捕获重复章号、章号断档、空摘要、揭露章倒置、空角色名单与逾期伏笔
+test("validateLedger catches duplicates, gaps, invalid revealChapter, empty names, and overdue foreshadowing", () => {
+  const report = validateLedger(fixtures.v13Features.ledgerHealthBad, { overdueThreshold: 20 });
+  assert.equal(report.pass, false);
+  const codes = new Set(report.issues.map((i) => i.code));
+  assert.ok(codes.has("DUPLICATE_CHAPTER_NUMBER"));
+  assert.ok(codes.has("CHAPTER_NUMBER_GAP"));
+  assert.ok(codes.has("EMPTY_CHAPTER_SUMMARY"));
+  assert.ok(codes.has("INVALID_REVEAL_CHAPTER"));
+  assert.ok(codes.has("EMPTY_CHARACTER_NAMES"));
+  assert.ok(codes.has("OVERDUE_FORESHADOWING"));
+  assert.ok(codes.has("MISSING_PROTAGONIST"));
+  assert.equal(report.stats.activeForeshadowingCount, 1);
+  assert.equal(report.stats.overdueForeshadowingCount, 1);
+});
+
+// 写后结算与 packet 瘦身：无损合并摘要/角色快照/伏笔跃迁，packet 过滤已收伏笔并按出场角色裁剪快照
+test("applyChapterSettlement merges chapter patch cleanly and compileBoundaryPacket prunes snapshots and closed foreshadowing", () => {
+  const base = fixtures.v13Features.settlementBaseLedger;
+  const patch = fixtures.v13Features.settlementPatch;
+  const { ledger: updated, diff } = applyChapterSettlement(base, patch);
+
+  assert.equal(diff.chapterUpdated, true);
+  assert.ok(diff.addedCharacters.includes(fixtures.v13Features.minedCharB));
+  assert.ok(diff.resolvedForeshadowing.includes("fs_token"));
+  assert.ok(diff.addedForeshadowing.includes("fs_seal"));
+  assert.equal(updated.characterSnapshots[fixtures.v13Features.minedCharA].lastUpdatedChapter, 4);
+
+  // 未修改原始对象
+  assert.equal(base.foreshadowing[0].status, "planted");
+
+  // packet 按 activeCharacters 裁剪快照、过滤已回收伏笔、并在到期章给出 dueForeshadowing
+  const pktBeforeSettle = compileBoundaryPacket(base, 4, "");
+  assert.equal(pktBeforeSettle.foreshadowing.length, 1);
+  assert.equal(pktBeforeSettle.foreshadowing[0].id, "fs_token");
+  assert.equal(pktBeforeSettle.dueForeshadowing.length, 1);
+  assert.equal(pktBeforeSettle.omittedCharacterSnapshotsCount, 1);
+
+  const pktAfterSettle = compileBoundaryPacket(updated, 4, "");
+  assert.equal(pktAfterSettle.foreshadowing.length, 1);
+  assert.equal(pktAfterSettle.foreshadowing[0].id, "fs_seal");
+});
+
+// 存量书稿候选人名挖掘：import-ledger --auto-characters 自动填充 characterNames 并激活主语歧义检测
+test("extractCandidateCharacters and import-ledger autoPopulateCharacters activate subject continuity checks", () => {
+  const { characterMiningChapters, minedCharA, minedCharB } = fixtures.v13Features;
+  const candidates = extractCandidateCharacters(characterMiningChapters);
+  const candNames = candidates.map((c) => c.name);
+  assert.ok(candNames.includes(minedCharA));
+  assert.ok(candNames.includes(minedCharB));
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "inkbone-chars-"));
+  try {
+    const ch1Path = path.join(tmp, "ch01.md");
+    const ch2Path = path.join(tmp, "ch02.md");
+    fs.writeFileSync(ch1Path, characterMiningChapters[0]);
+    fs.writeFileSync(ch2Path, characterMiningChapters[1]);
+    const imported = importLedgerFromChapters([tmp], { autoPopulateCharacters: true });
+    assert.ok(imported.ledger.characterNames.includes(minedCharA));
+    assert.ok(imported.ledger.characterNames.includes(minedCharB));
+    assert.ok(imported.stats.autoPopulatedCharacters.length >= 2);
+
+    const audited = auditChapterText(characterMiningChapters[0], {
+      skipLengthGate: true,
+      ledger: imported.ledger,
+    });
+    assert.ok(audited.violations.some((v) => v.code === "SUBJECT_AMBIGUITY"));
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// 6 个垂直题材包 v1.3 补厚规则正反例回归：坏例必中，干净正例零误报
+test("v1.3 expanded 6 genre packs catch new tropes and fillers with zero false positives on clean prose", () => {
+  const s = fixtures.v13Features.sixGenreV13;
+  const cases = [
+    ["wuxia-jianghu", s.wuxiaBad, s.wuxiaClean, ["REGISTER_COLLISION", "FORBIDDEN_AI_CLICHE", "NARRATIVE_FILLER"]],
+    ["mystery-thriller", s.mysteryBad, s.mysteryClean, ["REGISTER_COLLISION", "FORBIDDEN_AI_CLICHE", "NARRATIVE_FILLER"]],
+    ["urban-realism", s.urbanBad, s.urbanClean, ["REGISTER_COLLISION", "FORBIDDEN_AI_CLICHE", "NARRATIVE_FILLER"]],
+    ["scifi-wasteland", s.scifiBad, s.scifiClean, ["FORBIDDEN_AI_CLICHE", "NARRATIVE_FILLER"]],
+    ["light-fantasy", s.lightBad, s.lightClean, ["REGISTER_COLLISION", "FORBIDDEN_AI_CLICHE", "NARRATIVE_FILLER"]],
+    ["romance-emotional", s.romanceBad, s.romanceClean, ["REGISTER_COLLISION", "NARRATIVE_FILLER"]],
+  ];
+  for (const [genre, badText, cleanText, expectedCodes] of cases) {
+    const badRes = auditChapterText(badText, { genre, skipLengthGate: true });
+    for (const code of expectedCodes) {
+      assert.ok(
+        badRes.violations.some((v) => v.code === code),
+        `expected ${code} for ${genre} bad sample`
+      );
+    }
+    const cleanRes = auditChapterText(cleanText, { genre, skipLengthGate: true });
+    const badHitOnClean = cleanRes.violations.filter((v) =>
+      ["REGISTER_COLLISION", "FORBIDDEN_AI_CLICHE", "NARRATIVE_FILLER"].includes(v.code)
+    );
+    assert.equal(
+      badHitOnClean.length,
+      0,
+      `unexpected false positive on clean ${genre}: ${JSON.stringify(badHitOnClean)}`
+    );
+  }
+});
+
+// 双语格式化与精准改稿 Prompt 生成：输出包含行号与原句切片，且支持 zh / en 双语
+test("formatAuditMarkdown and buildTargetedRewritePrompt render structured output in zh and en", () => {
+  const report = auditChapterText(fixtures.aiPurpleSample, {
+    genre: "classical-xianxia",
+    skipLengthGate: true,
+  });
+  const mdZh = formatAuditMarkdown(report, { lang: "zh", fileName: "ch01.md" });
+  const mdEn = formatAuditMarkdown(report, { lang: "en", fileName: "ch01.md" });
+  assert.ok(mdZh.includes("ch01.md"));
+  assert.ok(mdZh.includes("FORBIDDEN_AI_CLICHE"));
+  assert.ok(mdEn.includes("# InkBone Audit Report"));
+
+  const built = buildTargetedRewritePrompt(fixtures.aiPurpleSample, report, { lang: "zh" });
+  assert.equal(built.hasIssues, true);
+  assert.ok(built.issueCount > 0);
+  assert.ok(built.prompt.includes("L1:"));
+});
+
+// 零依赖 MCP Server 协议与工具调用单元测试（内存分发 + 真实 stdio NDJSON 管道）
+test("zero-dependency MCP server handles initialize, tools/list, tools/call, and stdio framing", () => {
+  const initReply = handleMcpMessage({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: { protocolVersion: "2024-11-05" },
+  });
+  assert.equal(initReply.result.serverInfo.name, "inkbone");
+
+  const listReply = handleMcpMessage({ jsonrpc: "2.0", id: 2, method: "tools/list" });
+  assert.equal(listReply.result.tools.length, MCP_TOOLS.length);
+  assert.ok(listReply.result.tools.some((t) => t.name === "inkbone_audit"));
+  assert.ok(listReply.result.tools.some((t) => t.name === "inkbone_settle"));
+
+  const auditReply = handleMcpMessage({
+    jsonrpc: "2.0",
+    id: 3,
+    method: "tools/call",
+    params: {
+      name: "inkbone_audit",
+      arguments: {
+        text: fixtures.aiPurpleSample,
+        genre: "classical-xianxia",
+        skipLength: true,
+        format: "md",
+        lang: "zh",
+      },
+    },
+  });
+  assert.equal(auditReply.result.isError, undefined);
+  assert.ok(auditReply.result.content[0].text.includes("FORBIDDEN_AI_CLICHE"));
+
+  const ledgerReply = handleMcpMessage({
+    jsonrpc: "2.0",
+    id: 4,
+    method: "tools/call",
+    params: {
+      name: "inkbone_check_ledger",
+      arguments: { ledger: fixtures.v13Features.ledgerHealthBad },
+    },
+  });
+  assert.equal(ledgerReply.result.structuredContent.pass, false);
+
+  const missingMethod = handleMcpMessage({ jsonrpc: "2.0", id: 5, method: "unknown/method" });
+  assert.equal(missingMethod.error.code, -32601);
+
+  // 真实 stdio 管道端到端握手与工具列表验证
+  const binPath = path.resolve(rootDir, "bin/inkbone.mjs");
+  const ndjsonInput = [
+    JSON.stringify({ jsonrpc: "2.0", id: 10, method: "initialize", params: {} }),
+    JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }),
+    JSON.stringify({ jsonrpc: "2.0", id: 11, method: "ping" }),
+  ].join("\n") + "\n";
+  const stdout = execFileSync(process.execPath, [binPath, "mcp"], {
+    input: ndjsonInput,
+    encoding: "utf8",
+  });
+  const replies = stdout
+    .trim()
+    .split(/\r?\n/u)
+    .map((line) => JSON.parse(line));
+  assert.equal(replies.length, 2);
+  assert.equal(replies[0].id, 10);
+  assert.equal(replies[1].id, 11);
 });

@@ -1,23 +1,35 @@
 ---
 name: inkbone
-description: 写中文长篇小说时使用：开新书、写新章节、续写连载，或者检查和修改已有书稿（去 AI 味、查前后矛盾、提高可读性）。包含规划、写作、审读、修改各阶段的提示词，以及一个检查台账、题材用词、套话和主语歧义的本地命令行工具（需要 Node.js 18+）。
+description: 写中文长篇小说时使用：开新书、写新章节、续写连载，或者检查和修改已有书稿（去 AI 味、查前后矛盾、提高可读性）。包含规划、写作、审读、修改与写后结算各阶段的提示词，以及零依赖本地命令行与 MCP 工具（需要 Node.js 18+）。
+license: MIT
+compatibility: Node.js >= 18 (zero third-party dependencies)
+metadata:
+  author: blankym
+  version: "1.3.0"
+  repository: https://github.com/blankym/inkbone
 ---
 
-# InkBone（墨骨）1.1
+# InkBone（墨骨）
 
 用来写中文分章小说：开新书、写新章、续写，或者检查和修改已有书稿。每本书自己的设定、台账、语体合同和专属规则都放在小说的项目目录里，这个 skill 本身不带任何一本书的口味。
 
-## 运行环境与路径
+## 运行环境与调用方式
 
-- **路径约定**：本文件所在的目录记作 `SKILL_DIR`。下文所有 `$SKILL_DIR/...` 路径都相对这个目录，不相对小说项目目录。执行命令前先设置一次，例如 `SKILL_DIR=/path/to/skills/inkbone`。
-- **运行要求**：命令行工具需要 Node.js 18 或更高版本，没有第三方依赖，不需要 `npm install`。检查方法：`node --version`。
-- **不能执行命令时**：只用提示词部分（`$SKILL_DIR/prompts/` 与 `$SKILL_DIR/resources/`），规划、写作、审读照常进行。格式与台账检查、引文核对、规则统计、盲读计分这些代码检查都做不了，交付时要说明这一点，不要假装已经检查过。
-- **按阶段按需读取**：一次只读当前环节所需的 1 份阶段提示词和 1 份对应题材的 `genre_playbooks/<genre>.md`，不要一开头就把 `00`～`06` 和所有参考文档一次性全部读进上下文，避免冗余耗时与注意力稀释。
+- **路径约定**：本文件所在的目录记作 `SKILL_DIR`。下文所有 `$SKILL_DIR/...` 路径都相对这个目录，不相对小说项目目录。
+- **优先调用顺序**：
+  1. 若当前宿主已挂载 **InkBone MCP Server**（`inkbone mcp`），直接调用结构化工具 `inkbone_packet`、`inkbone_audit`、`inkbone_doctor`、`inkbone_normalize`、`inkbone_verify_review`、`inkbone_check_ledger`、`inkbone_settle`；
+  2. 若已全局安装（`npm install -g inkbone`），直接执行 `inkbone <command>`（跨 Windows / macOS / Linux 免配路径）；
+  3. 否则通过节点运行本地随包 CLI：
+     - macOS / Linux：`SKILL_DIR=/path/to/skills/inkbone`，执行 `node "$SKILL_DIR/bin/inkbone.mjs" <command>`
+     - Windows PowerShell：`$SKILL_DIR = "C:\path\to\skills\inkbone"`，执行 `node "$SKILL_DIR\bin\inkbone.mjs" <command>`
+- **运行要求**：需要 Node.js 18 或更高版本，零第三方依赖，不需要 `npm install`。检查方法：`node --version`。
+- **不能执行命令时**：只用提示词部分（`$SKILL_DIR/prompts/` 与 `$SKILL_DIR/resources/`），规划、写作、审读与结算照常进行。格式与台账检查、引文核对、规则统计、盲读计分这些代码检查都做不了，交付时要说明这一点，不要假装已经检查过。
+- **按阶段按需读取**：一次只读当前环节所需的 1 份阶段提示词和 1 份对应题材的 `genre_playbooks/<genre>.md`，不要一开头就把 `00`～`07` 和所有参考文档一次性全部读进上下文，避免冗余耗时与注意力稀释。
 - **项目文件**：小说自己的 `novel.json`、`ledger.json`、语体合同和项目层规则放在小说项目目录里，不放进 `SKILL_DIR`。
 
 ## 文件索引
 
-- 命令行工具：`node "$SKILL_DIR/bin/inkbone.mjs"`（用 `npm install -g` 全局安装后可以直接用 `inkbone`）。`--help` 列出全部命令。
+- 命令行工具：`node "$SKILL_DIR/bin/inkbone.mjs"`（`--help` 列出高频日常命令，`--help-all` 列出全部 23 条命令，`--version` 查看版本）。
 - 内置题材包：`$SKILL_DIR/configs/genres.json`，运行 `node "$SKILL_DIR/bin/inkbone.mjs" genres` 查看。
 - 各阶段提示词：
   - 定语体：`$SKILL_DIR/prompts/00-style-architect.md`
@@ -27,6 +39,7 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
   - 逻辑审读：`$SKILL_DIR/prompts/04-evidence-reviewer.md`
   - 读者模拟（零背景新读者和老读者两种视角）：`$SKILL_DIR/prompts/05-reader-simulator.md`
   - 给已有书稿建台账：`$SKILL_DIR/prompts/06-ledger-importer.md`
+  - 写后结算与台账增量合账：`$SKILL_DIR/prompts/07-chapter-settler.md`
 - 参考资料（用到时再读，不必一开始全读）：
   - `$SKILL_DIR/resources/bad_vs_good_cases.md`：改稿前后的句子对照
   - `$SKILL_DIR/resources/micro_techniques.md`：制造压迫感、开场写法、对话潜台词，以及常见问题速查
@@ -59,7 +72,7 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
 1. 直接对当前文件跑零配置清理检查与单章审计：
    ```bash
    node "$SKILL_DIR/bin/inkbone.mjs" normalize <chapter.md> --check --strip-bold
-   node "$SKILL_DIR/bin/inkbone.mjs" audit <chapter.md> [--genre <id>] --no-project --no-ledger --skip-length
+   node "$SKILL_DIR/bin/inkbone.mjs" audit <chapter.md> [--genre <id>] --format md --no-project --no-ledger --skip-length
    ```
    （不传 `--genre` 时可先对照 `genres` 选最贴近题材，或用 `general-clean`。）
 2. 只读 `$SKILL_DIR/prompts/03-targeted-rewriter.md`，对照报告行号局部砍水话、换套词、校对主语和对话标点，不动原本通顺的段落。
@@ -69,10 +82,11 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
 
 1. **定语体**（`00-style-architect.md`）：读作者的创意或总纲，根据时代背景、主角出身和职业、世界的权力规则选定题材包，生成项目目录里的 `novel.json`、`ledger.json` 和本书的语体合同。骨架可以用 `node "$SKILL_DIR/bin/inkbone.mjs" init <dir> --genre <id> --title <书名>` 生成。
 2. **排节拍**（`01-beat-planner.md`，写完停下等确认）：
-   - 先运行 `node "$SKILL_DIR/bin/inkbone.mjs" packet --ledger <ledger.json> --chapter <N> [--prev <上一章.md>]`，得到写这一章用的上下文。台账 `knowledgeLedger` 里还没到 `revealChapter` 的真相（`fullTruth`）会被隐去。
+   - 先运行 `node "$SKILL_DIR/bin/inkbone.mjs" packet --ledger <ledger.json> --chapter <N> [--prev <上一章.md>] [--active-characters <角色1,角色2>]`，得到写这一章用的上下文。台账 `knowledgeLedger` 里还没到 `revealChapter` 的真相（`fullTruth`）会被隐去，已完结伏笔自动过滤，到期伏笔会在 `dueForeshadowing` 提醒。
    - 按 `01-beat-planner.md` 输出信息分配表和分幕节拍表，需要时参考 `$SKILL_DIR/resources/micro_techniques.md` 和对应题材的手册。等级、数值、能力第一次出现时，要在它第一次影响局势的地方交代差距有多大、暴露了会怎样。人物发火、催促、动手之前，要先有让他这样做的原因。对话标出从哪里切入、在哪里收住。节拍表里不要写成段的正文。
 3. **写正文**（`02-paratactic-renderer.md`）：守住本书的语域，从上一章结尾的状态直接往下写，不照抄细纲原句，核对人数、件数、时间先后，不写寒暄水话。不要连续 3 段用同一种方式起头；省略主语之前，确认上一句的主语是同一个人。
 4. **检查和审读**：按下面的“定稿前的检查”执行。
+5. **写后结算（`07-chapter-settler.md`）**：单章定稿后，把本章新发生的摘要、角色位置/伤势/消耗品变化与伏笔状态跃迁写成增量 JSON，用 `settle` 无损合入 `ledger.json` 并跑 `check-ledger` 复核，确保台账与正文同步再开下一章。
 
 ## 检查和修改已有书稿
 
@@ -80,9 +94,9 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
 
 0. **还没有台账时先建台账**：
    ```bash
-   node "$SKILL_DIR/bin/inkbone.mjs" import-ledger <章节目录> [--merge <已有ledger.json>] --out <目标ledger.json>
+   node "$SKILL_DIR/bin/inkbone.mjs" import-ledger <章节目录> [--merge <已有ledger.json>] --auto-characters --out <目标ledger.json>
    ```
-   工具会识别中文和阿拉伯数字的章号、统计每章字数，合并已有的 `chapters[]` 和高频专有名词，不会覆盖原有内容。然后按 `06-ledger-importer.md` 补全每章摘要、`knowledgeLedger`、`characterSnapshots` 和 `foreshadowing`。原文里找不到依据的一律填 `[待补充]`。
+   工具会识别中文和阿拉伯数字的章号、统计每章字数、启发式挖掘高频角色名候选（`--auto-characters` 自动写入 `characterNames` 以启用主语歧义检测），无损合并已有的 `chapters[]` 和高频专有名词，不会覆盖原有内容。然后按 `06-ledger-importer.md` 补全每章摘要、`knowledgeLedger`、`characterSnapshots` 和 `foreshadowing`。原文里找不到依据的一律填 `[待补充]`。
 1. **整本检查**：
    ```bash
    node "$SKILL_DIR/bin/inkbone.mjs" doctor <章节或目录> [--outline <大纲目录>] [--ledger <ledger.json>]
@@ -91,7 +105,7 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
 2. **审读**：按 `04-evidence-reviewer.md` 做逻辑审读，按 `05-reader-simulator.md` 分别以零背景新读者和老读者的视角做读者模拟，各输出一份 JSON，用 `verify-review` 核对引文。重点找作者以为读者知道、新读者其实看不懂的设定、等级差距和人物动机。
 3. **局部修改**：对照检查结果的行号和审读清单，按 `03-targeted-rewriter.md` 修改：换掉不合语域的词、删掉水话、补上逻辑漏洞。如果改动涉及时间或设定，要同时检查前后相邻的章节能不能接上。
 
-## 定稿前的检查
+## 定稿前的检查与结算
 
 0. **清理格式（可选）**：
    ```bash
@@ -101,7 +115,7 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
    `normalize --strip-bold` 会去掉误留的 Markdown 加粗星号和 `---` 分隔线，白名单里的内容和行内代码不动。`check-outline` 在动笔前检查单章 Stage 1 节拍细纲是否缺少关键要素，或者还留着 `[待补充]`。
 1. **本地检查**：
    ```bash
-   node "$SKILL_DIR/bin/inkbone.mjs" audit <chapter.md> --genre <genreId> [--ledger <ledger.json> --chapter <N> --prev <上一章.md>] [--outline-chapter <细纲.md>]
+   node "$SKILL_DIR/bin/inkbone.mjs" audit <chapter.md> --genre <genreId> --format md [--ledger <ledger.json> --chapter <N> --prev <上一章.md>] [--outline-chapter <细纲.md>]
    ```
    - `error` 必须是 0，包括 `FORMATTING_OR_LEDGER_ARTIFACTS`、`CHAR_COUNT_CLAIM_MISMATCH` 和模型退化。
    - `REGISTER_COLLISION`、`NARRATIVE_FILLER`、`PRONOUN_HEAD_STREAK`、`OPENING_PATTERN_STREAK`、`SUBJECT_AMBIGUITY`、`FORBIDDEN_AI_CLICHE`、`OUTLINE_COPY_DETECTED` 逐条看，确实有问题就改，没问题说明理由。
@@ -113,7 +127,12 @@ description: 写中文长篇小说时使用：开新书、写新章节、续写�
    node "$SKILL_DIR/bin/inkbone.mjs" review-stats <章节目录>/_reviews
    ```
    存档时会记下正文哈希和模型名。改稿以后重新审读，用 `review-stats` 看跳读点和问题条数是不是真的少了。两次审读用的模型不同时，统计里会标出 `reviewer model changed`，这时条数的变化可能只是换了模型造成的。
-3. **AI 检测（可选，放在最后）**：
+3. **写后合账与健康体检**：
+   ```bash
+   node "$SKILL_DIR/bin/inkbone.mjs" settle --ledger <ledger.json> --patch <chN-settlement.json>
+   node "$SKILL_DIR/bin/inkbone.mjs" check-ledger <ledger.json> --current <N>
+   ```
+4. **AI 检测（可选，放在最后）**：
    - 本地检查和审读都没问题之前，不调用外部检测。
    - 定稿后每章最多测一次：`node "$SKILL_DIR/bin/inkbone.mjs" detect <chapter.md>`，结果只做记录。
    - 不按检测分改稿，也不对单个窗口反复复测：改几十个字，分数就可能差 0.1 以上，反复测量到的主要是噪声。标黄的段落可以当作提示，用读者的眼光再读一遍，确实有问题再为读者改。

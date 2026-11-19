@@ -74,11 +74,41 @@
           "fullTruth": "三长老在后山私炼幽冥丹，暗中凿穿石壁截水",
           "revealForbiddenTerms": ["幽冥丹", "三长老"]
         }
+      ],
+      "characterSnapshots": {
+        "陆青": {
+          "name": "陆青",
+          "location": "外门药园东渠",
+          "physicalState": "左掌割伤",
+          "inventory": ["铁牌", "小刀"]
+        },
+        "孙岳": {
+          "name": "孙岳",
+          "location": "外门药园门口",
+          "physicalState": "完好"
+        }
+      },
+      "foreshadowing": [
+        {
+          "id": "fs_ch1_water_drop",
+          "clue": "灵泉水渠每月少三成流量",
+          "plantedChapter": 1,
+          "targetChapter": 12,
+          "status": "planted"
+        },
+        {
+          "id": "fs_ch1_gate_token",
+          "clue": "外门铁牌刻痕",
+          "plantedChapter": 1,
+          "targetChapter": 3,
+          "status": "paid_off",
+          "paidOffChapter": 3
+        }
       ]
     },
     "presets": [
-      { "chapter": 4, "label": "第 4 章（未到揭露章 · 自动打码防剧透）" },
-      { "chapter": 12, "label": "第 12 章（到达揭露章 · 解锁完整真相）" }
+      { "chapter": 4, "label": "第 4 章（未到揭露章 · 自动打码 + 过滤已收伏笔）" },
+      { "chapter": 12, "label": "第 12 章（到达揭露章 · 解锁完整真相 + 到期伏笔提醒）" }
     ]
   },
   "reviewDemo": {
@@ -203,6 +233,13 @@
     "lineSuffix": " 行",
     "matchLabel": "命中：",
     "remedyLabel": "建议：",
-    "loadError": "本地引擎或配置加载失败。如直接通过 file:// 双击打开，请改用静态服务器（如 python3 -m http.server）或访问 GitHub Pages。"
+    "loadError": "本地引擎或配置加载失败。如直接通过 file:// 双击打开，请改用静态服务器（如 python3 -m http.server）或访问 GitHub Pages。",
+    "copiedPrompt": "已复制精准改稿 Prompt，可直接粘贴到 DeepSeek / Claude / Gemini 聊天框局部修改。",
+    "copyFallback": "浏览器限制了自动复制，请在下方预览框全选复制。",
+    "importedFile": "已本地载入文件：",
+    "rhythmSummary": "共 {paras} 段 · 句长均值 {mean} 字 · 变异系数 CV {cv}",
+    "rhythmBarTip": "第 {line} 行 · {han} 字",
+    "ledgerHealthy": "台账健康：{chapters} 章 · {chars} 名角色 · {activeFs} 条活跃伏笔（0 项硬错误）",
+    "ledgerIssues": "台账体检发现 {errors} 项错误、{warnings} 项提醒："
   }
 }

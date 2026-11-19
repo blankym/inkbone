@@ -30,11 +30,19 @@ import {
   loadPairTexts,
   saveReview,
   summarizeReviews,
+  validateLedger,
+  applyChapterSettlement,
+  formatAuditMarkdown,
+  buildTargetedRewritePrompt,
+  startMcpServer,
 } from "../src/index.mjs";
 
 const currentFile = fileURLToPath(import.meta.url);
 const binDir = path.dirname(currentFile);
 const rootDir = path.resolve(binDir, "..");
+const CLI_VERSION =
+  JSON.parse(fs.readFileSync(path.resolve(rootDir, "package.json"), "utf8")).version ||
+  "1.3.0";
 
 // 解析简单的命令行键值对标志参数
 function parseFlags(args) {
@@ -54,6 +62,10 @@ function parseFlags(args) {
     "no-project",
     "no-cache",
     "all",
+    "auto-characters",
+    "dry-run",
+    "include-closed",
+    "help-all",
   ]);
   for (let i = 0; i < args.length; i += 1) {
     const token = args[i];
@@ -135,39 +147,47 @@ function discoverBenchmarkEntries(explicitManifest = null) {
   return results;
 }
 
-// 打印 CLI 帮助指南
-function printHelp() {
-  const usage = [
-    "InkBone CLI 1.1 - local checks for Chinese long-form fiction (continuity, genre register, stock phrases, unclear subjects)",
+// 打印 CLI 帮助指南（默认分层聚焦作者日常命令，--help-all 展示全部命令）
+function printHelp(showAll = false) {
+  const daily = [
+    `InkBone CLI ${CLI_VERSION} - local checks, living ledger & MCP server for Chinese long-form fiction`,
     "",
     "Rule layers: universal (configs/) -> genre pack -> project (novel.json found upward from the chapter:",
     "             inline projectRules, rulesFile, whitelistLiterals / .inkbone-whitelist, and ledgerFile).",
     "",
-    "Commands:",
+    "Daily Writing & Revision Commands:",
     "  inkbone genres                                    List built-in multi-genre register packs",
     "  inkbone init [dir] [--genre <id>] [--title <name>] [--force]",
     "                                                    Scaffold universal novel.json & ledger.json",
-    "  inkbone doctor <file|dir>... [--genre <id>] [--outline <dir|file>...] [--ledger <ledger.json>] [--no-ledger]",
-    "                 [--project <dir|novel.json>] [--no-project] [--json]",
-    "                                                    Recursive multi-chapter checkup (errors, register, rhetoric, degeneration)",
-    "  inkbone audit <file.md> [--genre <id>] [--preset <id>]",
-    "                [--ledger <ledger.json> --chapter <n> --prev <prev.md> --skip-length] [--no-ledger]",
-    "                [--outline-chapter <outline.md>] [--reference <reference.json>] [--strict]",
-    "                [--project <dir|novel.json>] [--no-project]",
-    "                                                    Run hard boundary, register, rhetoric, density & degeneration audit",
-    "  inkbone packet --ledger <ledger.json> --chapter <n> [--prev <prev.md>]",
-    "                                                    Compile hard-boundary context packet for drafting",
-    "  inkbone import-ledger <file|dir>... [--merge <ledger.json>] [--out <ledger.json>] [--title <name>]",
-    "                                                    Scan existing chapters and merge non-destructively into ledger",
+    "  inkbone import-ledger <file|dir>... [--merge <ledger.json>] [--out <ledger.json>] [--title <name>] [--auto-characters]",
+    "                                                    Scan existing chapters, mine candidate characters & merge ledger",
+    "  inkbone packet --ledger <ledger.json> --chapter <n> [--prev <prev.md>] [--active-characters <a,b>] [--include-closed]",
+    "                                                    Compile spoiler-safe boundary packet for drafting",
     "  inkbone normalize <file|dir>... [--check] [--strip-bold] [--fix-emdash] [--project <dir|novel.json>] [--no-project]",
-    "                                                    Deterministic formatting & pause-punctuation cleaner (zero LLM tokens)",
+    "                                                    Deterministic formatting & pause-punctuation cleaner (zero tokens)",
+    "  inkbone audit <file.md> [--genre <id>] [--preset <id>] [--format json|md] [--lang zh|en] [--strict]",
+    "                [--ledger <ledger.json> --chapter <n> --prev <prev.md> --skip-length] [--outline-chapter <outline.md>]",
+    "                                                    Run hard boundary, register, rhetoric, density & degeneration audit",
+    "  inkbone doctor <file|dir>... [--genre <id>] [--outline <dir|file>...] [--ledger <ledger.json>] [--lang zh|en] [--json]",
+    "                                                    Recursive multi-chapter checkup (auto-discovers novel.json & genre)",
+    "  inkbone rewrite-prompt <file.md> [--genre <id>] [--lang zh|en] [--skip-length]",
+    "                                                    Audit chapter and output a copy-ready targeted rewrite prompt",
+    "  inkbone check-ledger <ledger.json> [--current <n>] [--overdue <20>]",
+    "                                                    Check ledger health (duplicates, reveal order, overdue foreshadowing)",
+    "  inkbone settle --ledger <ledger.json> --patch <patch.json> [--dry-run]",
+    "                                                    Merge post-chapter settlement updates non-destructively into ledger",
+    "  inkbone mcp                                       Start zero-dependency JSON-RPC 2.0 MCP server over stdio",
+  ];
+
+  const advanced = [
+    "",
+    "Review, Blind Evaluation & Rule Calibration Commands:",
     "  inkbone check-outline <file|dir>...               Check Stage 1 beat outlines for placeholders & required dramatic facets",
     "  inkbone verify-review <chapter.md> <review.json>  Verify verbatim quotes in logic & cold-reader reviews",
     "  inkbone review-save <chapter.md> <review.json> --kind <logic|reader> [--model <reviewer>] [--writer-model <writer>] [--dir <dir>] [--force]",
-    "                                                    Verify then archive a review with the chapter hash (default <chapter dir>/_reviews)",
-    "  inkbone review-stats <dir|file>... [--json]       Count archived review items by category and show the latest change",
-    "  inkbone eval-pack --a <dir|file>... --b <dir|file>... --out <dir> [--label-a <name>] [--label-b <name>]",
-    "                [--model-a <model>] [--model-b <model>] [--seed <n>]",
+    "                                                    Verify then archive a review with the chapter hash",
+    "  inkbone review-stats <dir|file>... [--json]       Count archived review items by category and show latest trends",
+    "  inkbone eval-pack --a <dir|file>... --b <dir|file>... --out <dir> [--label-a <name>] [--label-b <name>] [--seed <n>]",
     "                                                    Build a blind A/B reading packet (packet/ for readers, key.json for you)",
     "  inkbone eval-score --key <key.json> <ballot.json>... [--json]",
     "                                                    Tally blind ballots: wins, ties, sign-test p, skim marks",
@@ -182,14 +202,31 @@ function printHelp() {
     "                                                    Single-call cached Zhuque scan (final step only)",
     "  inkbone benchmark [--json] [--corpus <corpus.json>] [--manifest <manifest.json>]",
   ];
-  console.log(usage.join("\n"));
+
+  const footer = showAll
+    ? ["", "Options: --version / -v   Print InkBone version"]
+    : [
+        "",
+        "Run `inkbone --help-all` to list 12 additional review, blind-eval & calibration commands.",
+        "Run `inkbone --version` to print the installed version.",
+      ];
+
+  console.log([...daily, ...(showAll ? advanced : []), ...footer].join("\n"));
 }
 
 // 主命令行调度逻辑
 async function main() {
   const rawArgs = process.argv.slice(2);
+  if (rawArgs.includes("--version") || rawArgs.includes("-v")) {
+    console.log(`inkbone ${CLI_VERSION}`);
+    process.exit(0);
+  }
+  if (rawArgs.includes("--help-all")) {
+    printHelp(true);
+    process.exit(0);
+  }
   if (rawArgs.length === 0 || rawArgs.includes("--help") || rawArgs.includes("-h")) {
-    printHelp();
+    printHelp(false);
     process.exit(0);
   }
 
@@ -243,7 +280,11 @@ async function main() {
     if (flags.json) {
       console.log(JSON.stringify(diagnosis, null, 2));
     } else {
-      console.log(formatDoctorMarkdown(diagnosis));
+      console.log(
+        formatDoctorMarkdown(diagnosis, {
+          lang: typeof flags.lang === "string" ? flags.lang : "zh",
+        })
+      );
     }
     process.exitCode = diagnosis.pass ? 0 : 1;
     return;
@@ -311,7 +352,16 @@ async function main() {
         : null,
     });
 
-    console.log(JSON.stringify(report, null, 2));
+    if (flags.format === "md") {
+      console.log(
+        formatAuditMarkdown(report, {
+          lang: typeof flags.lang === "string" ? flags.lang : "zh",
+          fileName: path.basename(filePath),
+        })
+      );
+    } else {
+      console.log(JSON.stringify(report, null, 2));
+    }
     process.exitCode = report.pass ? 0 : 1;
     return;
   }
@@ -327,7 +377,17 @@ async function main() {
     const prevText = flags.prev
       ? fs.readFileSync(path.resolve(flags.prev), "utf8")
       : "";
-    const packet = compileBoundaryPacket(ledger, Number(flags.chapter), prevText);
+    const activeCharacters =
+      typeof flags["active-characters"] === "string"
+        ? flags["active-characters"]
+            .split(/[,;\s]+/u)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : undefined;
+    const packet = compileBoundaryPacket(ledger, Number(flags.chapter), prevText, {
+      activeCharacters,
+      includeClosedForeshadowing: Boolean(flags["include-closed"]),
+    });
     console.log(JSON.stringify(packet, null, 2));
     return;
   }
@@ -577,6 +637,7 @@ async function main() {
     const imported = importLedgerFromChapters(positional, {
       existingLedger,
       projectTitle: typeof flags.title === "string" ? flags.title : undefined,
+      autoPopulateCharacters: Boolean(flags["auto-characters"]),
     });
     if (typeof flags.out === "string") {
       const outPath = path.resolve(flags.out);
@@ -644,6 +705,109 @@ async function main() {
       )
     );
     process.exitCode = allPass ? 0 : 1;
+    return;
+  }
+
+  if (command === "check-ledger") {
+    const ledgerArg = positional[0] || flags.ledger;
+    if (!ledgerArg || typeof ledgerArg !== "string") {
+      console.error("Error: Provide <ledger.json> path for check-ledger.");
+      process.exit(2);
+    }
+    const ledgerPath = path.resolve(ledgerArg);
+    if (!fs.existsSync(ledgerPath)) {
+      console.error(`Error: Ledger file not found: ${ledgerPath}`);
+      process.exit(2);
+    }
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8"));
+    const report = validateLedger(ledger, {
+      currentChapter: flags.current ? Number(flags.current) : undefined,
+      overdueThreshold: flags.overdue ? Number(flags.overdue) : undefined,
+    });
+    console.log(JSON.stringify(report, null, 2));
+    process.exitCode = report.pass ? 0 : 1;
+    return;
+  }
+
+  if (command === "settle") {
+    const ledgerArg = typeof flags.ledger === "string" ? flags.ledger : positional[0];
+    const patchArg = typeof flags.patch === "string" ? flags.patch : positional[1];
+    if (!ledgerArg || !patchArg) {
+      console.error("Error: Provide --ledger <ledger.json> and --patch <settlement.json> for settle.");
+      process.exit(2);
+    }
+    const ledgerPath = path.resolve(ledgerArg);
+    const patchPath = path.resolve(patchArg);
+    if (!fs.existsSync(ledgerPath)) {
+      console.error(`Error: Ledger file not found: ${ledgerPath}`);
+      process.exit(2);
+    }
+    if (!fs.existsSync(patchPath)) {
+      console.error(`Error: Settlement patch file not found: ${patchPath}`);
+      process.exit(2);
+    }
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8"));
+    const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
+    const settled = applyChapterSettlement(ledger, patch);
+    const dryRun = Boolean(flags["dry-run"]);
+    if (!dryRun) {
+      fs.writeFileSync(ledgerPath, JSON.stringify(settled.ledger, null, 2) + "\n");
+    }
+    const health = validateLedger(settled.ledger, {
+      currentChapter: settled.diff.chapterNumber,
+    });
+    console.log(
+      JSON.stringify(
+        {
+          ledgerPath,
+          wroteFile: !dryRun,
+          diff: settled.diff,
+          health,
+        },
+        null,
+        2
+      )
+    );
+    process.exitCode = health.pass ? 0 : 1;
+    return;
+  }
+
+  if (command === "rewrite-prompt") {
+    const filePath = positional[0];
+    if (!filePath) {
+      console.error("Error: Missing <file.md> argument for rewrite-prompt.");
+      process.exit(2);
+    }
+    const text = fs.readFileSync(path.resolve(filePath), "utf8");
+    const project = resolveProject(flags, filePath);
+    const ledgerPath = flags.ledger
+      ? path.resolve(flags.ledger)
+      : !flags["no-ledger"] && project?.ledgerFile && fs.existsSync(project.ledgerFile)
+        ? project.ledgerFile
+        : null;
+    const ledger = ledgerPath ? JSON.parse(fs.readFileSync(ledgerPath, "utf8")) : null;
+    const report = auditChapterText(text, {
+      genre: typeof flags.genre === "string" ? flags.genre : project?.genre || null,
+      presetName: typeof flags.preset === "string" ? flags.preset : project?.preset || null,
+      projectRules: project ? project.rules : null,
+      ledger,
+      chapterNumber: flags.chapter ? Number(flags.chapter) : null,
+      skipLengthGate: Boolean(flags["skip-length"]),
+      strict: Boolean(flags.strict),
+    });
+    const built = buildTargetedRewritePrompt(text, report, {
+      lang: typeof flags.lang === "string" ? flags.lang : "zh",
+    });
+    if (flags.json) {
+      console.log(JSON.stringify(built, null, 2));
+    } else {
+      console.log(built.prompt);
+    }
+    return;
+  }
+
+  if (command === "mcp") {
+    startMcpServer();
     return;
   }
 

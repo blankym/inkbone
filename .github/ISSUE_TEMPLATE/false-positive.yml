@@ -1,0 +1,45 @@
+name: 规则误报反馈（False Positive）
+description: 某条通用/题材规则把自然的人类写作误判为 AI 味或语域冲突
+title: "[误报] 规则 ID："
+labels: ["false-positive", "rules"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！InkBone 坚持“人类正常写法不该被通用层误杀”。
+        **版权提醒**：请勿粘贴受版权保护作品的大段原文，提供 1～2 句脱敏短片段与 `rule-stats` 统计数据即可。
+  - type: input
+    id: rule_id
+    attributes:
+      label: 命中的规则 ID（如 cliche_pupil_shrink / reg_impossible_ke_count）
+      placeholder: "请填写 audit/doctor 输出中的 tag 或 code"
+    validations:
+      required: true
+  - type: dropdown
+    id: genre
+    attributes:
+      label: 使用的题材包
+      options:
+        - general-clean
+        - classical-xianxia
+        - historical-court
+        - wuxia-jianghu
+        - mystery-thriller
+        - urban-realism
+        - scifi-wasteland
+        - light-fantasy
+        - romance-emotional
+    validations:
+      required: true
+  - type: textarea
+    id: snippet
+    attributes:
+      label: 触发误报的脱敏短句（1～2 句）
+      placeholder: "粘贴最小复现句子，说明为何在当前语境下属于自然表达"
+    validations:
+      required: true
+  - type: textarea
+    id: stats
+    attributes:
+      label: 可选：rule-stats 人类语料命中率数据
+      placeholder: "如有运行 inkbone rule-stats --human ... --ai ...，可粘贴该规则的统计行"
