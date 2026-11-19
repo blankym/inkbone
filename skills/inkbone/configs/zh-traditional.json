@@ -1,0 +1,97 @@
+{
+  "version": "2.0.0",
+  "variant": "zh-hant",
+  "detection": {
+    "minMarkerHits": 2,
+    "minTraditionalRatio": 0.6,
+    "traditionalMarkers": "體國點過還這來會說時門開關讓聽見無為與從進遠近邊書畫語話頭臉眼淚氣風雲電燈鐵銀銅錢帳記寫讀變壞難錯對覺夢靜響聲驚怕慘殺奪搶壓輕重長短陰陽處應當該總結實際際發發現覺悟轉動動作顯現視線餘發條雜亂皺縮驟彷彿凝凍彎壓抑廳牆樓臺館閣灣",
+    "simplifiedMarkers": "体国点过还这来说时门开关让听见无为与从进远近边书画语话头脸眼泪气风云电灯铁银铜钱帐记写读变坏难错对觉梦静响声惊怕惨杀夺抢压轻重长短阴阳处应当该总结实际发现觉悟转动显现视线余条杂乱皱缩骤仿佛凝冻弯压抑厅墙楼台馆阁湾"
+  },
+  "forbiddenCliches": [
+    {
+      "id": "cliche_hant_pupil_shrink",
+      "category": "ai_micro_acting",
+      "scope": "narration",
+      "pattern": "瞳孔驟縮|瞳孔猛地一縮|瞳孔微縮"
+    },
+    {
+      "id": "cliche_hant_air_freeze",
+      "category": "ai_atmosphere",
+      "scope": "narration",
+      "pattern": "空氣彷彿(?:瞬間)?凝固|時間彷彿(?:在這一刻)?靜止|一股寒意從腳底直衝天靈蓋"
+    },
+    {
+      "id": "cliche_hant_smirk_arc",
+      "category": "ai_micro_acting",
+      "scope": "narration",
+      "pattern": "嘴角勾起一抹[^，。！？\\r\\n]{0,8}(?:弧度|冷笑|苦笑|嘲諷)|毫無溫度的聲音"
+    },
+    {
+      "id": "cliche_hant_cold_gasp",
+      "category": "ai_micro_acting",
+      "scope": "narration",
+      "pattern": "(?:不由得|忍不住)?倒吸一口涼氣|渾身血液(?:瞬間|彷彿)?凝固|大腦(?:瞬間)?一片空白"
+    },
+    {
+      "id": "cliche_hant_heart_sink",
+      "category": "ai_micro_acting",
+      "scope": "narration",
+      "pattern": "心頭(?:微凜|一凜|一沉|微緊|暗凜)|眼底閃過一絲不易察覺的"
+    }
+  ],
+  "registerRules": [
+    {
+      "id": "reg_hant_mainland_buzzword",
+      "category": "regional_register",
+      "scope": "all",
+      "pattern": "邏輯閉環|降維打擊|底層邏輯|顆粒度|賦能|拉胯|心態崩了|秒懂|小夥伴|給力",
+      "remedy": "Replace mainland corporate/internet slang with natural Traditional Chinese phrasing."
+    },
+    {
+      "id": "reg_hant_impossible_ke",
+      "category": "calendar_anachronism",
+      "scope": "all",
+      "pattern": "(?:(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)時(?:九|十[一二]?)刻|(?:九|十[一二三四五六七八九]?|[二三四五六七八九]十[一二三四五六七八九]?)刻鐘)",
+      "remedy": "A traditional shichen holds at most 8 ke; fix invalid traditional time count."
+    },
+    {
+      "id": "reg_hant_omniscient_tell",
+      "category": "pov_leak",
+      "scope": "narration",
+      "pattern": "殊不知|他作夢也沒想到|只是此刻他還不知道|誰也沒有注意到角落裡",
+      "remedy": "Keep strict limited POV without omniscient spoilers."
+    }
+  ],
+  "dialogueHygieneRules": [
+    {
+      "id": "dialogue_hant_outside_period",
+      "category": "dialogue_punctuation",
+      "scope": "all",
+      "pattern": "[「『][^」』\\r\\n]*[，。！？…][」』]。",
+      "remedy": "Place sentence-ending punctuation inside the closing corner quotation mark (「……」), not outside."
+    },
+    {
+      "id": "dialogue_hant_mid_colon",
+      "category": "dialogue_punctuation",
+      "scope": "all",
+      "pattern": "[，,][」』][^。！？\\r\\n]{1,18}[說問答喝道笑嘆]道?：[「『]",
+      "remedy": "Use a comma instead of a colon after a mid-dialogue attribution tag."
+    }
+  ],
+  "fillerRules": [
+    {
+      "id": "filler_hant_purpose_tail",
+      "category": "explanatory_padding",
+      "scope": "narration",
+      "pattern": "免得[^，。！？\\r\\n]{0,24}(?:看出端倪|惹來盤問|生出疑心|引人注意|露出馬腳)",
+      "remedy": "Cut explanatory purpose tails; let physical actions carry subtext."
+    },
+    {
+      "id": "filler_hant_pleasantry",
+      "category": "pleasantry_filler",
+      "scope": "all",
+      "pattern": "您(?:老人家)?先歇著|慢走不送|不得不說的是|轉眼間便來到了",
+      "remedy": "Trim exit pleasantries and narrator bridge glue."
+    }
+  ]
+}

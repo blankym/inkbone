@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![依赖: 0](https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-0-orange.svg)](package.json)
-[![版本: 1.3](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-1.3-lightgrey.svg)](package.json)
+[![版本: 2.0](https://img.shields.io/badge/%E7%89%88%E6%9C%AC-2.0-lightgrey.svg)](package.json)
 
-[English](README.en.md) · **[在线试跑台（纯浏览器本地运算）](https://blankym.github.io/inkbone/)** · 9 个题材包 · 23 条命令 · 零依赖 MCP Server · 58 项测试 · 零第三方依赖
+[English](README.en.md) · **[在线试跑台 / 整书体检（纯浏览器本地）](https://blankym.github.io/inkbone/)** · 9 个题材包 · 简繁自动识别 · 25 条命令 · MCP 三件套 · VS Code 实时扩展 · 66 项测试 · 零第三方依赖
 
 用大模型写长篇连载，头三章看着还行，写到十几章毛病就全出来了：
 
@@ -23,7 +23,19 @@
 
 ## 30 秒看它能抓出什么
 
-> **不想装环境，或者只用网页端 DeepSeek / Claude / Gemini 写小说？** 直接打开 **[在线试跑台](https://blankym.github.io/inkbone/)** —— 纯前端 ES Module 在浏览器本地运行，正文绝不上传服务器；支持本地 `.md`/`.txt` 拖拽导入、原文词级高亮、段落节奏心电图、**一键复制精准改稿 Prompt**，以及 `packet` / `check-ledger` / `verify-review` 实时演示。
+> **不想装环境，或者只用网页端 DeepSeek / Claude / Gemini 写小说？** 直接打开 **[在线试跑台 & 整书体检台](https://blankym.github.io/inkbone/)** —— 纯前端 ES Module 在浏览器本地运行，正文绝不上传服务器；支持：
+> - **单章体检**：本地 `.md`/`.txt` 拖拽导入、简繁自动识别（含港台網文繁體規則）、原文词级 `<mark>` 高亮、段落节奏心电图、**一键复制精准改稿 Prompt**；
+> - **整书多章体检（Browser Doctor · Tab 4）**：一次选择或拖入整个 `chapters/` 文件夹，自动按章号排序跑跨章回声体检、全书高频套话 Top 10 榜、一键下载含自动挖掘角色的 `ledger.json`、一键按起点/番茄/七猫/晋江导出纯净投稿版 `.txt`；
+> - **活账本防剧透与审读核验**：`packet` / `check-ledger` / `verify-review` 实时演示。
+
+![InkBone 在线试跑台：原文词级高亮、段落节奏心电图与一键精准改稿 Prompt](docs/assets/playground-audit.png)
+
+<details>
+<summary>点击展开查看 Tab 4：纯浏览器整书多章体检（Browser Doctor）与平台投稿导出实机界面</summary>
+
+![InkBone Browser Doctor：整书多章排序体检、跨章回声率、Top 10 套话榜与自动角色台账](docs/assets/playground-book-doctor.png)
+
+</details>
 
 ```mermaid
 flowchart LR
@@ -84,6 +96,18 @@ node bin/inkbone.mjs doctor ch01.md --genre classical-xianxia --ledger ledger.js
 屏幕右上角差评率挂在 0.62%，离片区红线还高一截。周建民把退单申诉表按平，扯下挂钩上的黄雨衣套上。门外胡飞正蹲在雨棚下抽烟，手机接单声刚响了两下就按了挂起。
 ```
 
+### 公开可复现评测对比（4 题材原创种子）
+
+使用完全原创、零版权风险的公开测试对 [benchmarks/eval-set/public-pairs.json](benchmarks/eval-set/public-pairs.json)（可运行 `node scripts/run-public-eval.mjs` 随时复现，完整报告见 [benchmarks/public-report.md](benchmarks/public-report.md)）：
+
+| 原创测试种子 | 题材包 | 典型 AI 初稿（阻断 / 提示 / 行命中） | InkBone 修订稿（阻断 / 提示 / 行命中） |
+| :--- | :--- | :---: | :---: |
+| 药园沟渠 | `classical-xianxia` | 0 / 5 / 13 | 0 / 0 / 0 |
+| 雾港夜班 | `mystery-thriller` | 1 / 5 / 12 | 0 / 0 / 0 |
+| 城中村站长 | `urban-realism` | 0 / 4 / 8 | 0 / 0 / 0 |
+| 冷静期最后一天 | `romance-emotional` | 0 / 3 / 14 | 0 / 0 / 0 |
+| **合计（4 题材）** | — | **1 / 17 / 47** | **0 / 0 / 0** |
+
 ---
 
 ## 安装与上手
@@ -112,9 +136,9 @@ cp -R inkbone/skills/inkbone <你的 skills 目录>/inkbone
 
 > 如果所用平台禁用了命令行执行，提示词部分（`prompts/` 与 `resources/`）仍可照常使用，只需注意脚本类检查不会自动运行。
 
-### 方式二：接入零依赖 MCP Server / Claude Code Hooks
+### 方式二：接入零依赖 MCP 三件套（Tools + Prompts + Resources）与 Hooks
 
-InkBone 内置**零第三方依赖**的 `stdio MCP Server`，可直接暴露 `inkbone_packet`、`inkbone_audit`、`inkbone_doctor`、`inkbone_normalize`、`inkbone_verify_review`、`inkbone_check_ledger`、`inkbone_settle` 7 个结构化工具给 Claude Desktop、Cursor、Antigravity 或 Codex（完整样例见 [examples/mcp-config.json](examples/mcp-config.json)）：
+InkBone 内置**零第三方依赖**的完整 `stdio MCP Server`，仅需挂载一个 MCP 即可同时获得 **9 个结构化工具**（含 `inkbone_style_profile`、`inkbone_export`）、**8 个阶段提示词 Prompts**（如 `inkbone/beat-planner`，传入 `genre` 自动拼附题材剧本卡）与 **11 份只读写作知识 Resources**（`inkbone://playbooks/<genre>` 与微技法手册），连 Skill 都无需重复配置（完整样例见 [examples/mcp-config.json](examples/mcp-config.json)）：
 
 ```json
 {
@@ -127,7 +151,8 @@ InkBone 内置**零第三方依赖**的 `stdio MCP Server`，可直接暴露 `in
 }
 ```
 
-如需在 Claude Code 修改章节文件后自动强制跑审计，可直接参考 [examples/claude-code-hooks.json](examples/claude-code-hooks.json)。
+- 如需在 Claude Code 修改章节后自动触发审计门禁，见 [examples/claude-code-hooks.json](examples/claude-code-hooks.json)。
+- 如需在 **VS Code / Cursor** 中边写边实时划波浪线（中文小说 ESLint）与一键 Quick Fix，见独立零依赖扩展 [editors/vscode-inkbone/](editors/vscode-inkbone/)。
 
 ### 方式三：本地命令行（支持 `npx` 零克隆或离线运行）
 
@@ -140,33 +165,36 @@ npx inkbone audit ch01.md --genre classical-xianxia --format md --skip-length
 git clone https://github.com/blankym/inkbone.git
 cd inkbone
 node bin/inkbone.mjs --help       # 展示高频日常命令
-node bin/inkbone.mjs --help-all   # 展示全部 23 条命令
+node bin/inkbone.mjs --help-all   # 展示全部 25 条命令
 ```
 
-三条最常用的起步路径：
+四条最常用的起步路径：
 
-1. **不想建台账？单章 30 秒快检 & 一键生成改稿 Prompt**
+1. **单章 30 秒快检 & 一键生成改稿 Prompt（自动支持简体 / 繁體）**
    ```bash
    node bin/inkbone.mjs audit ch01.md --genre urban-realism --format md --no-project --no-ledger --skip-length
    node bin/inkbone.mjs rewrite-prompt ch01.md --genre urban-realism --no-project --no-ledger --skip-length
    ```
-2. **新书开局与写后合账闭环**
+2. **安全拆书定风格 + 新书活账本闭环**
    ```bash
+   # 零原文泄露，基于范文或前 20 章提取节奏画像与可直接写入 novel.json 的 customGates
+   node bin/inkbone.mjs style-profile ./ref-samples --out ./my-novel/style.json
    node bin/inkbone.mjs init ./my-novel --genre classical-xianxia --title "书名"
-   # 写第 N 章前组装上下文（未到 revealChapter 的真相自动隐去，自动过滤已收伏笔并提醒到期伏笔）
    node bin/inkbone.mjs packet --ledger ./my-novel/ledger.json --chapter 4 --prev ./my-novel/ch03.md
-   # 写完定稿后无损合入本章结算并体检台账健康度
    node bin/inkbone.mjs settle --ledger ./my-novel/ledger.json --patch ./my-novel/ch04-settlement.json
    node bin/inkbone.mjs check-ledger ./my-novel/ledger.json --current 4
    ```
-3. **存量书稿接管与批量清洗**
+3. **存量长篇接管与增量体检**
    ```bash
-   # 扫描已有章节（支持中文/阿拉伯数字章号与分卷），自动启发式挖掘角色候选填入 characterNames
+   # 自动启发式挖掘角色候选填入 characterNames（激活主语歧义检测）
    node bin/inkbone.mjs import-ledger ./my-novel/chapters --auto-characters --out ./my-novel/ledger.json --title "书名"
-   # 整本递归体检（默认中文报告，支持 --lang en）
-   node bin/inkbone.mjs doctor ./my-novel/chapters
-   # 零 token 清理误留的 **加粗**、--- 分隔线和规范省略号（保留对话破折号和白名单）
-   node bin/inkbone.mjs normalize ./my-novel/chapters --strip-bold
+   # 百章大长篇增量体检（仅扫指定章或 git 变动章，同时自动保留前章查跨章回声）
+   node bin/inkbone.mjs doctor ./my-novel/chapters --chapters 40-45
+   node bin/inkbone.mjs doctor ./my-novel/chapters --changed
+   ```
+4. **一键清洗导出到网文平台后台（起点 / 番茄 / 七猫 / 晋江）**
+   ```bash
+   node bin/inkbone.mjs export ./my-novel/chapters --platform qidian --out ./dist/qidian --merge-out ./dist/vol1.txt
    ```
 
 ---
@@ -191,7 +219,7 @@ node bin/inkbone.mjs --help-all   # 展示全部 23 条命令
 
 | 类别 | 具体检查项 | 级别 |
 | :--- | :--- | :--- |
-| 台账边界 | 必达事实锚点遗漏、未解锁真相提前剧透、废弃旧词残留、复述上章结尾 | `error`（阻断） |
+| 台账与角色状态 | 必达事实锚点遗漏、未解锁真相提前剧透、废弃旧词残留、复述上章结尾；已阵亡/退场角色在非回忆段落再次行动说话预警 | `error` / `warning` |
 | 格式与造假 | 残留 `**星号**`、文内括号账本注记（如 `(余13滴)`/`（尚余八滴）`）、字数宣称与相邻引号实际字数不符 | `error`（阻断） |
 | 模型退化 | 邻行/长句复读、章末无标点截断、乱码、AI 拒答/自指词、工程结构词泄漏（Tier 1 阻断 / Tier 2 提示） | `error` / `warning` |
 | 主语连续性 | 省略主语后动作落在前句别的角色头上；连续 3 段用同一种方式起头 | `warning` |
@@ -250,10 +278,12 @@ InkBone 不只做字面质检，还随 Skill 附带了一套面向长篇连载�
 | | `settle` | 将写后结算增量 JSON 无损合入 `ledger.json` 并输出变更 diff 与健康报告 |
 | 排版与检查 | `normalize` | 零 token 清理 Markdown 星号、分隔线和省略号/破折号 |
 | | `check-outline` | 检查单章节拍细纲（Stage 1）是否遗漏要素或留有 `[待补充]` |
-| | `audit` | 审计单章（台账边界、抄纲、语域、密度、退化与主语连续性，支持 `--format md`） |
-| | `doctor` | 递归扫描整个小说目录，按章号排序体检并自动匹配项目配置（默认中文报告） |
+| | `audit` | 审计单章（支持 `--format md`、`--variant auto\|zh-hans\|zh-hant`、退场角色防诈尸） |
+| | `doctor` | 递归全书或增量体检（支持 `--chapters 40-45` / `--changed`，保留跨章回声检测） |
 | | `rewrite-prompt` | 审计单章并直接输出可粘贴给网页大模型的精准局部改稿 Prompt |
-| 协议集成 | `mcp` | 启动零第三方依赖 JSON-RPC 2.0 stdio MCP Server（暴露 7 个结构化工具） |
+| 拆书与发稿 | `style-profile` | 零原文泄露安全拆书：计算样本统计画像、匹配最接近预设并生成 `customGates` |
+| | `export` | 按起点 / 番茄 / 七猫 / 晋江习惯清洗 Markdown 杂项并导出分章或整卷 `.txt` |
+| 协议集成 | `mcp` | 启动零第三方依赖 stdio MCP Server（9 Tools + 8 Prompts + 11 Resources） |
 | 审读与盲测 | `verify-review` | 核对审读 JSON 里的原句是否真在正文里，拦截越权文评 |
 | | `review-save` | 校验后按正文 SHA-256 哈希与模型名归档审读记录 |
 | | `review-stats` | 对比多次审读的跳读点与问题条数变化趋势 |
@@ -266,27 +296,28 @@ InkBone 不只做字面质检，还随 Skill 附带了一套面向长篇连载�
 | | `detect` | 单次缓存调用朱雀检测（需自备 `.env` 密钥），仅作记录 |
 | | `benchmark` | 运行基准语料指标对比 |
 
-日常高频参数请运行 `node bin/inkbone.mjs --help`，全部 23 条命令与选项请运行 `node bin/inkbone.mjs --help-all`。
+日常高频参数请运行 `node bin/inkbone.mjs --help`，全部 25 条命令与选项请运行 `node bin/inkbone.mjs --help-all`。
 
 ---
 
 ## 目录与开发
 
 ```text
-bin/  src/         CLI 入口、零依赖核心引擎与 stdio MCP Server
-configs/           通用规则、9 个题材包、预设门禁、违规分级与双语文案字典
-docs/              浏览器纯前端静态试跑台（核心引擎零依赖运行）
+bin/  src/         CLI 入口、零依赖核心引擎（含安全拆书/导出/Browser Doctor）与 MCP 三件套
+configs/           通用规则、9 个题材包、繁体中文规则层、4 平台导出预设、门禁与双语文案
+docs/              浏览器纯前端试跑台与整书多章体检台（核心引擎零依赖运行）
+editors/           零依赖 VS Code / Cursor 实时波浪线扩展（中文小说 ESLint）
 examples/          MCP 客户端配置与 Claude Code PostToolUse Hook 模板
 prompts/           8 个分阶段写作、审读与写后结算提示词（00–07）
 resources/         正反例对照、微技法、9 份题材手册、盲读说明
-benchmarks/        4 组盲读评估种子 + 第 1 章多版本实测记录（不含私有正文）
+benchmarks/        4 组原创评估种子、公开对照样本与可复现对比报告（不含私有正文）
 evals/             跨运行时 Skill 触发评测集
 skills/inkbone/    自包含 Skill 发布目录（由脚本生成，勿直接修改）
-tests/             58 项单元测试
+tests/             66 项单元测试
 ```
 
 ```bash
-npm test               # 运行 58 项测试（含代码零汉字字面量检查、MCP 握手、docs 与 skill 同步检查；一项私有语料回归在公开仓库自动跳过）
+npm test               # 运行 66 项测试（含代码零汉字字面量、MCP 三件套、繁简、VS Code 核、docs 与 skill 同步）
 npm run build:skill    # 修改 bin/src/configs/prompts/resources 后重新生成 skills/inkbone
 npm run check:skill    # 检查 skills/inkbone 同步状态（CI 强制检查）
 npm run build:docs     # 修改 src/core 或 configs 后同步静态试跑台 docs/vendor

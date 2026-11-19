@@ -119,6 +119,19 @@ export function formatDoctorMarkdown(diagnosis, options = {}) {
     lines.push(`- ${text}`);
   }
 
+  if (diagnosis.incremental?.active) {
+    const incTpl =
+      bundle.incrementalNote ||
+      "Incremental mode ({mode}): scanned {scanned} of {total} chapter(s).";
+    lines.push(
+      `- ${interpolate(incTpl, {
+        mode: diagnosis.incremental.mode,
+        scanned: diagnosis.incremental.scannedCount,
+        total: diagnosis.incremental.totalDiscovered,
+      })}`
+    );
+  }
+
   const t = diagnosis.totals;
   lines.push(
     `- **${s.totalsLabel || "Totals"}**: ${t.chaptersScanned} ${s.chaptersUnit || "chapter(s)"} | ${s.hardErrors || "Hard Errors"}: ${t.hardErrors} | ${s.regClash || "Register Clash"}: ${t.registerCollisions} | ${s.fillers || "Fillers"}: ${t.narrativeFillers} | ${s.cliches || "AI Cliches"}: ${t.aiCliches} | ${s.rhetTics || "Rhet/Tics"}: ${t.rhetoricalPatterns + t.densityTics} | ${s.degeneration || "Degeneration"}: ${t.degenerationErrors} | ${s.metaLeaks || "Meta Leaks"}: ${t.metaLeaks} | ${s.proStreaks || "Pronoun Streaks"}: ${t.pronounStreaks}`,

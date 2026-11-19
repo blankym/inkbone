@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>InkBone（墨骨）· 中文长篇小说本地质检试跑台</title>
+  <title>InkBone（墨骨）· 中文长篇小说本地质检与整书体检台</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231c1b18'/><text x='16' y='22' text-anchor='middle' font-size='18' fill='%23f6f3ec'>墨</text></svg>" />
   <style>
     :root {
@@ -55,25 +55,10 @@
       margin-bottom: 18px;
     }
 
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .brand-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-family: var(--serif);
-      font-size: 1.45rem;
-      letter-spacing: 0.02em;
-    }
+    .brand { display: flex; flex-direction: column; gap: 4px; }
+    .brand-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .brand h1 { margin: 0; font-family: var(--serif); font-size: 1.45rem; letter-spacing: 0.02em; }
+    .brand p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
 
     .trust-pill {
       display: inline-flex;
@@ -88,18 +73,7 @@
       border: 1px solid #b8dfca;
     }
 
-    .brand p {
-      margin: 0;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .top-links {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
+    .top-links { display: flex; gap: 10px; flex-wrap: wrap; }
     .link-btn {
       display: inline-flex;
       align-items: center;
@@ -112,18 +86,9 @@
       font-size: 0.85rem;
       font-weight: 500;
     }
+    .link-btn:hover { border-color: var(--text-muted); }
 
-    .link-btn:hover {
-      border-color: var(--text-muted);
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
     .tab-btn {
       appearance: none;
       border: 1px solid var(--border);
@@ -136,12 +101,7 @@
       cursor: pointer;
       transition: all 0.15s ease;
     }
-
-    .tab-btn.active {
-      background: var(--text);
-      color: #fff;
-      border-color: var(--text);
-    }
+    .tab-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
 
     .panel { display: none; }
     .panel.active { display: block; }
@@ -161,12 +121,7 @@
       gap: 8px;
       margin-bottom: 12px;
     }
-
-    .preset-label {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
+    .preset-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; }
 
     .chip-btn {
       appearance: none;
@@ -178,7 +133,6 @@
       font-size: 0.82rem;
       cursor: pointer;
     }
-
     .chip-btn.active {
       background: var(--accent-soft);
       border-color: var(--accent);
@@ -188,7 +142,7 @@
 
     .controls-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 10px 14px;
       margin-bottom: 12px;
     }
@@ -214,24 +168,29 @@
     }
 
     textarea {
-      min-height: 220px;
+      min-height: 210px;
       line-height: 1.7;
       resize: vertical;
       font-size: 0.95rem;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-
-    textarea.drag-over {
+    textarea.drag-over, .drop-zone.drag-over {
       border: 2px dashed var(--accent);
       background: #fff8f6;
       box-shadow: 0 0 0 3px var(--accent-soft);
     }
+    textarea.code-input { font-family: var(--mono); font-size: 0.82rem; line-height: 1.55; min-height: 310px; }
 
-    textarea.code-input {
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      line-height: 1.55;
-      min-height: 310px;
+    .drop-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+      background: #faf7f0;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-bottom: 12px;
+      transition: all 0.15s ease;
     }
 
     .genre-meta {
@@ -255,7 +214,6 @@
       font-weight: 600;
       font-family: var(--mono);
     }
-
     .badge-error { background: var(--accent-soft); color: var(--accent); }
     .badge-warning { background: var(--warn-soft); color: var(--warn); }
     .badge-info { background: var(--info-soft); color: var(--info); }
@@ -270,28 +228,9 @@
       gap: 10px;
       margin-top: 10px;
     }
-
-    .checks-inline {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      font-size: 0.84rem;
-      color: var(--text-muted);
-    }
-
-    .checks-inline label {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-    }
-
-    .btns-inline {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
+    .checks-inline { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.84rem; color: var(--text-muted); }
+    .checks-inline label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+    .btns-inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
     .btn-primary {
       appearance: none;
@@ -304,7 +243,6 @@
       font-weight: 600;
       cursor: pointer;
     }
-
     .btn-secondary {
       appearance: none;
       border: 1px solid var(--border);
@@ -316,11 +254,7 @@
       font-weight: 500;
       cursor: pointer;
     }
-
-    .btn-secondary:hover {
-      border-color: var(--text-muted);
-    }
-
+    .btn-secondary:hover { border-color: var(--text-muted); }
     .btn-accent-outline {
       appearance: none;
       border: 1px solid var(--accent);
@@ -339,26 +273,9 @@
       gap: 8px;
       margin-bottom: 14px;
     }
-
-    .kpi {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-
-    .kpi-val {
-      font-size: 1.25rem;
-      font-weight: 700;
-      font-family: var(--mono);
-      line-height: 1.2;
-    }
-
-    .kpi-label {
-      font-size: 0.76rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .kpi-val { font-size: 1.25rem; font-weight: 700; font-family: var(--mono); line-height: 1.2; }
+    .kpi-label { font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; }
 
     .rhythm-card {
       background: var(--surface);
@@ -367,7 +284,6 @@
       padding: 12px 14px;
       margin-bottom: 14px;
     }
-
     .rhythm-head {
       display: flex;
       justify-content: space-between;
@@ -378,47 +294,30 @@
       font-size: 0.82rem;
       color: var(--text-muted);
     }
-
     .rhythm-bars {
       display: flex;
       align-items: flex-end;
-      gap: 3px;
-      height: 54px;
+      gap: 4px;
+      height: 58px;
       padding-top: 4px;
       overflow-x: auto;
     }
-
     .rbar {
       flex: 1 1 8px;
-      min-width: 6px;
-      max-width: 24px;
+      min-width: 8px;
+      max-width: 28px;
       border-radius: 3px 3px 0 0;
       background: #9fb4c4;
       cursor: pointer;
       transition: opacity 0.15s ease, transform 0.12s ease;
     }
-
-    .rbar:hover {
-      opacity: 0.85;
-      transform: translateY(-2px);
-    }
-
+    .rbar:hover { opacity: 0.85; transform: translateY(-2px); }
     .rbar.sev-error { background: var(--accent); }
     .rbar.sev-warning { background: #d49032; }
     .rbar.is-dialogue { background: #5a9c7a; }
 
-    .split-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      align-items: start;
-    }
-
-    @media (max-width: 860px) {
-      .split-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+    @media (max-width: 860px) { .split-grid { grid-template-columns: 1fr; } }
 
     .pane-title {
       margin: 0 0 10px;
@@ -438,16 +337,8 @@
       font-family: var(--serif);
       font-size: 0.94rem;
     }
-
-    .aline {
-      display: grid;
-      grid-template-columns: 42px 1fr;
-      border-bottom: 1px solid #f0ece3;
-      transition: background 0.15s ease;
-    }
-
+    .aline { display: grid; grid-template-columns: 42px 1fr; border-bottom: 1px solid #f0ece3; transition: background 0.15s ease; }
     .aline:last-child { border-bottom: 0; }
-
     .aline-num {
       padding: 7px 8px;
       text-align: right;
@@ -458,42 +349,18 @@
       border-right: 1px solid #f0ece3;
       user-select: none;
     }
-
-    .aline-text {
-      padding: 7px 10px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
+    .aline-text { padding: 7px 10px; white-space: pre-wrap; word-break: break-word; }
     .aline.sev-error { background: #fdf0ee; }
     .aline.sev-error .aline-num { background: #fbe2de; color: var(--accent); font-weight: 700; }
     .aline.sev-warning { background: #fef9ee; }
     .aline.sev-warning .aline-num { background: #fcefd4; color: var(--warn); font-weight: 700; }
     .aline.flash { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-    mark.hit-mark {
-      border-radius: 3px;
-      padding: 0 2px;
-      color: inherit;
-      cursor: help;
-    }
+    mark.hit-mark { border-radius: 3px; padding: 0 2px; color: inherit; cursor: help; }
+    mark.hit-mark.sev-error { background: #f9cbc4; border-bottom: 2px solid var(--accent); }
+    mark.hit-mark.sev-warning { background: #fbe3b6; border-bottom: 2px solid var(--warn); }
 
-    mark.hit-mark.sev-error {
-      background: #f9cbc4;
-      border-bottom: 2px solid var(--accent);
-    }
-
-    mark.hit-mark.sev-warning {
-      background: #fbe3b6;
-      border-bottom: 2px solid var(--warn);
-    }
-
-    .findings-list {
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-    }
-
+    .findings-list { display: flex; flex-direction: column; gap: 9px; }
     .finding-item {
       border: 1px solid var(--border);
       border-left-width: 4px;
@@ -502,46 +369,40 @@
       background: #fff;
       font-size: 0.86rem;
     }
-
     .finding-item.clickable { cursor: pointer; }
     .finding-item.clickable:hover { background: #fcfaf5; }
     .finding-item.sev-error { border-left-color: var(--accent); }
     .finding-item.sev-warning { border-left-color: var(--warn); }
     .finding-item.sev-info { border-left-color: var(--info); }
 
-    .finding-head {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
+    .finding-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 4px; }
     .finding-title { font-weight: 600; }
     .finding-detail { color: var(--text); margin-top: 3px; word-break: break-word; }
     .finding-remedy { color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; }
 
-    .status-banner {
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 0.86rem;
-      margin-bottom: 12px;
-    }
-
+    .status-banner { padding: 10px 12px; border-radius: 8px; font-size: 0.86rem; margin-bottom: 12px; }
     .status-banner.ok { background: var(--ok-soft); color: var(--ok); border: 1px solid #b8dfca; }
     .status-banner.err { background: var(--accent-soft); color: var(--accent); border: 1px solid #edc2bc; }
     .status-banner.warn { background: var(--warn-soft); color: var(--warn); border: 1px solid #edd6ad; }
     .status-banner.info { background: var(--info-soft); color: var(--info); border: 1px solid #c3d8e8; }
 
-    .prompt-drawer {
-      margin-top: 10px;
-      margin-bottom: 12px;
-      display: none;
-    }
+    .prompt-drawer { margin-top: 10px; margin-bottom: 12px; display: none; }
+    .prompt-drawer.open { display: block; }
 
-    .prompt-drawer.open {
-      display: block;
+    table.book-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
     }
+    table.book-table th, table.book-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    table.book-table th { background: var(--surface-muted); color: var(--text-muted); font-weight: 600; }
+    table.book-table td.num, table.book-table th.num { text-align: right; font-family: var(--mono); }
+
+    .char-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 
     pre.json-out {
       margin: 0;
@@ -566,7 +427,6 @@
       font-size: 0.84rem;
       color: var(--text-muted);
     }
-
     footer.cli-note code {
       font-family: var(--mono);
       font-size: 0.8rem;
@@ -585,7 +445,7 @@
           <h1>InkBone（墨骨）在线试跑台</h1>
           <span class="trust-pill">100% 浏览器本地运算 · 正文绝不上传服务器</span>
         </div>
-        <p>把长篇小说质检尺子、防剧透活账本与精准改稿 Prompt 生成器搬进浏览器，直接运行与 Node CLI 同源的零依赖检测引擎。</p>
+        <p>单章体检、整书多章 Browser Doctor、防剧透活账本、简繁自动识别与平台投稿导出，全部在本地浏览器零依赖运行。</p>
       </div>
       <div class="top-links">
         <a class="link-btn" href="https://github.com/blankym/inkbone" target="_blank" rel="noopener">GitHub 仓库</a>
@@ -597,12 +457,13 @@
     <div id="loadErrorBanner" class="status-banner err" style="display:none;"></div>
 
     <nav class="tabs" role="tablist">
-      <button class="tab-btn active" data-tab="audit">1. 正文体检与精准改稿（audit / normalize）</button>
-      <button class="tab-btn" data-tab="packet">2. 活账本防剧透与体检（packet / check-ledger）</button>
-      <button class="tab-btn" data-tab="review">3. 审读引文核验（verify-review）</button>
+      <button class="tab-btn active" data-tab="audit">1. 单章体检与改稿 Prompt</button>
+      <button class="tab-btn" data-tab="packet">2. 活账本防剧透与体检</button>
+      <button class="tab-btn" data-tab="review">3. 审读引文核验</button>
+      <button class="tab-btn" data-tab="book">4. 整书多章体检与投稿导出（Browser Doctor）</button>
     </nav>
 
-    <!-- Tab 1: 正文体检 -->
+    <!-- Tab 1: 单章体检 -->
     <section id="tab-audit" class="panel active">
       <div class="card">
         <div class="preset-bar">
@@ -620,11 +481,19 @@
             <select id="genreSelect"></select>
           </label>
           <label class="field">
-            出场角色名单（逗号或空格分隔，用于查省略主语歧义）
+            简繁语体（variant）
+            <select id="variantSelect">
+              <option value="auto">自动识别（简体 / 繁體）</option>
+              <option value="zh-hans">简体中文（zh-hans）</option>
+              <option value="zh-hant">繁體中文 / 港台網文（zh-hant）</option>
+            </select>
+          </label>
+          <label class="field">
+            出场角色名单（查主语歧义）
             <input id="charactersInput" type="text" placeholder="例如：陆青, 孙岳" />
           </label>
           <label class="field">
-            主角名（可选，豁免主角动作链误报）
+            主角名（豁免主角动作链）
             <input id="protagonistInput" type="text" placeholder="例如：陆青" />
           </label>
         </div>
@@ -635,7 +504,7 @@
 
         <div class="actions-row">
           <div class="checks-inline">
-            <label><input id="skipLengthCheck" type="checkbox" checked /> 跳过单章字数区间门禁（短片段试跑建议勾选）</label>
+            <label><input id="skipLengthCheck" type="checkbox" checked /> 跳过单章字数区间门禁</label>
             <label><input id="strictModeCheck" type="checkbox" /> 严格模式（--strict）</label>
           </div>
           <div class="btns-inline">
@@ -658,7 +527,13 @@
 
       <div class="split-grid">
         <div class="card">
-          <h3 class="pane-title"><span>逐行原文对照（词级高亮）</span><span id="lineStatsHint" class="badge badge-muted"></span></h3>
+          <h3 class="pane-title">
+            <span>逐行原文对照（词级高亮）</span>
+            <span class="btns-inline">
+              <span id="variantDetectedBadge" class="badge badge-info"></span>
+              <span id="lineStatsHint" class="badge badge-muted"></span>
+            </span>
+          </h3>
           <div id="annotatedLines" class="annotated-lines"></div>
         </div>
         <div class="card">
@@ -679,7 +554,7 @@
       </div>
     </section>
 
-    <!-- Tab 2: 台账防剧透打包与台账体检 -->
+    <!-- Tab 2: 活账本防剧透打包与台账体检 -->
     <section id="tab-packet" class="panel">
       <div class="card">
         <div class="preset-bar">
@@ -735,10 +610,88 @@
       </div>
     </section>
 
+    <!-- Tab 4: 整书多章体检与投稿导出（Browser Doctor） -->
+    <section id="tab-book" class="panel">
+      <div class="card">
+        <div class="preset-bar">
+          <span class="preset-label">整书多章体检（纯浏览器本地）：</span>
+          <button id="bookDemoBtn" class="chip-btn active" type="button">载入 3 章连载示例</button>
+          <input id="bookFilesInput" type="file" accept=".md,.txt" multiple style="display:none;" />
+          <input id="bookDirInput" type="file" webkitdirectory directory multiple style="display:none;" />
+          <button id="bookFilesBtn" class="btn-secondary" type="button" style="padding:5px 11px; font-size:0.82rem;">选择多个章节文件</button>
+          <button id="bookDirBtn" class="btn-secondary" type="button" style="padding:5px 11px; font-size:0.82rem;">选择整书 chapters/ 文件夹</button>
+        </div>
+
+        <div id="bookDropZone" class="drop-zone">
+          直接把多章 <code>.md</code> / <code>.txt</code> 文件拖放到这里，自动按中文或阿拉伯数字章号排序，本地完成跨章回声体检、角色挖掘与投稿清洗（绝不上传任何服务器）。
+        </div>
+
+        <div class="controls-grid">
+          <label class="field">
+            整书题材包（留空则自动推断）
+            <select id="bookGenreSelect">
+              <option value="">自动推断题材</option>
+            </select>
+          </label>
+          <label class="field">
+            投稿导出目标平台
+            <select id="bookPlatformSelect"></select>
+          </label>
+          <div class="field" style="justify-content:flex-end;">
+            <span>一键导出产物</span>
+            <div class="btns-inline">
+              <button id="downloadLedgerBtn" class="btn-secondary" type="button">下载 ledger.json</button>
+              <button id="exportBookBtn" class="btn-primary" type="button">导出平台纯净版 .txt</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="bookNotice" class="status-banner info" style="display:none; margin-bottom:0;"></div>
+      </div>
+
+      <div id="bookKpiGrid" class="kpi-grid"></div>
+
+      <div class="rhythm-card">
+        <div class="rhythm-head">
+          <strong>逐章字数与告警走势</strong>
+          <span id="bookGenreBadge" class="badge badge-ok"></span>
+        </div>
+        <div id="bookTrendBars" class="rhythm-bars"></div>
+      </div>
+
+      <div class="split-grid">
+        <div class="card">
+          <h3 class="pane-title"><span>逐章体检明细（含跨章结尾回声检测）</span></h3>
+          <div style="overflow-x:auto;">
+            <table class="book-table">
+              <thead>
+                <tr>
+                  <th>章节文件</th>
+                  <th class="num">字数</th>
+                  <th class="num">阻断</th>
+                  <th class="num">提示</th>
+                  <th class="num">回声率</th>
+                </tr>
+              </thead>
+              <tbody id="bookChapterTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="pane-title"><span>全书高频套话 / 问题 Top 10 榜</span></h3>
+          <div id="bookTopRulesList" class="findings-list" style="margin-bottom:14px;"></div>
+
+          <h3 class="pane-title"><span>自动挖掘角色名单（可直接写入 ledger.json）</span></h3>
+          <div id="bookCharChips" class="char-chips"></div>
+        </div>
+      </div>
+    </section>
+
     <footer class="cli-note">
-      <strong>需要整本多卷体检、存量章节自动挖掘角色建台账（<code>import-ledger --auto-characters</code>）、写后结算（<code>settle</code>）或接入 Claude Desktop / Cursor MCP？</strong><br />
-      完整版零第三方依赖，仅需 Node.js 18+：
-      <code>npx skills add blankym/inkbone</code> · <code>npx inkbone mcp</code> · <code>npx inkbone doctor ./chapters</code>
+      <strong>需要完整 CLI、MCP Server（9 工具 + 8 阶段 Prompt + 11 份剧本卡资源）、VS Code 实时波浪线扩展或安全拆书（<code>style-profile</code>）？</strong><br />
+      零第三方依赖，仅需 Node.js 18+：
+      <code>npx skills add blankym/inkbone</code> · <code>npx -y inkbone mcp</code> · <code>npx inkbone doctor ./chapters --changed</code>
     </footer>
   </div>
 

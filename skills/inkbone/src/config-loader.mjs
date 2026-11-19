@@ -6,6 +6,7 @@ import {
   compileLinguisticsConfig,
   compileProjectRules,
   compileSeverityConfig,
+  compileTraditionalConfig,
   resolveGenreFromConfig,
   resolvePresetFromConfig,
 } from "./core/config-compiler.mjs";
@@ -20,12 +21,16 @@ const defaultLingPath = path.resolve(rootDir, "configs/zh-linguistics.json");
 const defaultPresetsPath = path.resolve(rootDir, "configs/presets.json");
 const defaultGenresPath = path.resolve(rootDir, "configs/genres.json");
 const defaultMessagesPath = path.resolve(rootDir, "configs/messages.json");
+const defaultTraditionalPath = path.resolve(rootDir, "configs/zh-traditional.json");
+const defaultPlatformsPath = path.resolve(rootDir, "configs/platforms.json");
 
 let cachedLinguistics = null;
 let cachedPresets = null;
 let cachedGenres = null;
 let cachedSeverity = null;
 let cachedMessages = null;
+let cachedTraditional = null;
+let cachedPlatforms = null;
 
 // 加载并缓存中文计算语言学配置与预编译正则表达式
 export function loadLinguisticsConfig(customPath = null) {
@@ -98,6 +103,33 @@ export function loadMessagesConfig(customPath = null) {
   const parsed = JSON.parse(fs.readFileSync(targetPath, "utf8"));
   if (!customPath) {
     cachedMessages = parsed;
+  }
+  return parsed;
+}
+
+// 加载并编译繁体中文 / 港台网文规则层配置
+export function loadTraditionalConfig(customPath = null) {
+  if (!customPath && cachedTraditional) {
+    return cachedTraditional;
+  }
+  const targetPath = customPath ? path.resolve(customPath) : defaultTraditionalPath;
+  const raw = JSON.parse(fs.readFileSync(targetPath, "utf8"));
+  const compiled = compileTraditionalConfig(raw);
+  if (!customPath) {
+    cachedTraditional = compiled;
+  }
+  return compiled;
+}
+
+// 加载网文平台投稿导出清洗预设配置
+export function loadPlatformsConfig(customPath = null) {
+  if (!customPath && cachedPlatforms) {
+    return cachedPlatforms;
+  }
+  const targetPath = customPath ? path.resolve(customPath) : defaultPlatformsPath;
+  const parsed = JSON.parse(fs.readFileSync(targetPath, "utf8"));
+  if (!customPath) {
+    cachedPlatforms = parsed;
   }
   return parsed;
 }
@@ -187,6 +219,11 @@ export function loadProjectConfig(configPath) {
     projectTitle: raw.projectTitle || null,
     genre: raw.genre || null,
     preset: raw.preset || null,
+    variant: raw.variant || null,
+    customGates:
+      raw.customGates && typeof raw.customGates === "object" && !Array.isArray(raw.customGates)
+        ? raw.customGates
+        : null,
     ledgerFile: raw.ledgerFile ? path.resolve(baseDir, raw.ledgerFile) : null,
     whitelistFile:
       explicitWhitelist ||

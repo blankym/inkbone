@@ -1,6 +1,7 @@
 import {
   resolveGenreFromConfig,
   resolvePresetFromConfig,
+  detectScriptVariant,
 } from "./config-compiler.mjs";
 
 // 对照 calibrate 生成的人类参考区间，列出每项指标的位置
@@ -68,15 +69,32 @@ export function auditChapterText(rawContent, options = {}) {
   const effectivePresetName =
     options.presetName || (genrePack ? genrePack.defaultPreset : null);
   const preset = resolvePresetFromConfig(presetsConfig, effectivePresetName);
-  const gates = preset.gates;
+  const gates =
+    options.customGates && typeof options.customGates === "object"
+      ? { ...preset.gates, ...options.customGates }
+      : preset.gates;
 
-  // 三层规则合并：通用层 → 题材包 → 书目录项目规则；项目可用 disabledRuleIds 关掉上层规则
+  // 解析简繁语体变体（auto 自动检测；仅在识别为繁体或显式指定 zh-hant 时叠加繁体规则层）
+  const tradCfg = options.traditionalConfig || null;
+  const requestedVariant = options.variant || "auto";
+  const scriptVariant =
+    requestedVariant === "zh-hant"
+      ? "zh-hant"
+      : requestedVariant === "zh-hans"
+        ? "zh-hans"
+        : tradCfg
+          ? detectScriptVariant(rawContent, tradCfg)
+          : "zh-hans";
+  const useTraditional = scriptVariant === "zh-hant" && Boolean(tradCfg);
+
+  // 三层规则合并：通用层（+可选繁体层） → 题材包 → 书目录项目规则；项目可用 disabledRuleIds 关掉上层规则
   const project = options.projectRules || null;
   const disabled = project ? project.disabledRuleIds : new Set();
   const whitelistLiterals = project?.whitelistLiterals || [];
   const enabled = (rules) => (rules || []).filter((rule) => !disabled.has(rule.id));
   const clicheRules = enabled([
     ...lingConfig.compiledRegex.forbiddenCliches,
+    ...(useTraditional ? tradCfg.compiledClicheRules : []),
     ...(genrePack ? genrePack.compiledClicheRules : []),
     ...(project ? project.clicheRules : []),
   ]);
@@ -85,11 +103,13 @@ export function auditChapterText(rawContent, options = {}) {
     ...(project ? project.symmetricSkeletons : []),
   ]);
   const registerRules = enabled([
+    ...(useTraditional ? tradCfg.compiledRegisterRules : []),
     ...(genrePack ? genrePack.compiledRegisterRules : []),
     ...(project ? project.registerRules : []),
   ]);
   const fillerRules = enabled([
     ...genresConfig.compiledUniversalFillers,
+    ...(useTraditional ? tradCfg.compiledFillerRules : []),
     ...(genrePack ? genrePack.compiledFillerRules : []),
     ...(project ? project.fillerRules : []),
   ]);
@@ -100,6 +120,7 @@ export function auditChapterText(rawContent, options = {}) {
   ]);
   const dialogueHygieneRules = enabled([
     ...(lingConfig.compiledRegex.dialogueHygieneRules || []),
+    ...(useTraditional ? tradCfg.compiledDialogueHygieneRules : []),
   ]);
 
   const profile = profileText(rawContent, lingConfig, {
@@ -641,6 +662,15 @@ export function auditChapterText(rawContent, options = {}) {
           "Fix missing required anchors, remove future spoilers, or purge deprecated character names.",
       });
     }
+    if (boundaryReport.deceasedHits && boundaryReport.deceasedHits.length > 0) {
+      violations.push({
+        code: "DECEASED_CHARACTER_APPEARANCE",
+        count: boundaryReport.deceasedHits.length,
+        hits: boundaryReport.deceasedHits,
+        remedy:
+          "Character is marked deceased/exited in earlier chapters; verify this is an explicit flashback or fix continuity.",
+      });
+    }
   } else if (
     options.previousChapterText &&
     options.previousChapterText.trim().length > 0
@@ -827,6 +857,14 @@ export function auditChapterText(rawContent, options = {}) {
       { layer: "universal", level: "blocking", review: "mechanical" }
     )
   );
+  (boundaryReport?.deceasedHits || []).forEach((h) =>
+    registerLineIssue(
+      h.line,
+      "deceased_character_appearance",
+      `${h.character} (${h.status} after ch${h.afterChapter ?? "?"}): ${h.matched}`,
+      { layer: "project", level: "advisory", review: "semantic" }
+    )
+  );
 
   const surgeryTargets = Array.from(surgeryLineMap.entries())
     .sort((a, b) => a[0] - b[0])
@@ -861,6 +899,7 @@ export function auditChapterText(rawContent, options = {}) {
   return {
     pass,
     mode: strict ? "strict" : "default",
+    scriptVariant,
     genre: genrePack ? genrePack.id : null,
     preset: preset.id,
     summary,

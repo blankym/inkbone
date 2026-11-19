@@ -3,9 +3,25 @@ import {
   compileBoundaryPacket,
   computeBoundaryEchoRatio as computeBoundaryEchoRatioCore,
   verifyChapterBoundaries as verifyChapterBoundariesCore,
+  checkDeceasedCharacterAppearances as checkDeceasedCharacterAppearancesCore,
 } from "./core/boundary-compiler.mjs";
 
 export { compileBoundaryPacket };
+
+// 检查已阵亡或退场角色是否在非回忆段落中再次活跃出场
+export function checkDeceasedCharacterAppearances(
+  chapterText,
+  ledger,
+  chapterNumber,
+  customLingConfig = null
+) {
+  return checkDeceasedCharacterAppearancesCore(
+    chapterText,
+    ledger,
+    chapterNumber,
+    customLingConfig || loadLinguisticsConfig()
+  );
+}
 
 // 计算本章开篇 500 字与上一章结尾 500 字的 6-gram 重合率（防前情重演）
 export function computeBoundaryEchoRatio(

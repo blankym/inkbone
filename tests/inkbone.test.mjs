@@ -45,7 +45,21 @@ import {
   buildTargetedRewritePrompt,
   handleMcpMessage,
   MCP_TOOLS,
+  MCP_PROMPTS,
+  MCP_RESOURCES,
+  analyzeStyleProfile,
+  formatStyleProfileMarkdown,
+  formatChapterForPlatform,
+  exportChapters,
+  diagnoseChapterEntries,
+  detectScriptVariant,
+  loadTraditionalConfig,
+  checkDeceasedCharacterAppearances,
 } from "../src/index.mjs";
+import {
+  buildEditorDiagnostics,
+  computeQuickFixProposal,
+} from "../editors/vscode-inkbone/diagnostics-core.mjs";
 import { execFileSync } from "node:child_process";
 
 // 加载外部测试夹具数据以保持测试代码纯英文零中文字符
@@ -1062,18 +1076,25 @@ test("all JavaScript source files strictly separate code from Chinese data liter
       });
     }
   }
-  // 校验浏览器页面控制脚本也保持零汉字字面量
-  const appLines = fs
-    .readFileSync(path.resolve(rootDir, "docs/app.mjs"), "utf8")
-    .split(/\r?\n/u);
-  appLines.forEach((line, idx) => {
-    const codePart = line.replace(/\/\/.*$/u, "");
-    assert.equal(
-      hanRegex.test(codePart),
-      false,
-      `Unexpected Chinese literal in docs/app.mjs:${idx + 1}`
-    );
-  });
+  // 校验浏览器页面控制脚本与 VS Code 扩展脚本也保持零汉字字面量
+  const extraJsFiles = [
+    "docs/app.mjs",
+    "editors/vscode-inkbone/diagnostics-core.mjs",
+    "editors/vscode-inkbone/extension.cjs",
+  ];
+  for (const relFile of extraJsFiles) {
+    const fileLines = fs
+      .readFileSync(path.resolve(rootDir, relFile), "utf8")
+      .split(/\r?\n/u);
+    fileLines.forEach((line, idx) => {
+      const codePart = line.replace(/\/\/.*$/u, "");
+      assert.equal(
+        hanRegex.test(codePart),
+        false,
+        `Unexpected Chinese literal in ${relFile}:${idx + 1}`
+      );
+    });
+  }
 });
 
 // 主语歧义：上一句主语是别的角色、下一句无主语动作，应报 SUBJECT_AMBIGUITY；补上主语后不报
@@ -1784,4 +1805,218 @@ test("zero-dependency MCP server handles initialize, tools/list, tools/call, and
   assert.equal(replies.length, 2);
   assert.equal(replies[0].id, 10);
   assert.equal(replies[1].id, 11);
+});
+
+// MCP 三件套：prompts/list、prompts/get（附题材剧本卡）、resources/list、resources/read 及新工具
+test("MCP server exposes prompts, resources, and v2 tools (style_profile & export)", () => {
+  const initRes = handleMcpMessage({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} });
+  assert.ok(initRes.result.capabilities.prompts);
+  assert.ok(initRes.result.capabilities.resources);
+
+  const pList = handleMcpMessage({ jsonrpc: "2.0", id: 2, method: "prompts/list" });
+  assert.equal(pList.result.prompts.length, MCP_PROMPTS.length);
+  assert.ok(pList.result.prompts.some((p) => p.name === "inkbone/beat-planner"));
+
+  const pGet = handleMcpMessage({
+    jsonrpc: "2.0",
+    id: 3,
+    method: "prompts/get",
+    params: { name: "inkbone/beat-planner", arguments: { genre: "classical-xianxia", chapter: "4" } },
+  });
+  assert.equal(pGet.result.messages.length, 2);
+  assert.ok(pGet.result.messages[1].content.text.includes("classical-xianxia"));
+
+  const rList = handleMcpMessage({ jsonrpc: "2.0", id: 4, method: "resources/list" });
+  assert.equal(rList.result.resources.length, MCP_RESOURCES.length);
+  assert.ok(rList.result.resources.some((r) => r.uri === "inkbone://playbooks/classical-xianxia"));
+
+  const rRead = handleMcpMessage({
+    jsonrpc: "2.0",
+    id: 5,
+    method: "resources/read",
+    params: { uri: "inkbone://playbooks/classical-xianxia" },
+  });
+  assert.equal(rRead.result.contents[0].mimeType, "text/markdown");
+  assert.ok(rRead.result.contents[0].text.length > 200);
+
+  const expRes = handleMcpMessage({
+    jsonrpc: "2.0",
+    id: 6,
+    method: "tools/call",
+    params: {
+      name: "inkbone_export",
+      arguments: { text: fixtures.v20Features.exportSampleMarkdown, platform: "qidian" },
+    },
+  });
+  assert.equal(expRes.result.isError, undefined);
+  assert.equal(expRes.result.structuredContent.output.includes("**"), false);
+
+  const styleRes = handleMcpMessage({
+    jsonrpc: "2.0",
+    id: 7,
+    method: "tools/call",
+    params: {
+      name: "inkbone_style_profile",
+      arguments: { texts: [fixtures.exclamationCleanSample], format: "md", lang: "zh" },
+    },
+  });
+  assert.equal(styleRes.result.isError, undefined);
+  assert.ok(styleRes.result.structuredContent.suggestedGates.maxParagraphHanChars >= 120);
+});
+
+// 安全拆书 style-profile 与 novel.json customGates 落地生效
+test("analyzeStyleProfile generates copyright-safe customGates that take effect in auditChapterText", () => {
+  const profile = analyzeStyleProfile([fixtures.exclamationCleanSample, fixtures.clearSubjectSample], {
+    label: "unit-test",
+  });
+  assert.equal(profile.kind, "inkbone-style-profile");
+  assert.ok(profile.nearestPreset.id.length > 0);
+  assert.ok(profile.suggestedGates.maxDePer100Han > 0);
+  const md = formatStyleProfileMarkdown(profile, { lang: "zh" });
+  assert.ok(md.includes(profile.nearestPreset.id));
+  assert.ok(md.includes("customGates"));
+
+  // 验证 customGates 在审计器中确实覆盖默认预设上限
+  const tightAudit = auditChapterText(fixtures.exclamationCleanSample, {
+    skipLengthGate: true,
+    customGates: { maxParagraphHanChars: 20 },
+  });
+  assert.ok(tightAudit.violations.some((v) => v.code === "PARAGRAPH_TOO_LONG"));
+});
+
+// 长篇硬状态守卫：已阵亡角色在后续章行动触发预警，回忆段落与对话提及自动豁免
+test("deceased character guard flags active reappearances while exempting flashbacks and dialogue mentions", () => {
+  const f = fixtures.v20Features;
+  const badHits = checkDeceasedCharacterAppearances(f.deceasedActiveText, f.deceasedLedger, 5);
+  assert.equal(badHits.length, 1);
+  assert.equal(badHits[0].line, 3);
+
+  const audited = auditChapterText(f.deceasedActiveText, {
+    skipLengthGate: true,
+    ledger: f.deceasedLedger,
+    chapterNumber: 5,
+  });
+  assert.ok(audited.violations.some((v) => v.code === "DECEASED_CHARACTER_APPEARANCE" && v.severity === "warning"));
+  assert.ok(audited.surgeryTargets.some((t) => t.issues.some((i) => i.tag === "deceased_character_appearance")));
+
+  const flashHits = checkDeceasedCharacterAppearances(f.deceasedFlashbackText, f.deceasedLedger, 5);
+  assert.equal(flashHits.length, 0);
+
+  const quoteHits = checkDeceasedCharacterAppearances(f.deceasedMentionInQuoteText, f.deceasedLedger, 5);
+  assert.equal(quoteHits.length, 0);
+});
+
+// 增量 doctor（--chapters 范围过滤）：仅扫描目标章但保留前章文本用于跨章回声检测
+test("diagnoseProject incremental chapterFilter scans subset while preserving previous-chapter echo check", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "inkbone-inc-"));
+  try {
+    fs.writeFileSync(path.join(tmp, "ch01.md"), `# 1\n\n${fixtures.doctorChainSample.ch2EchoTail}`);
+    fs.writeFileSync(path.join(tmp, "ch02.md"), `# 2\n\n${fixtures.doctorChainSample.ch2EchoHead}`);
+    fs.writeFileSync(path.join(tmp, "ch03.md"), `# 3\n\n${fixtures.volumeOrderSample.ch3Body}`);
+
+    const diag = diagnoseProject([tmp], { chapterFilter: "2", skipLengthGate: true });
+    assert.equal(diag.incremental.active, true);
+    assert.equal(diag.incremental.totalDiscovered, 3);
+    assert.equal(diag.incremental.scannedCount, 1);
+    assert.equal(diag.chapters.length, 1);
+    assert.ok(diag.chapters[0].violations.some((v) => v.code === "PREVIOUS_ENDING_ECHO"));
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// 4 平台投稿清洗导出：剥离 frontmatter/注释/星号/分隔线，应用全角缩进并支持整卷合并
+test("exportChapters cleans Markdown artifacts for publishing platforms and merges volumes", () => {
+  const f = fixtures.v20Features;
+  const formatted = formatChapterForPlatform(f.exportSampleMarkdown, { platform: "qidian" });
+  assert.equal(formatted.title, f.exportExpectedTitle);
+  assert.equal(formatted.output.includes("**"), false);
+  assert.equal(formatted.output.includes("---"), false);
+  assert.equal(formatted.output.includes("<!--"), false);
+  assert.ok(formatted.output.includes(f.exportExpectedIndentPrefix));
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "inkbone-exp-"));
+  try {
+    const chDir = path.join(tmp, "chapters");
+    const outDir = path.join(tmp, "out");
+    const mergePath = path.join(tmp, "merged.txt");
+    fs.mkdirSync(chDir);
+    fs.writeFileSync(path.join(chDir, "ch01.md"), f.exportSampleMarkdown);
+    const res = exportChapters([chDir], { platform: "fanqie", outDir, mergeOut: mergePath });
+    assert.equal(res.chapterCount, 1);
+    assert.equal(fs.existsSync(mergePath), true);
+    assert.equal(res.writtenFiles.length, 2);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// 繁体中文自动识别与规则层回归：zh-hant 自动命中繁体套话、港台跨语境词、直角引号外句号，干净繁文零误报
+test("Traditional Chinese auto-detection activates zh-hant rules cleanly without false positives", () => {
+  const f = fixtures.v20Features;
+  const tradCfg = loadTraditionalConfig();
+  assert.equal(detectScriptVariant(f.traditionalBadText, tradCfg), "zh-hant");
+  assert.equal(detectScriptVariant(fixtures.exclamationCleanSample, tradCfg), "zh-hans");
+
+  const badRes = auditChapterText(f.traditionalBadText, {
+    genre: "mystery-thriller",
+    variant: "auto",
+    skipLengthGate: true,
+  });
+  assert.equal(badRes.scriptVariant, "zh-hant");
+  assert.ok(badRes.violations.some((v) => v.code === "FORBIDDEN_AI_CLICHE"));
+  assert.ok(badRes.violations.some((v) => v.code === "REGISTER_COLLISION"));
+  assert.ok(badRes.violations.some((v) => v.code === "DIALOGUE_PUNCTUATION_ERROR"));
+  assert.ok(badRes.violations.some((v) => v.code === "NARRATIVE_FILLER"));
+
+  const cleanRes = auditChapterText(f.traditionalCleanText, {
+    genre: "mystery-thriller",
+    variant: "auto",
+    skipLengthGate: true,
+  });
+  assert.equal(cleanRes.scriptVariant, "zh-hant");
+  assert.equal(cleanRes.summary.error, 0);
+  const badHits = cleanRes.violations.filter((v) =>
+    ["FORBIDDEN_AI_CLICHE", "REGISTER_COLLISION", "DIALOGUE_PUNCTUATION_ERROR", "NARRATIVE_FILLER"].includes(v.code)
+  );
+  assert.equal(badHits.length, 0);
+});
+
+// Browser Doctor 内存整书体检：乱序输入自动按中文章号排序、检出跨章回声、产出 Top 规则榜与角色台账骨架
+test("diagnoseChapterEntries sorts chapters naturally, detects cross-chapter echo, and builds suggestedLedger", () => {
+  const f = fixtures.v20Features;
+  const report = diagnoseChapterEntries(f.bookDoctorEntries, {
+    genre: "classical-xianxia",
+    skipLengthGate: true,
+  });
+  assert.equal(report.totals.chaptersScanned, 2);
+  assert.equal(report.chapters[0].chapterNumber, 1);
+  assert.equal(report.chapters[1].chapterNumber, 2);
+  assert.ok(report.totals.echoWarnings >= 1);
+  assert.ok(report.topRules.length > 0);
+  assert.ok(report.suggestedLedger.characterNames.includes(fixtures.v13Features.minedCharA));
+});
+
+// VS Code 扩展纯逻辑诊断核与 Quick Fix 验证
+test("VS Code diagnostics-core locates spans accurately and proposes normalize & whitelist Quick Fixes", () => {
+  const f = fixtures.v20Features;
+  const built = buildEditorDiagnostics(f.vscodeSample, {
+    genre: "classical-xianxia",
+    skipLengthGate: true,
+  });
+  assert.ok(built.diagnostics.length >= 2);
+  const clicheDiag = built.diagnostics.find((d) => d.code === "cliche_pupil_shrink");
+  assert.ok(clicheDiag);
+  assert.equal(clicheDiag.matchedText, f.vscodeExpectedMatched);
+  assert.ok(clicheDiag.endCol > clicheDiag.startCol);
+
+  const wlFix = computeQuickFixProposal(f.vscodeSample, clicheDiag);
+  assert.equal(wlFix.kind, "append_whitelist");
+  assert.equal(wlFix.literal, f.vscodeExpectedMatched);
+
+  const starDiag = built.diagnostics.find((d) => d.code === "markdown_asterisk");
+  assert.ok(starDiag);
+  const normFix = computeQuickFixProposal(f.vscodeSample, starDiag);
+  assert.equal(normFix.kind, "replace_document");
+  assert.equal(normFix.newText.includes("**"), false);
 });

@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "defaultPlatform": "qidian",
+  "platforms": {
+    "qidian": {
+      "id": "qidian",
+      "title": "起点中文网",
+      "minHan": 2000,
+      "maxHan": 5000,
+      "stripMarkdownHeadings": true,
+      "stripMarkdownEmphasis": true,
+      "stripDividers": true,
+      "fixNarrationEmDash": false,
+      "blankLinesBetweenParagraphs": 1,
+      "defaultIndent": true,
+      "indentString": "　　",
+      "chapterSeparator": "\n\n\n"
+    },
+    "fanqie": {
+      "id": "fanqie",
+      "title": "番茄小说",
+      "minHan": 2000,
+      "maxHan": 3500,
+      "stripMarkdownHeadings": true,
+      "stripMarkdownEmphasis": true,
+      "stripDividers": true,
+      "fixNarrationEmDash": false,
+      "blankLinesBetweenParagraphs": 1,
+      "defaultIndent": false,
+      "indentString": "　　",
+      "chapterSeparator": "\n\n\n"
+    },
+    "qimao": {
+      "id": "qimao",
+      "title": "七猫免费小说",
+      "minHan": 2000,
+      "maxHan": 4000,
+      "stripMarkdownHeadings": true,
+      "stripMarkdownEmphasis": true,
+      "stripDividers": true,
+      "fixNarrationEmDash": false,
+      "blankLinesBetweenParagraphs": 1,
+      "defaultIndent": true,
+      "indentString": "　　",
+      "chapterSeparator": "\n\n\n"
+    },
+    "jjwxc": {
+      "id": "jjwxc",
+      "title": "晋江文学城",
+      "minHan": 2000,
+      "maxHan": 6000,
+      "stripMarkdownHeadings": true,
+      "stripMarkdownEmphasis": true,
+      "stripDividers": true,
+      "fixNarrationEmDash": false,
+      "blankLinesBetweenParagraphs": 1,
+      "defaultIndent": true,
+      "indentString": "　　",
+      "chapterSeparator": "\n\n\n"
+    }
+  }
+}

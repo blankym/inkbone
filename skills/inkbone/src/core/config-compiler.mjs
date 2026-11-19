@@ -208,11 +208,23 @@ function compileAuxiliaryRules(raw) {
       }
     : null;
 
+  const stateGuardRaw = raw.characterStateGuard || null;
+  const compiledStateGuard = stateGuardRaw
+    ? {
+        inactiveStatuses: new Set(stateGuardRaw.inactiveStatuses || ["deceased", "dead", "exited"]),
+        flashbackRegex: stateGuardRaw.flashbackPattern
+          ? new RegExp(stateGuardRaw.flashbackPattern, "u")
+          : null,
+        activeVerbPattern: stateGuardRaw.activeVerbPattern || "",
+      }
+    : null;
+
   return {
     compiledDensity,
     compiledDegeneration,
     compiledCrossParallel,
     compiledCharExtraction,
+    compiledStateGuard,
   };
 }
 
@@ -286,8 +298,45 @@ export function compileLinguisticsConfig(raw) {
       densityRules: aux.compiledDensity,
       degeneration: aux.compiledDegeneration,
       characterExtraction: aux.compiledCharExtraction,
+      characterStateGuard: aux.compiledStateGuard,
     },
   };
+}
+
+// 从解析后的 JSON 对象编译繁体中文 / 港台网文规则层与繁简自动识别词表
+export function compileTraditionalConfig(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const det = raw.detection || {};
+  return {
+    ...raw,
+    detectionCompiled: {
+      minMarkerHits: det.minMarkerHits ?? 2,
+      minTraditionalRatio: det.minTraditionalRatio ?? 0.6,
+      tradSet: new Set(Array.from(det.traditionalMarkers || "")),
+      simpSet: new Set(Array.from(det.simplifiedMarkers || "")),
+    },
+    compiledClicheRules: compileRules(raw.forbiddenCliches, "universal", "narration"),
+    compiledRegisterRules: compileRules(raw.registerRules, "universal", "all"),
+    compiledDialogueHygieneRules: compileRules(raw.dialogueHygieneRules, "universal", "all"),
+    compiledFillerRules: compileRules(raw.fillerRules, "universal", "all"),
+  };
+}
+
+// 零依赖判断输入文本属于简体中文（zh-hans）还是繁体中文（zh-hant）
+export function detectScriptVariant(text, compiledTraditional) {
+  const det = compiledTraditional?.detectionCompiled;
+  if (!det || !text) return "zh-hans";
+  let tradHits = 0;
+  let simpHits = 0;
+  for (const ch of String(text)) {
+    if (det.tradSet.has(ch)) tradHits += 1;
+    else if (det.simpSet.has(ch)) simpHits += 1;
+  }
+  const total = tradHits + simpHits;
+  if (tradHits >= det.minMarkerHits && total > 0 && tradHits / total >= det.minTraditionalRatio) {
+    return "zh-hant";
+  }
+  return "zh-hans";
 }
 
 // 从解析后的 JSON 对象编译多题材语域防火墙配置

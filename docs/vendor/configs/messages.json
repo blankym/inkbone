@@ -50,6 +50,7 @@
         "DIALOGUE_PUNCTUATION_ERROR": "对话标点错误（居中冒号 / 引号外句号）",
         "SUBJECT_AMBIGUITY": "省略主语导致动作归属歧义",
         "OPENING_PATTERN_STREAK": "连续多段同一种起头句式",
+        "DECEASED_CHARACTER_APPEARANCE": "已阵亡/退场角色在非回忆段落中再次活跃出场",
         "WORD_COUNT_OUT_OF_RANGE": "章节总字数不在预设区间",
         "HIGH_LEXICAL_ENTROPY_MATTR": "词汇熵 MATTR-50 偏高（换词洁癖）",
         "EXCESSIVE_HAPAX_SYNONYM_CHURN": "一次性装饰词占比过高",
@@ -91,6 +92,7 @@
         "DIALOGUE_PUNCTUATION_ERROR": "修正对话标点错误（居中提示语误用冒号、句末句号漏在引号外）。",
         "SUBJECT_AMBIGUITY": "上一句主语是其他角色而本句省略主语，请补出明确人名或代词以防动作张冠李戴。",
         "OPENING_PATTERN_STREAK": "打破连续 3 段相同的起头句式，交替使用环境声响、对手动作与人名起笔。",
+        "DECEASED_CHARACTER_APPEARANCE": "该角色在台账中已标记阵亡或退场；若此处并非回忆/梦境或借尸还魂，请核对是否写串吃书。",
         "WORD_COUNT_OUT_OF_RANGE": "调整场景推进节奏，使章节有效汉字数落在目标区间内。",
         "HIGH_LEXICAL_ENTROPY_MATTR": "减少刻意轮换华丽近义词，回到平实准确的日常动词。",
         "EXCESSIVE_HAPAX_SYNONYM_CHURN": "减少一次性装饰性复合词堆砌，保留干净直白的动作表达。",
@@ -166,7 +168,28 @@
         "issuesHeading": "### 需要局部修改的问题清单",
         "chapterHeading": "### 待改正文（已标注行号）",
         "emptyNotice": "本次体检未发现阻断错误或写法警告，无需生成改稿指令。"
-      }
+      },
+      "styleProfile": {
+        "title": "# InkBone（墨骨）文风节奏画像（零原文拆书）",
+        "samplesLabel": "分析样本数",
+        "totalHanLabel": "样本总字数",
+        "nearestPresetLabel": "最接近内置预设",
+        "paceLabel": "节奏特征",
+        "dialogueLabel": "对白占比",
+        "modifierLabel": "定语密度",
+        "metricsHeading": "## 统计区间（p10 / 中位数 / p90）",
+        "gatesHeading": "## 可直接写入 novel.json 的 customGates 建议",
+        "paceFast": "明快短切",
+        "paceBalanced": "张弛均衡",
+        "paceFlowing": "长流意合",
+        "dialogueHigh": "高对白驱动",
+        "dialogueMedium": "叙事与对白均衡",
+        "dialogueLow": "强白描叙述主导",
+        "modClean": "洗练低修饰",
+        "modModerate": "适中书面修饰",
+        "modDense": "偏密定语修饰"
+      },
+      "incrementalNote": "增量体检模式（{mode}）：共发现 {total} 章，本次扫描 {scanned} 章（自动保留前章用于跨章回声检测）。"
     },
     "en": {
       "severityLabels": {
@@ -252,7 +275,28 @@
         "issuesHeading": "### Flagged Issues",
         "chapterHeading": "### Chapter Text (Line Numbered)",
         "emptyNotice": "No errors or warnings found; no rewrite prompt needed."
-      }
+      },
+      "styleProfile": {
+        "title": "# InkBone Style Profile (Statistics-Only)",
+        "samplesLabel": "Samples",
+        "totalHanLabel": "Total Han Chars",
+        "nearestPresetLabel": "Nearest Built-in Preset",
+        "paceLabel": "Pacing",
+        "dialogueLabel": "Dialogue Ratio",
+        "modifierLabel": "Modifier Density",
+        "metricsHeading": "## Reference Quantiles (p10 / median / p90)",
+        "gatesHeading": "## Suggested customGates for novel.json",
+        "paceFast": "Brisk short cuts",
+        "paceBalanced": "Balanced cadence",
+        "paceFlowing": "Flowing parataxis",
+        "dialogueHigh": "Dialogue-heavy",
+        "dialogueMedium": "Balanced narration/dialogue",
+        "dialogueLow": "Narration-heavy",
+        "modClean": "Crisp low-modifier",
+        "modModerate": "Moderate modifiers",
+        "modDense": "Dense pre-nominal modifiers"
+      },
+      "incrementalNote": "Incremental mode ({mode}): scanned {scanned} of {total} chapter(s) (previous chapters retained for boundary echo checks)."
     }
   }
 }

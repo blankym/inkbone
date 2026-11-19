@@ -469,5 +469,42 @@
       "romanceBad": "他眼底闪过一丝不易察觉的宠溺，修长的手指轻轻挑起她的下巴，这一刻她终于明白自己早已动了心。",
       "romanceClean": "谢承把伞柄往她那边偏了半寸，自己左肩淋透了一片，却只问她明天还去不去户部交账。"
     }
+  },
+  "v20Features": {
+    "deceasedLedger": {
+      "projectTitle": "防诈尸测试",
+      "protagonist": { "name": "陆青" },
+      "characterNames": ["陆青", "陈师兄", "孙岳"],
+      "characterSnapshots": {
+        "陈师兄": {
+          "name": "陈师兄",
+          "status": "deceased",
+          "deceasedChapter": 2
+        }
+      },
+      "chapters": [
+        { "chapterNumber": 5, "title": "夜巡", "coreSummary": "检查东渠", "requiredAnchors": [] }
+      ]
+    },
+    "deceasedActiveText": "子时刚过，陆青提着灯笼走到渠边。\n\n陈师兄起身推开木门，冷声道：“今夜怎么来得这么晚？”",
+    "deceasedFlashbackText": "子时刚过，陆青盯着那枚旧印，忽然想起去年回忆里陈师兄生前说过的话，不由得叹了口气。",
+    "deceasedMentionInQuoteText": "孙岳冷声道：“陈师兄去年死在后山，这事你别再提了。”",
+    "traditionalBadText": "子時三刻，巷口鐵門被人推開，林硯瞳孔驟縮，空氣彷彿瞬間凝固。\n\n趙組長壓低聲音開口：「這案子得趕快形成邏輯閉環。」。\n\n林硯嘴角勾起一抹苦笑，心頭微凜地合上卷宗，免得被人惹來盤問。",
+    "traditionalCleanText": "巷口鐵門剛拉開半尺，冷風就灌進了走廊。\n\n林硯合上卷宗，把借據放回牛皮紙袋裡：「明天早上九點再核對一次監視器畫面。」",
+    "exportSampleMarkdown": "---\ntitle: 测试\n---\n\n<!-- 作者备忘 -->\n\n# 第一章 夜雨\n\n陆青摸出**外门铁牌**，听见外头雨声...越来越急。\n\n---\n\n孙岳站在廊下：“丑正前交差。”",
+    "exportExpectedTitle": "第一章 夜雨",
+    "exportExpectedIndentPrefix": "　　陆青摸出外门铁牌",
+    "bookDoctorEntries": [
+      {
+        "name": "第002章_渠底.md",
+        "text": "# 第二章 渠底\n\n夜风卷过石阶，陆青熄了油灯，把铜牌按进袖袋里静静听着外头雨声。陆青瞳孔骤缩，心里盘算着免得被人看出端倪。"
+      },
+      {
+        "name": "第001章_夜叩.md",
+        "text": "# 第一章 夜叩\n\n子时三刻，陆青起身去开门，孙岳低声道：“寅时十刻之前把符拔干净。”陆青点头记下。夜风卷过石阶，陆青熄了油灯，把铜牌按进袖袋里静静听着外头雨声。"
+      }
+    ],
+    "vscodeSample": "陆青摸着**铁牌**，忽然瞳孔骤缩。",
+    "vscodeExpectedMatched": "瞳孔骤缩"
   }
 }

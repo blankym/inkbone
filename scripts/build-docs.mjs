@@ -16,6 +16,8 @@ const CONFIG_FILES = [
   "configs/presets.json",
   "configs/severity.json",
   "configs/messages.json",
+  "configs/zh-traditional.json",
+  "configs/platforms.json",
 ];
 
 // 列出目录下所有文件名（按字典序）

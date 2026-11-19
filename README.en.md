@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-orange.svg)](package.json)
-[![Version: 1.3](https://img.shields.io/badge/version-1.3-lightgrey.svg)](package.json)
+[![Version: 2.0](https://img.shields.io/badge/version-2.0-lightgrey.svg)](package.json)
 
-[中文](README.md) · **[Live Browser Playground (client-side)](https://blankym.github.io/inkbone/)** · 9 genre packs · 23 commands · Zero-dep MCP server · 58 tests · zero external dependencies
+[中文](README.md) · **[Live Playground & Browser Doctor (client-side)](https://blankym.github.io/inkbone/)** · 9 genre packs · Simplified + Traditional Chinese · 25 commands · Full MCP Server · VS Code Extension · 66 tests · zero dependencies
 
 > **Language note:** Prompts, rule patterns, and CLI findings target **Chinese fiction**. This README documents the design and workflow in English.
 
@@ -25,7 +25,16 @@ Prompting alone stops working once earlier rules fall out of context. InkBone se
 
 ## See it work in 30 seconds
 
-> **Want to try without cloning, or drafting directly in web LLMs?** Open the **[Live Browser Playground](https://blankym.github.io/inkbone/)** — pure browser-side ES Modules running the exact engine locally with zero server uploads, including local `.md`/`.txt` drag-and-drop, inline `<mark>` highlighting, paragraph rhythm strips, **one-click copy of targeted rewrite prompts**, and live `packet` / `check-ledger` / `verify-review` demos.
+> **Want to try without cloning, or check a whole novel in your browser?** Open the **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** — pure client-side ES Modules with zero server uploads, supporting single-chapter inline `<mark>` highlights, auto Simplified/Traditional Chinese detection, one-click targeted rewrite prompts, **multi-chapter Browser Doctor (drop an entire `chapters/` folder for cross-chapter echo checks, Top 10 cliché rankings, auto-mined `ledger.json`, and platform `.txt` export)**, plus live `packet` / `check-ledger` / `verify-review` demos.
+
+![InkBone Browser Playground: inline word-level highlights, rhythm strip, and one-click targeted rewrite prompt](docs/assets/playground-audit.png)
+
+<details>
+<summary>Expand Tab 4 screenshot: Browser Doctor multi-chapter checkup & platform exporter</summary>
+
+![InkBone Browser Doctor: multi-chapter sorting, cross-chapter echo detection, Top 10 clichés, and auto-mined ledger](docs/assets/playground-book-doctor.png)
+
+</details>
 
 Save a 9-line sample chapter (`ch01.md`):
 
@@ -76,6 +85,18 @@ After (cut resume dump, stock tics, and explanatory tail):
 The complaint rate sat at 0.62%, well above the district cutoff. Zhou flattened the appeal sheets, pulled his yellow raincoat off the hook. Outside under the awning, Hu Fei tapped "decline" two rings into a dispatch alert.
 ```
 
+### Reproducible Public Benchmark (4 Original Seeds)
+
+Run `node scripts/run-public-eval.mjs` to reproduce [benchmarks/public-report.md](benchmarks/public-report.md) on the 4 original zero-copyright pairs in [benchmarks/eval-set/public-pairs.json](benchmarks/eval-set/public-pairs.json):
+
+| Seed | Genre | Baseline (Errors / Warnings / Line Hits) | InkBone Revised (Errors / Warnings / Line Hits) |
+| :--- | :--- | :---: | :---: |
+| Herb Ditch (`xianxia-herb-ditch`) | `classical-xianxia` | 0 / 5 / 13 | 0 / 0 / 0 |
+| Fog Harbor (`mystery-harbor-coroner`) | `mystery-thriller` | 1 / 5 / 12 | 0 / 0 / 0 |
+| Delivery Station (`urban-delivery-station`) | `urban-realism` | 0 / 4 / 8 | 0 / 0 / 0 |
+| Cooling-Off Day (`romance-cooling-off`) | `romance-emotional` | 0 / 3 / 14 | 0 / 0 / 0 |
+| **Total (4 genres)** | — | **1 / 17 / 47** | **0 / 0 / 0** |
+
 ---
 
 ## Installation & Quickstart
@@ -104,9 +125,9 @@ Once loaded, you can ask your agent directly:
 
 *(If your agent runtime blocks shell execution, the prompt stages in `prompts/` and `resources/` still work standalone; local checks simply won't run automatically.)*
 
-### Option 2: Zero-Dependency MCP Server & Claude Code Hooks
+### Option 2: Full Zero-Dependency MCP Server (Tools + Prompts + Resources) & Editor Integration
 
-InkBone ships a **zero-dependency stdio MCP Server** exposing 7 structured tools (`inkbone_packet`, `inkbone_audit`, `inkbone_doctor`, `inkbone_normalize`, `inkbone_verify_review`, `inkbone_check_ledger`, `inkbone_settle`) for Claude Desktop, Cursor, Antigravity, and Codex (see [examples/mcp-config.json](examples/mcp-config.json)):
+InkBone ships a **zero-dependency stdio MCP Server** exposing **9 structured tools** (including `inkbone_style_profile` & `inkbone_export`), **8 stage prompts** (`inkbone/beat-planner`, etc. — passing `genre` auto-attaches the matching playbook), and **11 read-only craft resources** (`inkbone://playbooks/<genre>`, micro-techniques, before/after cases). See [examples/mcp-config.json](examples/mcp-config.json):
 
 ```json
 {
@@ -119,7 +140,8 @@ InkBone ships a **zero-dependency stdio MCP Server** exposing 7 structured tools
 }
 ```
 
-For automatic post-edit chapter auditing in Claude Code, see [examples/claude-code-hooks.json](examples/claude-code-hooks.json).
+- For automatic post-edit chapter auditing in Claude Code, see [examples/claude-code-hooks.json](examples/claude-code-hooks.json).
+- For real-time squiggly diagnostics and Quick Fixes inside **VS Code / Cursor**, see the standalone zero-dependency extension in [editors/vscode-inkbone/](editors/vscode-inkbone/).
 
 ### Option 3: Standalone CLI
 
@@ -130,34 +152,34 @@ npx inkbone audit ch01.md --genre classical-xianxia --format md --skip-length
 # Or run offline from git clone (no npm install required):
 git clone https://github.com/blankym/inkbone.git
 cd inkbone
-node bin/inkbone.mjs --help       # Daily writing & revision commands
-node bin/inkbone.mjs --help-all   # All 23 commands
+node bin/inkbone.mjs --help       # Daily writing, revision & publishing commands
+node bin/inkbone.mjs --help-all   # All 25 commands
 ```
 
-Three common starting points:
+Four common starting points:
 
-1. **No setup? 30-second standalone chapter check & targeted rewrite prompt**
+1. **30-second chapter check & rewrite prompt (Simplified + Traditional Chinese auto-detected)**
    ```bash
    node bin/inkbone.mjs audit ch01.md --genre urban-realism --format md --lang en --no-project --no-ledger --skip-length
    node bin/inkbone.mjs rewrite-prompt ch01.md --genre urban-realism --lang en --no-project --no-ledger --skip-length
    ```
-2. **Starting a new book with post-chapter ledger settlement**
+2. **Copyright-safe style profiling + living ledger loop**
    ```bash
+   node bin/inkbone.mjs style-profile ./ref-samples --out ./my-novel/style.json
    node bin/inkbone.mjs init ./my-novel --genre classical-xianxia --title "BookTitle"
-   # Build next-chapter context with un-revealed secrets masked out & due foreshadowing surfaced
    node bin/inkbone.mjs packet --ledger ./my-novel/ledger.json --chapter 4 --prev ./my-novel/ch03.md
-   # Merge post-chapter settlement updates and check ledger health
    node bin/inkbone.mjs settle --ledger ./my-novel/ledger.json --patch ./my-novel/ch04-settlement.json
    node bin/inkbone.mjs check-ledger ./my-novel/ledger.json --current 4
    ```
-3. **Taking over an existing draft**
+3. **Incremental long-form checkup (`--chapters` / `--changed`)**
    ```bash
-   # Scan existing chapters, auto-mine candidate character names for subject-ambiguity checks, and merge ledger
    node bin/inkbone.mjs import-ledger ./my-novel/chapters --auto-characters --out ./my-novel/ledger.json --title "BookTitle"
-   # Run a full directory checkup sorted by chapter number (--lang zh|en)
-   node bin/inkbone.mjs doctor ./my-novel/chapters --lang en
-   # Strip leftover Markdown bold/dividers and malformed ellipses deterministically (zero LLM tokens)
-   node bin/inkbone.mjs normalize ./my-novel/chapters --strip-bold
+   node bin/inkbone.mjs doctor ./my-novel/chapters --chapters 40-45 --lang en
+   node bin/inkbone.mjs doctor ./my-novel/chapters --changed --lang en
+   ```
+4. **Export clean chapters for Chinese web-fiction platforms (`qidian`, `fanqie`, `qimao`, `jjwxc`)**
+   ```bash
+   node bin/inkbone.mjs export ./my-novel/chapters --platform qidian --out ./dist/qidian --merge-out ./dist/vol1.txt
    ```
 
 ---
@@ -240,10 +262,12 @@ Beyond mechanical linting, InkBone ships practical plotting and editing handbook
 | | `settle` | Non-destructively merge post-chapter settlement JSON into `ledger.json` with diff and health check |
 | Format & QA | `normalize` | Deterministically clean bold/italic asterisks, dividers, and malformed ellipses/dashes |
 | | `check-outline` | Check Stage 1 beat outlines for `[待补充]` placeholders and missing dramatic facets |
-| | `audit` | Audit a single chapter (supports `--format md --lang zh|en` or raw JSON) |
-| | `doctor` | Recursively scan a directory sorted by chapter number, auto-detecting genre and project config |
+| | `audit` | Audit a single chapter (supports `--format md`, `--variant auto\|zh-hans\|zh-hant`, deceased-character guard) |
+| | `doctor` | Full or incremental directory checkup (`--chapters 40-45` / `--changed`, preserving boundary echo checks) |
 | | `rewrite-prompt` | Audit a chapter and emit a copy-ready targeted rewrite prompt for web LLMs |
-| Protocol | `mcp` | Start the zero-dependency JSON-RPC 2.0 stdio MCP server (7 structured tools) |
+| Style & publish | `style-profile` | Copyright-safe statistical style profile, nearest preset match & `customGates` generator |
+| | `export` | Clean Markdown & format chapters for `qidian`, `fanqie`, `qimao`, or `jjwxc` (single files or merged volume) |
+| Protocol | `mcp` | Start the zero-dependency stdio MCP server (9 tools, 8 prompts, 11 resources) |
 | Review & blind eval | `verify-review` | Verify that review quotes exist verbatim in the chapter and reject style meddling |
 | | `review-save` | Verify and archive a review JSON with chapter SHA-256 and reviewer/writer model metadata |
 | | `review-stats` | Compare issue counts and skip points across saved review revisions |
@@ -256,27 +280,28 @@ Beyond mechanical linting, InkBone ships practical plotting and editing handbook
 | | `detect` | Run a single cached Zhuque AIGC scan (requires `.env` API key), record-only |
 | | `benchmark` | Compare corpus metrics against manifest entries |
 
-Run `node bin/inkbone.mjs --help` for daily commands, or `--help-all` for all 23 commands.
+Run `node bin/inkbone.mjs --help` for daily commands, or `--help-all` for all 25 commands.
 
 ---
 
 ## Layout & Development
 
 ```text
-bin/  src/         CLI, zero-dependency core engine & stdio MCP server
-configs/           Universal rules, 9 genre packs, presets, severity levels & zh/en message catalog
-docs/              Browser-only static playground (zero-dependency core)
+bin/  src/         CLI, zero-dependency core engine (style profiler, exporter, Browser Doctor) & full MCP server
+configs/           Universal rules, 9 genre packs, Traditional Chinese layer, 4 platform presets, gates & zh/en catalog
+docs/              Browser-only static playground & multi-chapter Browser Doctor
+editors/           Standalone zero-dependency VS Code / Cursor real-time linter extension
 examples/          MCP client config & Claude Code PostToolUse Hook templates
 prompts/           8 staged drafting, review & settlement prompts (00–07)
 resources/         Before/after examples, micro-techniques, 9 genre playbooks, eval guide
-benchmarks/        4 blind-eval opening seeds + chapter-1 test log (private drafts omitted)
+benchmarks/        4 original eval seeds, public eval pairs & reproducible comparison report (no private drafts)
 evals/             Runtime-agnostic skill trigger eval set
 skills/inkbone/    Generated self-contained skill package (do not edit directly)
-tests/             58 unit tests
+tests/             66 unit tests
 ```
 
 ```bash
-npm test               # Run all 58 tests (includes zero-Han-literal, MCP, docs sync, and skill sync checks; 1 private-corpus test auto-skips)
+npm test               # Run all 66 tests (zero-Han-literal, full MCP, zh-hant, VS Code core, docs & skill sync)
 npm run build:skill    # Repackage skills/inkbone after editing bin/src/configs/prompts/resources
 npm run check:skill    # Verify skills/inkbone matches sources (enforced in CI)
 npm run build:docs     # Sync browser playground docs/vendor after editing src/core or configs

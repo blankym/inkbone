@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
   profileText,
@@ -35,6 +36,10 @@ import {
   formatAuditMarkdown,
   buildTargetedRewritePrompt,
   startMcpServer,
+  analyzeStyleProfile,
+  formatStyleProfileMarkdown,
+  exportChapters,
+  listPlatforms,
 } from "../src/index.mjs";
 
 const currentFile = fileURLToPath(import.meta.url);
@@ -66,6 +71,9 @@ function parseFlags(args) {
     "dry-run",
     "include-closed",
     "help-all",
+    "indent",
+    "no-indent",
+    "platforms",
   ]);
   for (let i = 0; i < args.length; i += 1) {
     const token = args[i];
@@ -147,15 +155,59 @@ function discoverBenchmarkEntries(explicitManifest = null) {
   return results;
 }
 
-// 打印 CLI 帮助指南（默认分层聚焦作者日常命令，--help-all 展示全部命令）
+// 通过 git status / git diff 识别当前工作区改动过的章稿文件（用于 doctor --changed 增量体检）
+function resolveGitChangedFiles(targetDir, gitRef) {
+  const cwd = fs.existsSync(targetDir) && fs.statSync(targetDir).isDirectory()
+    ? targetDir
+    : path.dirname(targetDir);
+  try {
+    const repoRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    const relSet = new Set();
+    if (typeof gitRef === "string" && gitRef.trim()) {
+      const diffOut = execFileSync("git", ["diff", "--name-only", gitRef.trim()], {
+        cwd: repoRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      });
+      for (const line of diffOut.split(/\r?\n/u)) {
+        if (line.trim()) relSet.add(line.trim());
+      }
+    }
+    const statusOut = execFileSync("git", ["status", "--porcelain"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    for (const line of statusOut.split(/\r?\n/u)) {
+      if (line.length >= 4) {
+        const filePart = line.slice(3).trim().replace(/^"(.*)"$/u, "$1");
+        const arrowIdx = filePart.indexOf(" -> ");
+        const cleanRel = arrowIdx >= 0 ? filePart.slice(arrowIdx + 4) : filePart;
+        if (cleanRel) relSet.add(cleanRel);
+      }
+    }
+    return Array.from(relSet)
+      .filter((f) => /\.(md|txt)$/iu.test(f))
+      .map((f) => path.resolve(repoRoot, f))
+      .filter((abs) => fs.existsSync(abs));
+  } catch {
+    return [];
+  }
+}
+
+// 打印 CLI 帮助指南（默认分层聚焦作者日常命令，--help-all 展示全部 25 条命令）
 function printHelp(showAll = false) {
   const daily = [
-    `InkBone CLI ${CLI_VERSION} - local checks, living ledger & MCP server for Chinese long-form fiction`,
+    `InkBone CLI ${CLI_VERSION} - local checks, living ledger, style profiler, exporter & MCP server for Chinese long-form fiction`,
     "",
-    "Rule layers: universal (configs/) -> genre pack -> project (novel.json found upward from the chapter:",
-    "             inline projectRules, rulesFile, whitelistLiterals / .inkbone-whitelist, and ledgerFile).",
+    "Rule layers: universal (configs/ + auto zh-hant) -> genre pack -> project (novel.json found upward from the chapter:",
+    "             inline projectRules, rulesFile, customGates, variant, whitelistLiterals / .inkbone-whitelist, and ledgerFile).",
     "",
-    "Daily Writing & Revision Commands:",
+    "Daily Writing, Revision & Publishing Commands:",
     "  inkbone genres                                    List built-in multi-genre register packs",
     "  inkbone init [dir] [--genre <id>] [--title <name>] [--force]",
     "                                                    Scaffold universal novel.json & ledger.json",
@@ -165,18 +217,23 @@ function printHelp(showAll = false) {
     "                                                    Compile spoiler-safe boundary packet for drafting",
     "  inkbone normalize <file|dir>... [--check] [--strip-bold] [--fix-emdash] [--project <dir|novel.json>] [--no-project]",
     "                                                    Deterministic formatting & pause-punctuation cleaner (zero tokens)",
-    "  inkbone audit <file.md> [--genre <id>] [--preset <id>] [--format json|md] [--lang zh|en] [--strict]",
-    "                [--ledger <ledger.json> --chapter <n> --prev <prev.md> --skip-length] [--outline-chapter <outline.md>]",
-    "                                                    Run hard boundary, register, rhetoric, density & degeneration audit",
-    "  inkbone doctor <file|dir>... [--genre <id>] [--outline <dir|file>...] [--ledger <ledger.json>] [--lang zh|en] [--json]",
-    "                                                    Recursive multi-chapter checkup (auto-discovers novel.json & genre)",
-    "  inkbone rewrite-prompt <file.md> [--genre <id>] [--lang zh|en] [--skip-length]",
+    "  inkbone audit <file.md> [--genre <id>] [--preset <id>] [--variant auto|zh-hans|zh-hant] [--format json|md] [--lang zh|en]",
+    "                [--ledger <ledger.json> --chapter <n> --prev <prev.md> --skip-length] [--outline-chapter <outline.md>] [--strict]",
+    "                                                    Run boundary, deceased-guard, register, rhetoric, density & continuity audit",
+    "  inkbone doctor <file|dir>... [--genre <id>] [--variant auto|zh-hans|zh-hant] [--chapters <40-45>] [--changed [ref]]",
+    "                 [--outline <dir|file>...] [--ledger <ledger.json>] [--lang zh|en] [--json]",
+    "                                                    Full or incremental multi-chapter checkup (preserves cross-chapter echo)",
+    "  inkbone rewrite-prompt <file.md> [--genre <id>] [--variant auto|zh-hans|zh-hant] [--lang zh|en] [--skip-length]",
     "                                                    Audit chapter and output a copy-ready targeted rewrite prompt",
     "  inkbone check-ledger <ledger.json> [--current <n>] [--overdue <20>]",
     "                                                    Check ledger health (duplicates, reveal order, overdue foreshadowing)",
     "  inkbone settle --ledger <ledger.json> --patch <patch.json> [--dry-run]",
     "                                                    Merge post-chapter settlement updates non-destructively into ledger",
-    "  inkbone mcp                                       Start zero-dependency JSON-RPC 2.0 MCP server over stdio",
+    "  inkbone style-profile <file|dir>... [--out <style.json>] [--label <name>] [--lang zh|en] [--json]",
+    "                                                    Copyright-safe statistical style profile & suggested customGates",
+    "  inkbone export <file|dir>... --platform <qidian|fanqie|qimao|jjwxc> [--out <dir>] [--merge-out <book.txt>] [--indent] [--check]",
+    "                                                    Clean Markdown & format chapters for web-fiction publishing platforms",
+    "  inkbone mcp                                       Start zero-dependency stdio MCP server (9 tools, 8 prompts, 11 resources)",
   ];
 
   const advanced = [
@@ -264,11 +321,19 @@ async function main() {
     const ledger = ledgerPath
       ? JSON.parse(fs.readFileSync(ledgerPath, "utf8"))
       : null;
+    const changedFiles = flags.changed
+      ? resolveGitChangedFiles(path.resolve(positional[0]), flags.changed === true ? null : flags.changed)
+      : null;
     const diagnosis = diagnoseProject(positional, {
       genre:
         typeof flags.genre === "string" ? flags.genre : project?.genre || undefined,
       presetName:
         typeof flags.preset === "string" ? flags.preset : project?.preset || undefined,
+      customGates: project?.customGates || null,
+      variant:
+        typeof flags.variant === "string" ? flags.variant : project?.variant || "auto",
+      chapterFilter: typeof flags.chapters === "string" ? flags.chapters : undefined,
+      changedFiles: changedFiles && changedFiles.length > 0 ? changedFiles : undefined,
       projectRules: project ? project.rules : null,
       genreSource:
         typeof flags.genre !== "string" && project?.genre ? "project" : undefined,
@@ -340,6 +405,9 @@ async function main() {
       genre: typeof flags.genre === "string" ? flags.genre : project?.genre || null,
       presetName:
         typeof flags.preset === "string" ? flags.preset : project?.preset || null,
+      customGates: project?.customGates || null,
+      variant:
+        typeof flags.variant === "string" ? flags.variant : project?.variant || "auto",
       projectRules: project ? project.rules : null,
       ledger,
       chapterNumber: flags.chapter ? Number(flags.chapter) : null,
@@ -789,6 +857,8 @@ async function main() {
     const report = auditChapterText(text, {
       genre: typeof flags.genre === "string" ? flags.genre : project?.genre || null,
       presetName: typeof flags.preset === "string" ? flags.preset : project?.preset || null,
+      customGates: project?.customGates || null,
+      variant: typeof flags.variant === "string" ? flags.variant : project?.variant || "auto",
       projectRules: project ? project.rules : null,
       ledger,
       chapterNumber: flags.chapter ? Number(flags.chapter) : null,
@@ -803,6 +873,55 @@ async function main() {
     } else {
       console.log(built.prompt);
     }
+    return;
+  }
+
+  if (command === "style-profile") {
+    const files = collectTextFiles(positional);
+    if (files.length === 0) {
+      console.error("Error: Provide at least one <file.md> or <directory> for style-profile.");
+      process.exit(2);
+    }
+    const texts = files.map((f) => fs.readFileSync(f, "utf8"));
+    const profile = analyzeStyleProfile(texts, {
+      label: typeof flags.label === "string" ? flags.label : "",
+    });
+    if (typeof flags.out === "string") {
+      fs.writeFileSync(path.resolve(flags.out), JSON.stringify(profile, null, 2) + "\n");
+      console.error(`Wrote style profile (${profile.sampleCount} samples) to ${flags.out}`);
+    }
+    if (flags.json) {
+      console.log(JSON.stringify(profile, null, 2));
+    } else {
+      console.log(
+        formatStyleProfileMarkdown(profile, {
+          lang: typeof flags.lang === "string" ? flags.lang : "zh",
+        })
+      );
+    }
+    return;
+  }
+
+  if (command === "export") {
+    if (flags.platforms) {
+      console.log(JSON.stringify(listPlatforms(), null, 2));
+      return;
+    }
+    if (positional.length === 0) {
+      console.error("Error: Provide at least one <file.md> or <directory> for export.");
+      process.exit(2);
+    }
+    const project = resolveProject(flags, positional[0]);
+    const indentOpt = flags.indent ? true : flags["no-indent"] ? false : undefined;
+    const report = exportChapters(positional, {
+      platform: typeof flags.platform === "string" ? flags.platform : "qidian",
+      outDir: typeof flags.out === "string" ? flags.out : undefined,
+      mergeOut: typeof flags["merge-out"] === "string" ? flags["merge-out"] : undefined,
+      indent: indentOpt,
+      check: Boolean(flags.check),
+      whitelistLiterals: project?.rules?.whitelistLiterals || [],
+    });
+    console.log(JSON.stringify(report, null, 2));
     return;
   }
 

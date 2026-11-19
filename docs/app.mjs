@@ -3,6 +3,7 @@ import {
   compileGenresConfig,
   compileLinguisticsConfig,
   compileSeverityConfig,
+  compileTraditionalConfig,
 } from "./vendor/core/config-compiler.mjs";
 import { auditChapterText } from "./vendor/core/auditor.mjs";
 import { normalizeProseText } from "./vendor/core/normalizer.mjs";
@@ -10,6 +11,8 @@ import { compileBoundaryPacket } from "./vendor/core/boundary-compiler.mjs";
 import { validateEvidenceReview } from "./vendor/core/evidence-validator.mjs";
 import { validateLedger } from "./vendor/core/ledger-manager.mjs";
 import { buildTargetedRewritePrompt } from "./vendor/core/formatter.mjs";
+import { diagnoseChapterEntries } from "./vendor/core/browser-doctor.mjs";
+import { exportChapterEntries, resolvePlatformConfig } from "./vendor/core/exporter.mjs";
 
 const state = {
   lingConfig: null,
@@ -17,11 +20,15 @@ const state = {
   presetsConfig: null,
   severityConfig: null,
   messagesConfig: null,
+  traditionalConfig: null,
+  platformsConfig: null,
   samples: null,
   activeAuditPresetId: null,
   activeReviewPresetKey: "hallucinated",
   lastAuditResult: null,
   lastAuditText: "",
+  bookEntries: [],
+  lastBookReport: null,
 };
 
 const el = (id) => document.getElementById(id);
@@ -50,6 +57,19 @@ function parseCharacterList(raw) {
     .split(/[\s,;\uFF0C\u3001]+/u)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+// 触发纯本地浏览器文件下载（不触碰任何网络）
+function triggerLocalDownload(filename, content, mimeType = "text/plain;charset=utf-8") {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // 根据违规等级与条目标注推断每行的展示严重度
@@ -180,7 +200,6 @@ function computeLineHighlights(lineText, issues, violationSeverityMap) {
   for (const issue of issues) {
     const detail = String(issue.detail || "").trim();
     if (!detail) continue;
-    // 针对 "previous actor X: snippet" 或普通字面量命中提取精确片段
     const candidates = [detail];
     const colonIdx = detail.indexOf(": ");
     if (colonIdx > 0 && colonIdx + 2 < detail.length) {
@@ -338,7 +357,6 @@ function renderFindings(result) {
     banner.appendChild(createNode("div", "status-banner err", msgs.failDefault || "FAIL"));
   }
 
-  // 1. 先按行号渲染精准定位命中
   for (const target of targets) {
     for (const issue of target.issues) {
       const sev = issue.level === "blocking" ? "error" : "warning";
@@ -366,7 +384,6 @@ function renderFindings(result) {
     }
   }
 
-  // 2. 再渲染整章级维度诊断（按 error -> warning -> info 排序，优先显示中文建议）
   const rank = { error: 0, warning: 1, info: 2 };
   const sortedViolations = [...violations].sort(
     (a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9)
@@ -402,6 +419,7 @@ function runAudit() {
   if (!state.lingConfig) return;
   const text = el("chapterInput").value;
   const genre = el("genreSelect").value;
+  const variant = el("variantSelect").value || "auto";
   const characterNames = parseCharacterList(el("charactersInput").value);
   const protagonistName = el("protagonistInput").value.trim();
   const skipLengthGate = el("skipLengthCheck").checked;
@@ -409,6 +427,7 @@ function runAudit() {
 
   const result = auditChapterText(text, {
     genre,
+    variant,
     skipLengthGate,
     strict,
     characterNames,
@@ -417,11 +436,19 @@ function runAudit() {
     genresConfig: state.genresConfig,
     presetsConfig: state.presetsConfig,
     severityConfig: state.severityConfig,
+    traditionalConfig: state.traditionalConfig,
   });
 
   state.lastAuditResult = result;
   state.lastAuditText = text;
   el("promptCopyNotice").style.display = "none";
+
+  const msgs = state.samples.uiMessages || {};
+  const vBadge = el("variantDetectedBadge");
+  vBadge.textContent =
+    result.scriptVariant === "zh-hant"
+      ? msgs.variantBadgeHant || "zh-hant"
+      : msgs.variantBadgeHans || "zh-hans";
 
   const violationSeverityMap = new Map();
   for (const v of result.violations) {
@@ -495,6 +522,7 @@ function handleLocalFileRead(file) {
 function applyAuditPreset(preset) {
   state.activeAuditPresetId = preset.id;
   el("genreSelect").value = preset.genre;
+  el("variantSelect").value = preset.variant || "auto";
   el("charactersInput").value = preset.characters || "";
   el("protagonistInput").value = preset.protagonist || "";
   el("chapterInput").value = preset.text;
@@ -616,6 +644,147 @@ function runReviewCheck() {
   out.textContent = JSON.stringify(result, null, 2);
 }
 
+// Tab 4：运行浏览器端整书多章体检（Browser Doctor）并渲染走势、Top 10 榜与自动角色名单
+function runBookDoctor() {
+  const notice = el("bookNotice");
+  const msgs = state.samples.uiMessages || {};
+  if (!state.bookEntries || state.bookEntries.length === 0) {
+    notice.style.display = "block";
+    notice.className = "status-banner info";
+    notice.textContent = msgs.bookEmpty || "No chapters loaded.";
+    return;
+  }
+
+  const explicitGenre = el("bookGenreSelect").value || undefined;
+  const report = diagnoseChapterEntries(state.bookEntries, {
+    genre: explicitGenre,
+    skipLengthGate: true,
+    variant: "auto",
+    linguisticsConfig: state.lingConfig,
+    genresConfig: state.genresConfig,
+    presetsConfig: state.presetsConfig,
+    severityConfig: state.severityConfig,
+    traditionalConfig: state.traditionalConfig,
+  });
+  state.lastBookReport = report;
+
+  notice.style.display = "block";
+  notice.className = report.pass ? "status-banner ok" : "status-banner warn";
+  notice.textContent = interpolate(msgs.bookLoaded || "{count}", {
+    count: report.totals.chaptersScanned,
+  });
+
+  // 1. 全书汇总 KPI 卡片
+  const kpiGrid = el("bookKpiGrid");
+  const kpiCards = [
+    { val: report.totals.chaptersScanned, label: msgs.bookKpiChapters || "Chapters" },
+    { val: report.totals.totalHan, label: msgs.bookKpiHan || "Total Han" },
+    {
+      val: report.totals.hardErrors,
+      label: msgs.bookKpiErrors || "Errors",
+      color: report.totals.hardErrors ? "var(--accent)" : "var(--ok)",
+    },
+    {
+      val: report.totals.totalWarnings,
+      label: msgs.bookKpiWarnings || "Warnings",
+      color: report.totals.totalWarnings ? "var(--warn)" : "var(--ok)",
+    },
+    {
+      val: report.totals.echoWarnings,
+      label: msgs.bookKpiEcho || "Echo",
+      color: report.totals.echoWarnings ? "var(--accent)" : "var(--ok)",
+    },
+    { val: report.candidateCharacters.length, label: msgs.bookKpiChars || "Characters", color: "var(--info)" },
+  ];
+  kpiGrid.replaceChildren();
+  for (const c of kpiCards) {
+    const card = createNode("div", "kpi");
+    const v = createNode("div", "kpi-val", c.val);
+    if (c.color) v.style.color = c.color;
+    card.appendChild(v);
+    card.appendChild(createNode("div", "kpi-label", c.label));
+    kpiGrid.appendChild(card);
+  }
+
+  // 2. 逐章走势柱状图
+  el("bookGenreBadge").textContent = `${report.genre.title} (${report.genre.id})`;
+  const trendBars = el("bookTrendBars");
+  trendBars.replaceChildren();
+  const maxHan = Math.max(80, ...report.trend.map((t) => t.totalHan));
+  for (const row of report.trend) {
+    const pct = Math.max(18, Math.round((row.totalHan / maxHan) * 100));
+    const cls = row.errors > 0 ? "rbar sev-error" : row.warnings > 0 ? "rbar sev-warning" : "rbar is-dialogue";
+    const bar = createNode("div", cls);
+    bar.style.height = `${pct}%`;
+    bar.title = `${row.name} | ${row.totalHan} Han | ${row.errors}E/${row.warnings}W | echo=${row.echoRatio}`;
+    trendBars.appendChild(bar);
+  }
+
+  // 3. 逐章体检明细表
+  const tbody = el("bookChapterTableBody");
+  tbody.replaceChildren();
+  for (const ch of report.chapters) {
+    const tr = document.createElement("tr");
+    tr.appendChild(createNode("td", "", ch.name));
+    tr.appendChild(createNode("td", "num", ch.totalHan));
+    const errTd = createNode("td", "num", ch.summary.error);
+    if (ch.summary.error > 0) errTd.style.color = "var(--accent)";
+    tr.appendChild(errTd);
+    tr.appendChild(createNode("td", "num", ch.summary.warning));
+    const echoTd = createNode("td", "num", ch.echoRatio || 0);
+    if (ch.echoRatio > 0.15) echoTd.style.color = "var(--accent)";
+    tr.appendChild(echoTd);
+    tbody.appendChild(tr);
+  }
+
+  // 4. 全书高频规则 Top 10 榜
+  const topList = el("bookTopRulesList");
+  topList.replaceChildren();
+  if (report.topRules.length === 0) {
+    topList.appendChild(createNode("div", "status-banner ok", msgs.bookTopEmpty || "Clean"));
+  } else {
+    for (const r of report.topRules) {
+      const sev = r.level === "blocking" ? "error" : "warning";
+      const item = createNode("div", `finding-item sev-${sev}`);
+      const head = createNode("div", "finding-head");
+      head.appendChild(createNode("span", `badge badge-${sev}`, `${r.count}x / ${r.chapterCount}ch`));
+      head.appendChild(createNode("span", "badge badge-muted", r.tag));
+      item.appendChild(head);
+      if (r.sample) item.appendChild(createNode("div", "finding-detail", r.sample));
+      topList.appendChild(item);
+    }
+  }
+
+  // 5. 自动挖掘的角色名单标签
+  const charChips = el("bookCharChips");
+  charChips.replaceChildren();
+  if (report.candidateCharacters.length === 0) {
+    charChips.appendChild(createNode("span", "badge badge-muted", msgs.bookCharsEmpty || "None"));
+  } else {
+    for (const c of report.candidateCharacters) {
+      charChips.appendChild(createNode("span", "badge badge-info", `${c.name} (${c.totalCount})`));
+    }
+  }
+}
+
+async function loadBookFileList(fileList) {
+  const valid = Array.from(fileList || []).filter((f) => /\.(md|txt)$/iu.test(f.name));
+  if (valid.length === 0) return;
+  const entries = await Promise.all(
+    valid.map(
+      (file) =>
+        new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ name: file.name, text: String(reader.result || "") });
+          reader.readAsText(file, "utf-8");
+        })
+    )
+  );
+  state.bookEntries = entries;
+  el("bookDemoBtn").classList.remove("active");
+  runBookDoctor();
+}
+
 function setupTabs() {
   const buttons = document.querySelectorAll(".tab-btn");
   const panels = document.querySelectorAll(".panel");
@@ -642,14 +811,37 @@ function setupFileDropAndImport() {
     evt.preventDefault();
     textarea.classList.add("drag-over");
   });
-  textarea.addEventListener("dragleave", () => {
-    textarea.classList.remove("drag-over");
-  });
+  textarea.addEventListener("dragleave", () => textarea.classList.remove("drag-over"));
   textarea.addEventListener("drop", (evt) => {
     evt.preventDefault();
     textarea.classList.remove("drag-over");
     const file = evt.dataTransfer?.files?.[0];
     if (file) handleLocalFileRead(file);
+  });
+
+  // Tab 4 多章文件与目录导入
+  const bookFilesInput = el("bookFilesInput");
+  const bookDirInput = el("bookDirInput");
+  const dropZone = el("bookDropZone");
+  el("bookFilesBtn").addEventListener("click", () => bookFilesInput.click());
+  el("bookDirBtn").addEventListener("click", () => bookDirInput.click());
+  bookFilesInput.addEventListener("change", () => {
+    loadBookFileList(bookFilesInput.files);
+    bookFilesInput.value = "";
+  });
+  bookDirInput.addEventListener("change", () => {
+    loadBookFileList(bookDirInput.files);
+    bookDirInput.value = "";
+  });
+  dropZone.addEventListener("dragover", (evt) => {
+    evt.preventDefault();
+    dropZone.classList.add("drag-over");
+  });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+  dropZone.addEventListener("drop", (evt) => {
+    evt.preventDefault();
+    dropZone.classList.remove("drag-over");
+    loadBookFileList(evt.dataTransfer?.files);
   });
 }
 
@@ -657,13 +849,15 @@ async function init() {
   setupTabs();
   setupFileDropAndImport();
   try {
-    const [lingRaw, genresRaw, presetsRaw, severityRaw, messagesRaw, samples] =
+    const [lingRaw, genresRaw, presetsRaw, severityRaw, messagesRaw, tradRaw, platRaw, samples] =
       await Promise.all([
         fetch("./vendor/configs/zh-linguistics.json").then((r) => r.json()),
         fetch("./vendor/configs/genres.json").then((r) => r.json()),
         fetch("./vendor/configs/presets.json").then((r) => r.json()),
         fetch("./vendor/configs/severity.json").then((r) => r.json()),
         fetch("./vendor/configs/messages.json").then((r) => r.json()),
+        fetch("./vendor/configs/zh-traditional.json").then((r) => r.json()),
+        fetch("./vendor/configs/platforms.json").then((r) => r.json()),
         fetch("./samples.json").then((r) => r.json()),
       ]);
 
@@ -672,19 +866,35 @@ async function init() {
     state.presetsConfig = presetsRaw;
     state.severityConfig = compileSeverityConfig(severityRaw);
     state.messagesConfig = messagesRaw;
+    state.traditionalConfig = compileTraditionalConfig(tradRaw);
+    state.platformsConfig = platRaw;
     state.samples = samples;
 
-    // 填充题材下拉列表
+    // 填充题材下拉列表（Tab 1 与 Tab 4 共用）
     const genreSelect = el("genreSelect");
+    const bookGenreSelect = el("bookGenreSelect");
     for (const [id, pack] of Object.entries(state.genresConfig.genres)) {
       const opt = createNode("option", "", `${pack.title} (${id})`);
       opt.value = id;
       genreSelect.appendChild(opt);
+      const optBook = createNode("option", "", `${pack.title} (${id})`);
+      optBook.value = id;
+      bookGenreSelect.appendChild(optBook);
     }
     genreSelect.addEventListener("change", () => {
       renderGenreMeta();
       runAudit();
     });
+    el("variantSelect").addEventListener("change", runAudit);
+    bookGenreSelect.addEventListener("change", runBookDoctor);
+
+    // 填充平台导出下拉框
+    const platSelect = el("bookPlatformSelect");
+    for (const [id, spec] of Object.entries(state.platformsConfig.platforms || {})) {
+      const opt = createNode("option", "", `${spec.title} (${id})`);
+      opt.value = id;
+      platSelect.appendChild(opt);
+    }
 
     // 绑定 Tab 1 样例按钮、体检与改稿 Prompt 复制事件
     const presetContainer = el("auditPresetBtns");
@@ -723,9 +933,7 @@ async function init() {
       });
       packetPresetBtns.appendChild(btn);
     }
-    if (packetPresetBtns.firstChild) {
-      packetPresetBtns.firstChild.classList.add("active");
-    }
+    if (packetPresetBtns.firstChild) packetPresetBtns.firstChild.classList.add("active");
     el("runPacketBtn").addEventListener("click", runPacket);
     runPacket();
 
@@ -746,13 +954,48 @@ async function init() {
       });
       reviewPresetBtns.appendChild(btn);
     }
-    const defaultReview = samples.reviewDemo.presets.hallucinated;
-    el("reviewJsonInput").value = JSON.stringify(defaultReview.payload, null, 2);
-    if (reviewPresetBtns.firstChild) {
-      reviewPresetBtns.firstChild.classList.add("active");
-    }
+    el("reviewJsonInput").value = JSON.stringify(samples.reviewDemo.presets.hallucinated.payload, null, 2);
+    if (reviewPresetBtns.firstChild) reviewPresetBtns.firstChild.classList.add("active");
     el("runReviewBtn").addEventListener("click", runReviewCheck);
     runReviewCheck();
+
+    // 初始化 Tab 4 整书多章体检（默认加载 3 章连载示例）
+    const loadDemoBook = () => {
+      state.bookEntries = (samples.bookDoctorDemo?.chapters || []).map((c) => ({ ...c }));
+      el("bookDemoBtn").classList.add("active");
+      runBookDoctor();
+    };
+    el("bookDemoBtn").addEventListener("click", loadDemoBook);
+    el("downloadLedgerBtn").addEventListener("click", () => {
+      if (!state.lastBookReport) return;
+      const msgs = state.samples.uiMessages || {};
+      triggerLocalDownload(
+        "ledger.json",
+        JSON.stringify(state.lastBookReport.suggestedLedger, null, 2) + "\n",
+        "application/json;charset=utf-8"
+      );
+      const notice = el("bookNotice");
+      notice.style.display = "block";
+      notice.className = "status-banner ok";
+      notice.textContent = msgs.bookLedgerDownloaded || "Downloaded ledger.json";
+    });
+    el("exportBookBtn").addEventListener("click", () => {
+      if (!state.bookEntries || state.bookEntries.length === 0) return;
+      const msgs = state.samples.uiMessages || {};
+      const platId = el("bookPlatformSelect").value || "qidian";
+      const spec = resolvePlatformConfig(state.platformsConfig, platId);
+      const exported = exportChapterEntries(state.bookEntries, spec, state.lingConfig);
+      triggerLocalDownload(`inkbone-export-${spec.id}.txt`, exported.mergedText);
+      const notice = el("bookNotice");
+      notice.style.display = "block";
+      notice.className = "status-banner ok";
+      notice.textContent = interpolate(msgs.bookExportReady || "Exported {count}", {
+        platform: spec.title,
+        count: exported.chapterCount,
+        han: exported.totalHan,
+      });
+    });
+    loadDemoBook();
   } catch (err) {
     const banner = el("loadErrorBanner");
     banner.style.display = "block";

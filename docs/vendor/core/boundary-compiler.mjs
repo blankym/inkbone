@@ -1,5 +1,97 @@
 import { countHan, profileText } from "./profiler.mjs";
 import { stripMarkdownEmphasis } from "./normalizer.mjs";
+import { stripSpokenDialogue } from "./rule-engine.mjs";
+
+// 转义正则特殊字符以安全匹配角色名
+function escapeRegExp(str) {
+  return String(str || "").replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
+
+// 收集截至当前章已经阵亡或退场的角色清单（兼容 characterSnapshots.status 与 deceasedCharacters 两种写法）
+function collectInactiveCharacters(ledger, numChapter, inactiveStatuses) {
+  const byName = new Map();
+  const statusSet = inactiveStatuses || new Set(["deceased", "dead", "exited", "killed"]);
+
+  const snaps = ledger?.characterSnapshots;
+  if (snaps && typeof snaps === "object" && !Array.isArray(snaps)) {
+    for (const [key, snap] of Object.entries(snaps)) {
+      if (!snap || typeof snap !== "object") continue;
+      const status = String(snap.status || "").toLowerCase();
+      if (!statusSet.has(status)) continue;
+      const afterChap =
+        snap.absentAfterChapter ?? snap.deceasedChapter ?? snap.lastUpdatedChapter ?? null;
+      if (afterChap != null && Number(afterChap) < numChapter) {
+        const name = String(snap.name || key).trim();
+        if (name) {
+          byName.set(name, { name, status, afterChapter: Number(afterChap) });
+        }
+      }
+    }
+  }
+
+  for (const item of ledger?.deceasedCharacters || []) {
+    if (!item) continue;
+    const name = typeof item === "string" ? item.trim() : String(item.name || "").trim();
+    const afterChap = typeof item === "object" ? item.afterChapter ?? item.deceasedChapter : 0;
+    if (name && (afterChap == null || Number(afterChap) < numChapter)) {
+      byName.set(name, {
+        name,
+        status: (typeof item === "object" && item.status) || "deceased",
+        afterChapter: afterChap != null ? Number(afterChap) : null,
+      });
+    }
+  }
+
+  return Array.from(byName.values());
+}
+
+// 检查已阵亡或退场角色是否在非回忆段落的叙述层中作为活跃动作/说话主体再次出场（防吃书诈尸）
+export function checkDeceasedCharacterAppearances(
+  chapterText,
+  ledger,
+  chapterNumber,
+  customLingConfig = null
+) {
+  const numChapter = Number(chapterNumber);
+  if (!chapterText || !ledger || !Number.isFinite(numChapter)) return [];
+  const guard = customLingConfig?.compiledRegex?.characterStateGuard;
+  const inactive = collectInactiveCharacters(ledger, numChapter, guard?.inactiveStatuses);
+  if (inactive.length === 0) return [];
+
+  const flashbackRe = guard?.flashbackRegex || null;
+  const verbPattern = guard?.activeVerbPattern || "";
+  const lines = String(chapterText).split(/\r?\n/u);
+  const hits = [];
+
+  lines.forEach((rawLine, idx) => {
+    const trimmed = rawLine.trim();
+    if (!trimmed || trimmed.startsWith("#")) return;
+    const { narration } = stripSpokenDialogue(trimmed, customLingConfig, " ");
+    if (!narration || !narration.trim()) return;
+    // 回忆、梦境、追忆、祭奠语境默认豁免，避免误杀合法回忆杀
+    if (flashbackRe && flashbackRe.test(trimmed)) return;
+
+    for (const char of inactive) {
+      if (!narration.includes(char.name)) continue;
+      const escaped = escapeRegExp(char.name);
+      const activeRe = verbPattern
+        ? new RegExp(`${escaped}[^\\n\\r。！？，,；;]{0,6}${verbPattern}`, "u")
+        : new RegExp(`^\\s*${escaped}`, "u");
+      const m = activeRe.exec(narration);
+      if (m) {
+        hits.push({
+          line: idx + 1,
+          character: char.name,
+          status: char.status,
+          afterChapter: char.afterChapter,
+          matched: m[0].slice(0, 32),
+        });
+      }
+    }
+  });
+
+  return hits;
+}
 
 // 提取文本中的连续汉字序列并生成固定长度的 N-gram 集合用于重演回声检测
 function extractHanNgrams(text, ngramSize, hanGlobalRegex) {
@@ -305,6 +397,14 @@ export function verifyChapterBoundaries(
     }
   }
 
+  // 5. 扫描已阵亡或退场角色是否在非回忆段落中再次作为活跃主体行动/说话（warning 级防吃书提醒）
+  const deceasedHits = checkDeceasedCharacterAppearances(
+    plainChapterText,
+    ledger,
+    numChapter,
+    cfg
+  );
+
   const totalHan = countHan(chapterText, hanRegex);
 
   return {
@@ -314,6 +414,7 @@ export function verifyChapterBoundaries(
     spoilerHits,
     missingAnchors,
     deprecatedHits,
+    deceasedHits,
     pass:
       spoilerHits.length === 0 &&
       missingAnchors.length === 0 &&

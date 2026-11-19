@@ -1,4 +1,5 @@
-// 零第三方依赖 MCP Server（JSON-RPC 2.0 over stdio），同时兼容 NDJSON 与 Content-Length 两种帧协议
+// 零第三方依赖 MCP Server（JSON-RPC 2.0 over stdio），完整实现 Tools(9) + Prompts(8) + Resources(11) 三件套
+// 自动兼容 NDJSON 与 Content-Length 两种帧协议
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,13 +11,134 @@ import { normalizeProseText, normalizeFiles } from "./normalizer.mjs";
 import { validateEvidenceReview } from "./evidence-validator.mjs";
 import { validateLedger, applyChapterSettlement } from "./ledger-manager.mjs";
 import { formatAuditMarkdown, formatDoctorMarkdown } from "./formatter.mjs";
+import { analyzeStyleProfile, formatStyleProfileMarkdown } from "./style-profiler.mjs";
+import { formatChapterForPlatform, exportChapters } from "./exporter.mjs";
+import { collectTextFiles } from "./calibrator.mjs";
 
 const currentFile = fileURLToPath(import.meta.url);
-const pkgPath = path.resolve(path.dirname(currentFile), "..", "package.json");
-const SERVER_VERSION = JSON.parse(fs.readFileSync(pkgPath, "utf8")).version || "1.3.0";
+const rootDir = path.resolve(path.dirname(currentFile), "..");
+const pkgPath = path.resolve(rootDir, "package.json");
+const SERVER_VERSION = JSON.parse(fs.readFileSync(pkgPath, "utf8")).version || "2.0.0";
 const SUPPORTED_PROTOCOL_VERSION = "2024-11-05";
 
-// 暴露给 MCP 客户端的 7 个结构化工具声明与参数 Schema
+// 8 个阶段提示词清单（暴露为 MCP Prompts，传入 genre 时自动挂载对应流派剧本卡）
+const PROMPT_FILES = [
+  {
+    name: "inkbone/style-architect",
+    description: "Stage 0: Define genre register contract, three-tier character voice matrix, and novel.json rules.",
+    file: "prompts/00-style-architect.md",
+    arguments: [
+      { name: "genre", description: "Optional genre pack id (e.g. classical-xianxia, urban-realism)", required: false },
+      { name: "premise", description: "Optional novel premise or outline summary", required: false },
+    ],
+  },
+  {
+    name: "inkbone/beat-planner",
+    description: "Stage 1: Build scene beat sheet and information placement plan before drafting (pauses for approval).",
+    file: "prompts/01-beat-planner.md",
+    arguments: [
+      { name: "genre", description: "Optional genre pack id to attach matching playbook", required: false },
+      { name: "chapter", description: "Target chapter number", required: false },
+    ],
+  },
+  {
+    name: "inkbone/draft-chapter",
+    description: "Stage 2: Render Chinese chapter prose directly from beat sheet with pure genre register and clear subjects.",
+    file: "prompts/02-paratactic-renderer.md",
+    arguments: [
+      { name: "genre", description: "Optional genre pack id to attach matching playbook", required: false },
+      { name: "chapter", description: "Target chapter number", required: false },
+    ],
+  },
+  {
+    name: "inkbone/targeted-rewriter",
+    description: "Stage 4: Perform surgical line-level edits on audit targets and verified review items without rewriting clean prose.",
+    file: "prompts/03-targeted-rewriter.md",
+    arguments: [
+      { name: "genre", description: "Optional genre pack id", required: false },
+    ],
+  },
+  {
+    name: "inkbone/evidence-reviewer",
+    description: "Stage 3a: Grounded continuity, timeline, physical-logic, and motivation review with verbatim quote enforcement.",
+    file: "prompts/04-evidence-reviewer.md",
+    arguments: [],
+  },
+  {
+    name: "inkbone/reader-simulator",
+    description: "Stage 3b: Dual-persona cold-reader & genre-veteran simulation producing verifiable JSON.",
+    file: "prompts/05-reader-simulator.md",
+    arguments: [
+      { name: "persona", description: "cold or veteran", required: false },
+    ],
+  },
+  {
+    name: "inkbone/ledger-importer",
+    description: "Stage 6: Reverse-engineer a non-destructive ledger.json from existing chapters without inventing lore.",
+    file: "prompts/06-ledger-importer.md",
+    arguments: [],
+  },
+  {
+    name: "inkbone/chapter-settler",
+    description: "Stage 5: Produce a post-chapter settlement JSON patch to update snapshots, summaries, and foreshadowing.",
+    file: "prompts/07-chapter-settler.md",
+    arguments: [
+      { name: "chapter", description: "Completed chapter number to settle", required: false },
+    ],
+  },
+];
+
+export const MCP_PROMPTS = PROMPT_FILES.map(({ name, description, arguments: args }) => ({
+  name,
+  description,
+  arguments: args,
+}));
+
+// 11 份只读写作知识库资源（9 份题材剧本卡 + 微技法 + 正反例对照）
+const GENRE_PLAYBOOK_IDS = [
+  "classical-xianxia",
+  "historical-court",
+  "wuxia-jianghu",
+  "mystery-thriller",
+  "urban-realism",
+  "scifi-wasteland",
+  "light-fantasy",
+  "romance-emotional",
+  "general-clean",
+];
+
+const RESOURCE_ENTRIES = [
+  ...GENRE_PLAYBOOK_IDS.map((genreId) => ({
+    uri: `inkbone://playbooks/${genreId}`,
+    name: `Playbook: ${genreId}`,
+    description: `Genre craft playbook, tropes to avoid, props, and chapter hooks for ${genreId}.`,
+    mimeType: "text/markdown",
+    file: `resources/genre_playbooks/${genreId}.md`,
+  })),
+  {
+    uri: "inkbone://craft/micro-techniques",
+    name: "Fiction Craft Micro-Techniques & Revision Lookup",
+    description: "Action-reaction beats, 80/20 climax framing, multi-purpose foreshadowing, and 9-symptom troubleshooting table.",
+    mimeType: "text/markdown",
+    file: "resources/micro_techniques.md",
+  },
+  {
+    uri: "inkbone://craft/bad-vs-good-cases",
+    name: "8 Before/After Prose Revision Cases",
+    description: "Side-by-side examples of cutting micro-action bloat, late-in/early-out dialogue, and preserving flow.",
+    mimeType: "text/markdown",
+    file: "resources/bad_vs_good_cases.md",
+  },
+];
+
+export const MCP_RESOURCES = RESOURCE_ENTRIES.map(({ uri, name, description, mimeType }) => ({
+  uri,
+  name,
+  description,
+  mimeType,
+}));
+
+// 暴露给 MCP 客户端的 9 个结构化工具声明与参数 Schema
 export const MCP_TOOLS = [
   {
     name: "inkbone_packet",
@@ -43,7 +165,7 @@ export const MCP_TOOLS = [
   {
     name: "inkbone_audit",
     description:
-      "Run InkBone deterministic chapter audit (ledger boundaries, genre register, stock phrases, density tics, model degeneration, and subject continuity). Accepts inline text or filePath.",
+      "Run InkBone deterministic chapter audit (ledger boundaries, deceased-character guard, genre register, Traditional/Simplified script variant, stock phrases, density tics, degeneration, and subject continuity).",
     inputSchema: {
       type: "object",
       properties: {
@@ -51,6 +173,7 @@ export const MCP_TOOLS = [
         text: { type: "string", description: "Inline chapter prose (alternative to filePath)" },
         genre: { type: "string", description: "Genre pack id (e.g. classical-xianxia, urban-realism)" },
         preset: { type: "string", description: "Optional preset id" },
+        variant: { type: "string", enum: ["auto", "zh-hans", "zh-hant"], description: "Script variant (default auto)" },
         ledgerPath: { type: "string", description: "Optional path to ledger.json" },
         chapter: { type: "number", description: "Optional chapter number for ledger boundary verification" },
         prevPath: { type: "string", description: "Optional previous chapter path for echo check" },
@@ -71,7 +194,7 @@ export const MCP_TOOLS = [
   {
     name: "inkbone_doctor",
     description:
-      "Recursively diagnose a chapter file or novel folder with automatic project config and genre detection.",
+      "Recursively diagnose a chapter file or novel folder with automatic project config, genre detection, and optional incremental --chapters filtering.",
     inputSchema: {
       type: "object",
       properties: {
@@ -81,6 +204,8 @@ export const MCP_TOOLS = [
           description: "One or more chapter files or directories",
         },
         genre: { type: "string" },
+        variant: { type: "string", enum: ["auto", "zh-hans", "zh-hant"] },
+        chapters: { type: "string", description: "Optional chapter filter spec (e.g. 40-45,48)" },
         ledgerPath: { type: "string" },
         skipLength: { type: "boolean" },
         format: { type: "string", enum: ["json", "md"] },
@@ -148,6 +273,38 @@ export const MCP_TOOLS = [
         patch: { type: "object", description: "Settlement JSON patch containing chapterNumber and updates" },
         patchPath: { type: "string", description: "Optional path to settlement JSON patch file" },
         dryRun: { type: "boolean", description: "Preview diff without writing to ledgerPath" },
+      },
+    },
+  },
+  {
+    name: "inkbone_style_profile",
+    description:
+      "Compute a copyright-safe statistical style profile (quantiles, nearest preset, and suggested customGates for novel.json) from sample texts or directories without outputting any source prose.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        texts: { type: "array", items: { type: "string" }, description: "Inline sample texts" },
+        paths: { type: "array", items: { type: "string" }, description: "Files or directories of sample prose" },
+        label: { type: "string" },
+        format: { type: "string", enum: ["json", "md"] },
+        lang: { type: "string", enum: ["zh", "en"] },
+      },
+    },
+  },
+  {
+    name: "inkbone_export",
+    description:
+      "Clean Markdown artifacts and format chapter(s) for major Chinese web-fiction platforms (qidian, fanqie, qimao, jjwxc) with length checks.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "Inline single chapter text" },
+        paths: { type: "array", items: { type: "string" }, description: "Chapter files or directories to export" },
+        platform: { type: "string", enum: ["qidian", "fanqie", "qimao", "jjwxc"] },
+        indent: { type: "boolean", description: "Apply full-width two-space paragraph indentation" },
+        outDir: { type: "string", description: "Optional output directory for per-chapter .txt files" },
+        mergeOut: { type: "string", description: "Optional output file for merged volume .txt" },
+        checkOnly: { type: "boolean", description: "Dry-run length and formatting check without writing files" },
       },
     },
   },
@@ -225,6 +382,8 @@ function executeToolCall(name, rawArgs = {}) {
     const report = auditChapterText(text, {
       genre: args.genre || project?.genre || null,
       presetName: args.preset || project?.preset || null,
+      customGates: project?.customGates || null,
+      variant: args.variant || project?.variant || "auto",
       projectRules: project ? project.rules : null,
       ledger,
       characterNames: Array.isArray(args.characterNames) ? args.characterNames : undefined,
@@ -265,6 +424,9 @@ function executeToolCall(name, rawArgs = {}) {
     const diag = diagnoseProject(targets, {
       genre: args.genre || project?.genre || undefined,
       presetName: project?.preset || undefined,
+      customGates: project?.customGates || null,
+      variant: args.variant || project?.variant || "auto",
+      chapterFilter: args.chapters || undefined,
       projectRules: project ? project.rules : null,
       genreSource: !args.genre && project?.genre ? "project" : undefined,
       ledger,
@@ -370,7 +532,127 @@ function executeToolCall(name, rawArgs = {}) {
     };
   }
 
+  if (name === "inkbone_style_profile") {
+    let texts = Array.isArray(args.texts) ? args.texts.filter((t) => typeof t === "string") : [];
+    if (texts.length === 0 && Array.isArray(args.paths) && args.paths.length > 0) {
+      const files = collectTextFiles(args.paths);
+      texts = files.map((f) => fs.readFileSync(f, "utf8"));
+    }
+    if (texts.length === 0) {
+      throw new Error("Provide either texts array or paths for inkbone_style_profile.");
+    }
+    const profile = analyzeStyleProfile(texts, { label: args.label || "" });
+    const outText =
+      args.format === "json"
+        ? JSON.stringify(profile, null, 2)
+        : formatStyleProfileMarkdown(profile, { lang: args.lang || "zh" });
+    return {
+      content: [{ type: "text", text: outText }],
+      structuredContent: profile,
+    };
+  }
+
+  if (name === "inkbone_export") {
+    const platform = args.platform || "qidian";
+    if (typeof args.text === "string") {
+      const res = formatChapterForPlatform(args.text, {
+        platform,
+        indent: args.indent,
+      });
+      return {
+        content: [{ type: "text", text: res.output }],
+        structuredContent: res,
+      };
+    }
+    if (Array.isArray(args.paths) && args.paths.length > 0) {
+      const res = exportChapters(args.paths, {
+        platform,
+        indent: args.indent,
+        outDir: args.outDir,
+        mergeOut: args.mergeOut,
+        check: Boolean(args.checkOnly),
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(res, null, 2) }],
+        structuredContent: res,
+      };
+    }
+    throw new Error("Provide either text or paths for inkbone_export.");
+  }
+
   throw new Error(`Unknown MCP tool: ${name}`);
+}
+
+// 组装指定 MCP Prompt（如附带合法 genre 参数，自动拼接对应流派剧本卡）
+function executePromptGet(name, rawArgs = {}) {
+  const entry = PROMPT_FILES.find((p) => p.name === name);
+  if (!entry) {
+    throw new Error(`Unknown MCP prompt: ${name}`);
+  }
+  const promptPath = path.resolve(rootDir, entry.file);
+  if (!fs.existsSync(promptPath)) {
+    throw new Error(`Prompt file missing: ${entry.file}`);
+  }
+  const promptBody = fs.readFileSync(promptPath, "utf8");
+  const args = rawArgs && typeof rawArgs === "object" ? rawArgs : {};
+  const messages = [
+    {
+      role: "user",
+      content: { type: "text", text: promptBody },
+    },
+  ];
+
+  // 附加上下文参数说明与可选对应流派剧本卡
+  const contextParts = [];
+  if (args.chapter != null && String(args.chapter).trim()) {
+    contextParts.push(`Target chapter: ${args.chapter}`);
+  }
+  if (typeof args.persona === "string" && args.persona.trim()) {
+    contextParts.push(`Reader persona focus: ${args.persona}`);
+  }
+  if (typeof args.premise === "string" && args.premise.trim()) {
+    contextParts.push(`Premise:\n${args.premise}`);
+  }
+  if (typeof args.genre === "string" && GENRE_PLAYBOOK_IDS.includes(args.genre)) {
+    const pbPath = path.resolve(rootDir, `resources/genre_playbooks/${args.genre}.md`);
+    if (fs.existsSync(pbPath)) {
+      contextParts.push(
+        `Attached Genre Playbook (${args.genre}):\n\n${fs.readFileSync(pbPath, "utf8")}`
+      );
+    }
+  }
+  if (contextParts.length > 0) {
+    messages.push({
+      role: "user",
+      content: { type: "text", text: contextParts.join("\n\n---\n\n") },
+    });
+  }
+
+  return {
+    description: entry.description,
+    messages,
+  };
+}
+
+// 读取指定的 MCP Resource 只读 Markdown 内容
+function executeResourceRead(uri) {
+  const entry = RESOURCE_ENTRIES.find((r) => r.uri === uri);
+  if (!entry) {
+    throw new Error(`Unknown MCP resource URI: ${uri}`);
+  }
+  const absPath = path.resolve(rootDir, entry.file);
+  if (!fs.existsSync(absPath)) {
+    throw new Error(`Resource file missing: ${entry.file}`);
+  }
+  return {
+    contents: [
+      {
+        uri: entry.uri,
+        mimeType: entry.mimeType,
+        text: fs.readFileSync(absPath, "utf8"),
+      },
+    ],
+  };
 }
 
 // 处理单条 JSON-RPC 2.0 消息并返回响应对象（通知类消息返回 null）
@@ -399,6 +681,8 @@ export function handleMcpMessage(msg) {
         protocolVersion: requestedVersion,
         capabilities: {
           tools: { listChanged: false },
+          prompts: { listChanged: false },
+          resources: { subscribe: false, listChanged: false },
         },
         serverInfo: {
           name: "inkbone",
@@ -413,11 +697,7 @@ export function handleMcpMessage(msg) {
   }
 
   if (method === "tools/list") {
-    return {
-      jsonrpc: "2.0",
-      id,
-      result: { tools: MCP_TOOLS },
-    };
+    return { jsonrpc: "2.0", id, result: { tools: MCP_TOOLS } };
   }
 
   if (method === "tools/call") {
@@ -440,6 +720,56 @@ export function handleMcpMessage(msg) {
           isError: true,
           content: [{ type: "text", text: `Error: ${err.message}` }],
         },
+      };
+    }
+  }
+
+  if (method === "prompts/list") {
+    return { jsonrpc: "2.0", id, result: { prompts: MCP_PROMPTS } };
+  }
+
+  if (method === "prompts/get") {
+    const promptName = params?.name;
+    if (!promptName || typeof promptName !== "string") {
+      return {
+        jsonrpc: "2.0",
+        id,
+        error: { code: -32602, message: "Missing required params.name for prompts/get." },
+      };
+    }
+    try {
+      const result = executePromptGet(promptName, params?.arguments || {});
+      return { jsonrpc: "2.0", id, result };
+    } catch (err) {
+      return {
+        jsonrpc: "2.0",
+        id,
+        error: { code: -32602, message: err.message },
+      };
+    }
+  }
+
+  if (method === "resources/list") {
+    return { jsonrpc: "2.0", id, result: { resources: MCP_RESOURCES } };
+  }
+
+  if (method === "resources/read") {
+    const uri = params?.uri;
+    if (!uri || typeof uri !== "string") {
+      return {
+        jsonrpc: "2.0",
+        id,
+        error: { code: -32602, message: "Missing required params.uri for resources/read." },
+      };
+    }
+    try {
+      const result = executeResourceRead(uri);
+      return { jsonrpc: "2.0", id, result };
+    } catch (err) {
+      return {
+        jsonrpc: "2.0",
+        id,
+        error: { code: -32602, message: err.message },
       };
     }
   }

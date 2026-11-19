@@ -5,19 +5,19 @@ license: MIT
 compatibility: Node.js >= 18 (zero third-party dependencies)
 metadata:
   author: blankym
-  version: "1.3.0"
+  version: "2.0.0"
   repository: https://github.com/blankym/inkbone
 ---
 
 # InkBone（墨骨）
 
-用来写中文分章小说：开新书、写新章、续写，或者检查和修改已有书稿。每本书自己的设定、台账、语体合同和专属规则都放在小说的项目目录里，这个 skill 本身不带任何一本书的口味。
+用来写中文分章小说（同时支持简体中文与繁體中文/港台網文）：开新书、写新章、续写、安全拆书定风格、整书增量体检，或清洗导出到起点/番茄/七猫/晋江后台。每本书自己的设定、台账、语体合同和专属规则都放在小说的项目目录里，这个 skill 本身不带任何一本书的口味。
 
 ## 运行环境与调用方式
 
 - **路径约定**：本文件所在的目录记作 `SKILL_DIR`。下文所有 `$SKILL_DIR/...` 路径都相对这个目录，不相对小说项目目录。
 - **优先调用顺序**：
-  1. 若当前宿主已挂载 **InkBone MCP Server**（`inkbone mcp`），直接调用结构化工具 `inkbone_packet`、`inkbone_audit`、`inkbone_doctor`、`inkbone_normalize`、`inkbone_verify_review`、`inkbone_check_ledger`、`inkbone_settle`；
+  1. 若当前宿主已挂载 **InkBone MCP Server**（`inkbone mcp`），可直接调用 9 个结构化工具（含 `inkbone_style_profile`、`inkbone_export`）、8 个 MCP Prompts（`inkbone/beat-planner` 等）与 11 份剧本卡/微技法只读 Resources（`inkbone://playbooks/<genre>`）；
   2. 若已全局安装（`npm install -g inkbone`），直接执行 `inkbone <command>`（跨 Windows / macOS / Linux 免配路径）；
   3. 否则通过节点运行本地随包 CLI：
      - macOS / Linux：`SKILL_DIR=/path/to/skills/inkbone`，执行 `node "$SKILL_DIR/bin/inkbone.mjs" <command>`
@@ -25,11 +25,17 @@ metadata:
 - **运行要求**：需要 Node.js 18 或更高版本，零第三方依赖，不需要 `npm install`。检查方法：`node --version`。
 - **不能执行命令时**：只用提示词部分（`$SKILL_DIR/prompts/` 与 `$SKILL_DIR/resources/`），规划、写作、审读与结算照常进行。格式与台账检查、引文核对、规则统计、盲读计分这些代码检查都做不了，交付时要说明这一点，不要假装已经检查过。
 - **按阶段按需读取**：一次只读当前环节所需的 1 份阶段提示词和 1 份对应题材的 `genre_playbooks/<genre>.md`，不要一开头就把 `00`～`07` 和所有参考文档一次性全部读进上下文，避免冗余耗时与注意力稀释。
-- **项目文件**：小说自己的 `novel.json`、`ledger.json`、语体合同和项目层规则放在小说项目目录里，不放进 `SKILL_DIR`。
+- **项目文件**：小说自己的 `novel.json`（支持 `customGates` 与 `variant`）、`ledger.json`、语体合同和项目层规则放在小说项目目录里，不放进 `SKILL_DIR`。
 
 ## 文件索引
 
-- 命令行工具：`node "$SKILL_DIR/bin/inkbone.mjs"`（`--help` 列出高频日常命令，`--help-all` 列出全部 23 条命令，`--version` 查看版本）。
+- 命令行工具：`node "$SKILL_DIR/bin/inkbone.mjs"`（`--help` 列出高频日常命令，`--help-all` 列出全部 25 条命令，`--version` 查看版本）。
+- 常用新能力速查：
+  - 安全拆书提取风格与 `customGates`：`style-profile <范文目录> [--out style.json]`
+  - 长篇增量体检：`doctor ./chapters --chapters 40-45` 或 `doctor ./chapters --changed`（自动保留前章查跨章回声）
+  - 简繁语体切换：`audit` / `doctor` 支持 `--variant auto|zh-hans|zh-hant`
+  - 退场/阵亡角色防诈尸：在 `ledger.json` 的 `characterSnapshots[name]` 记 `status: "deceased"` 或 `deceasedCharacters[]`，自动校验非回忆段落是否写串
+  - 平台投稿清洗导出：`export ./chapters --platform qidian|fanqie|qimao|jjwxc [--out ./dist] [--merge-out ./vol1.txt]`
 - 内置题材包：`$SKILL_DIR/configs/genres.json`，运行 `node "$SKILL_DIR/bin/inkbone.mjs" genres` 查看。
 - 各阶段提示词：
   - 定语体：`$SKILL_DIR/prompts/00-style-architect.md`

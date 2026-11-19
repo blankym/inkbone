@@ -3,6 +3,7 @@ import {
   loadLinguisticsConfig,
   loadPresetsConfig,
   loadSeverityConfig,
+  loadTraditionalConfig,
 } from "./config-loader.mjs";
 import { auditChapterText as auditChapterTextCore } from "./core/auditor.mjs";
 
@@ -15,5 +16,9 @@ export function auditChapterText(rawContent, options = {}) {
     presetsConfig: options.presetsConfig || loadPresetsConfig(options.presetsPath),
     severityConfig:
       options.severityConfig || loadSeverityConfig(options.severityPath),
+    traditionalConfig:
+      options.traditionalConfig !== undefined
+        ? options.traditionalConfig
+        : loadTraditionalConfig(),
   });
 }

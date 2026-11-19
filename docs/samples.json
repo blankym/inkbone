@@ -31,8 +31,35 @@
       "characters": "陈默, 周总监",
       "protagonist": "陈默",
       "text": "他推开会议室玻璃门，把季度报表放在长桌上。\n\n他没急着落座，只盯着投影幕布上那条掉头向下的折线。\n\n他心里清楚，这并不是单纯的预算削减，而是部门裁撤的信号。\n\n周总监端起咖啡抿了一口：“陈默，此乃权宜之计，老夫劝你莫要自误。”\n\n周总监说完便起身走向电梯间。从文件夹里抽出一张离职申请，压在键盘底下。"
+    },
+    {
+      "id": "hant-mystery",
+      "label": "繁體懸疑 · 台北雨夜",
+      "genre": "mystery-thriller",
+      "variant": "auto",
+      "characters": "林硯, 趙組長",
+      "protagonist": "林硯",
+      "text": "子時三刻，巷口鐵門被人推開，林硯瞳孔驟縮，空氣彷彿瞬間凝固。\n\n趙組長壓低聲音開口：「這案子得趕快形成邏輯閉環。」。\n\n林硯沒有立刻答話，嘴角勾起一抹苦笑，心頭微凜地合上卷宗，免得被人惹來盤問。"
     }
   ],
+  "bookDoctorDemo": {
+    "projectTitle": "药园夜账（三章示例）",
+    "genre": "classical-xianxia",
+    "chapters": [
+      {
+        "name": "第001章_夜叩药园.md",
+        "text": "# 第一章 夜叩药园\n\n子时三刻，药园的木门被人拍响。陆青瞳孔骤缩，起身拔闩去开门。\n\n门外站着执事孙岳，大雨落到他肩头就散成白雾。孙岳没进门，把一块**外门铁牌**丢在桌上：“寅时十刻之前，把东渠底下的符拔干净。”\n\n孙岳转身靠在门柱上，合上了眼。从袖子里摸出一把小刀，挑开了渠边的青泥。夜风卷过石阶，他熄了油灯，把铜牌按进袖袋里静静听着外头雨声。"
+      },
+      {
+        "name": "第002章_渠底铜片.md",
+        "text": "# 第二章 渠底铜片\n\n夜风卷过石阶，他熄了油灯，把铜牌按进袖袋里静静听着外头雨声。陆青心里盘算着，免得被人看出端倪。\n\n陆青蹲回水渠边，指尖触到石缝里一枚残缺铜片。这并不是普通的阵符，而是后山丹房才有的私印。陆青瞳孔骤缩，嘴角勾起一抹苦笑。\n\n---"
+      },
+      {
+        "name": "第003章_暗账对数.md",
+        "text": "# 第三章 暗账对数\n\n天色微亮，陆青把前三月的药草损耗账册摊在桌上。\n\n孙岳站在廊下敲了敲窗棂：“账对完了没有？”\n\n陆青合上账册推到窗沿：“少了三成灵泉，东渠底下被人凿了暗槽。”\n\n孙岳没有接话，只低头看了看他袖口沾着的青泥。"
+      }
+    ]
+  },
   "packetDemo": {
     "ledger": {
       "projectTitle": "药园试炼",
@@ -240,6 +267,20 @@
     "rhythmSummary": "共 {paras} 段 · 句长均值 {mean} 字 · 变异系数 CV {cv}",
     "rhythmBarTip": "第 {line} 行 · {han} 字",
     "ledgerHealthy": "台账健康：{chapters} 章 · {chars} 名角色 · {activeFs} 条活跃伏笔（0 项硬错误）",
-    "ledgerIssues": "台账体检发现 {errors} 项错误、{warnings} 项提醒："
+    "ledgerIssues": "台账体检发现 {errors} 项错误、{warnings} 项提醒：",
+    "bookLoaded": "已本地载入 {count} 个章节文件，自动按章号排序体检完成。",
+    "bookEmpty": "请先选择章节文件/文件夹，或点击「载入 3 章连载样例」。",
+    "bookKpiChapters": "扫描章数",
+    "bookKpiHan": "全书有效汉字",
+    "bookKpiErrors": "阻断错误",
+    "bookKpiWarnings": "写法提示",
+    "bookKpiEcho": "跨章回声告警",
+    "bookKpiChars": "自动挖掘角色",
+    "bookTopEmpty": "全书未检出高频重复问题规则。",
+    "bookExportReady": "已按「{platform}」清洗 {count} 章（共 {han} 字），可直接下载纯净文本。",
+    "bookLedgerDownloaded": "已生成并下载含自动挖掘角色名单的 ledger.json。",
+    "bookCharsEmpty": "未挖掘到高频角色名（建议章数 >= 2 且含明确人物动作）。",
+    "variantBadgeHans": "简体中文 (zh-hans)",
+    "variantBadgeHant": "繁體中文 (zh-hant)"
   }
 }

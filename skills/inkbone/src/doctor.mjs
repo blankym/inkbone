@@ -91,7 +91,31 @@ function resolveDoctorChapterInfo(filePath, rawContent, ledger, lingConfig) {
   return { detectedNumber, ledgerChapterNumber };
 }
 
-// 对单章或整书目录执行四维体检（客观错误、语域冲突、穿插水词、AI句法热区）
+// 解析章节范围过滤表达式（例如 "40-45,48"）为数字集合
+export function parseChapterFilterSpec(spec) {
+  if (!spec) return null;
+  if (spec instanceof Set) return spec;
+  const set = new Set();
+  const tokens = String(spec)
+    .split(/[,;\s]+/u)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const token of tokens) {
+    const rangeMatch = token.match(/^(\d+)\s*-\s*(\d+)$/u);
+    if (rangeMatch) {
+      const start = Number(rangeMatch[1]);
+      const end = Number(rangeMatch[2]);
+      const lo = Math.min(start, end);
+      const hi = Math.max(start, end);
+      for (let n = lo; n <= hi; n += 1) set.add(n);
+    } else if (/^\d+$/u.test(token)) {
+      set.add(Number(token));
+    }
+  }
+  return set.size > 0 ? set : null;
+}
+
+// 对单章或整书目录执行四维体检（支持 --chapters / --changed 增量过滤同时保留前章回声检查）
 export function diagnoseProject(targetPaths, options = {}) {
   const chapterFiles = collectTextFiles([].concat(targetPaths || []));
   if (chapterFiles.length === 0) {
@@ -146,8 +170,40 @@ export function diagnoseProject(targetPaths, options = {}) {
     }
   }
 
+  // 支持按章节号范围（chapterFilter）或变动文件集合（changedFiles）做增量体检，但保留前章文本用于跨章回声检测
+  const chapterFilterSet = parseChapterFilterSpec(options.chapterFilter);
+  const changedFileSet =
+    Array.isArray(options.changedFiles) && options.changedFiles.length > 0
+      ? new Set(options.changedFiles.map((p) => path.resolve(p)))
+      : null;
+  const incrementalActive = Boolean(chapterFilterSet || changedFileSet);
+  const incrementalMode = chapterFilterSet
+    ? changedFileSet
+      ? "chapters+changed"
+      : "chapters"
+    : changedFileSet
+      ? "changed"
+      : "full";
+
+  const selectedIndices = [];
+  for (let idx = 0; idx < sortedFiles.length; idx += 1) {
+    if (!incrementalActive) {
+      selectedIndices.push(idx);
+      continue;
+    }
+    const info = chapInfos[idx];
+    const absFile = path.resolve(sortedFiles[idx]);
+    const matchChapter =
+      !chapterFilterSet ||
+      (info.detectedNumber !== null && chapterFilterSet.has(info.detectedNumber));
+    const matchChanged = !changedFileSet || changedFileSet.has(absFile);
+    if (matchChapter && matchChanged) {
+      selectedIndices.push(idx);
+    }
+  }
+
   const totals = {
-    chaptersScanned: sortedFiles.length,
+    chaptersScanned: selectedIndices.length,
     hardErrors: 0,
     registerCollisions: 0,
     narrativeFillers: 0,
@@ -160,7 +216,8 @@ export function diagnoseProject(targetPaths, options = {}) {
     totalWarnings: 0,
   };
 
-  const chapters = sortedFiles.map((filePath, idx) => {
+  const chapters = selectedIndices.map((idx) => {
+    const filePath = sortedFiles[idx];
     const raw = chapterTexts[idx];
     const info = chapInfos[idx];
     const chapNum =
@@ -178,6 +235,8 @@ export function diagnoseProject(targetPaths, options = {}) {
     const audit = auditChapterText(raw, {
       genre: genrePack.id,
       presetName: options.presetName || genrePack.defaultPreset,
+      customGates: options.customGates || null,
+      variant: options.variant || "auto",
       ledger: options.ledger || null,
       chapterNumber: chapNum,
       previousChapterText: prevText,
@@ -269,6 +328,12 @@ export function diagnoseProject(targetPaths, options = {}) {
       voiceMatrix: genrePack.voiceMatrix,
     },
     hints,
+    incremental: {
+      active: incrementalActive,
+      mode: incrementalMode,
+      scannedCount: selectedIndices.length,
+      totalDiscovered: sortedFiles.length,
+    },
     totals,
     chapters,
   };

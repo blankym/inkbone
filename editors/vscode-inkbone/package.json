@@ -1,0 +1,84 @@
+{
+  "name": "inkbone-vscode",
+  "displayName": "InkBone（墨骨）中文小说实时质检",
+  "description": "Real-time ESLint-style diagnostics, Quick Fixes, formatting cleaner, and targeted rewrite prompt generator for Chinese long-form fiction (zero dependencies).",
+  "version": "2.0.0",
+  "publisher": "blankym",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onLanguage:plaintext"
+  ],
+  "main": "./extension.cjs",
+  "contributes": {
+    "commands": [
+      {
+        "command": "inkbone.auditCurrent",
+        "title": "InkBone: Audit Current Chapter"
+      },
+      {
+        "command": "inkbone.normalizeCurrent",
+        "title": "InkBone: Normalize Markdown & Punctuation"
+      },
+      {
+        "command": "inkbone.copyRewritePrompt",
+        "title": "InkBone: Copy Targeted Rewrite Prompt"
+      },
+      {
+        "command": "inkbone.exportChapter",
+        "title": "InkBone: Export Current Chapter for Platform"
+      }
+    ],
+    "configuration": {
+      "title": "InkBone",
+      "properties": {
+        "inkbone.realtimeDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable debounced real-time squiggly diagnostics while editing Chinese novel chapters."
+        },
+        "inkbone.genre": {
+          "type": "string",
+          "default": "",
+          "enum": [
+            "",
+            "classical-xianxia",
+            "historical-court",
+            "wuxia-jianghu",
+            "mystery-thriller",
+            "urban-realism",
+            "scifi-wasteland",
+            "light-fantasy",
+            "romance-emotional",
+            "general-clean"
+          ],
+          "description": "Fallback genre pack id when novel.json is not present."
+        },
+        "inkbone.variant": {
+          "type": "string",
+          "default": "auto",
+          "enum": ["auto", "zh-hans", "zh-hant"],
+          "description": "Chinese script variant detection mode."
+        },
+        "inkbone.skipLengthGate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Skip chapter word-count range warning during active drafting."
+        },
+        "inkbone.defaultExportPlatform": {
+          "type": "string",
+          "default": "qidian",
+          "enum": ["qidian", "fanqie", "qimao", "jjwxc"],
+          "description": "Default web-fiction publishing platform for export."
+        }
+      }
+    }
+  }
+}

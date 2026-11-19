@@ -4,6 +4,8 @@ export {
   loadPresetsConfig,
   loadSeverityConfig,
   loadMessagesConfig,
+  loadTraditionalConfig,
+  loadPlatformsConfig,
   resolveGenre,
   resolvePreset,
   findProjectConfig,
@@ -27,6 +29,7 @@ export {
   compileBoundaryPacket,
   verifyChapterBoundaries,
   computeBoundaryEchoRatio,
+  checkDeceasedCharacterAppearances,
 } from "./boundary-compiler.mjs";
 export { auditChapterText } from "./auditor.mjs";
 export { validateEvidenceReview } from "./evidence-validator.mjs";
@@ -49,6 +52,7 @@ export {
   listGenres,
   inferGenreFromTexts,
   diagnoseProject,
+  parseChapterFilterSpec,
   formatDoctorMarkdown,
   scaffoldProject,
 } from "./doctor.mjs";
@@ -86,6 +90,27 @@ export {
 } from "./formatter.mjs";
 export {
   MCP_TOOLS,
+  MCP_PROMPTS,
+  MCP_RESOURCES,
   handleMcpMessage,
   startMcpServer,
 } from "./mcp-server.mjs";
+export {
+  analyzeStyleProfile,
+  formatStyleProfileMarkdown,
+} from "./style-profiler.mjs";
+export {
+  listPlatforms,
+  resolvePlatformConfig,
+  formatChapterForPlatform,
+  exportChapters,
+} from "./exporter.mjs";
+export {
+  diagnoseChapterEntries,
+  parseChapterMetaFromEntry,
+  inferGenreFromEntries,
+} from "./browser-doctor.mjs";
+export {
+  compileTraditionalConfig,
+  detectScriptVariant,
+} from "./core/config-compiler.mjs";

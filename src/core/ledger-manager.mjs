@@ -335,12 +335,21 @@ export function applyChapterSettlement(ledger, patch) {
         next.characterSnapshots[charName] && typeof next.characterSnapshots[charName] === "object"
           ? next.characterSnapshots[charName]
           : { name: charName };
-      next.characterSnapshots[charName] = {
+      const mergedSnap = {
         ...prevSnap,
         ...delta,
         name: delta.name || prevSnap.name || charName,
         lastUpdatedChapter: chapNum,
       };
+      const statusLower = String(mergedSnap.status || "").toLowerCase();
+      if (
+        ["deceased", "dead", "exited", "killed"].includes(statusLower) &&
+        mergedSnap.deceasedChapter == null &&
+        mergedSnap.absentAfterChapter == null
+      ) {
+        mergedSnap.deceasedChapter = chapNum;
+      }
+      next.characterSnapshots[charName] = mergedSnap;
       diff.updatedCharacters.push(charName);
     }
   }
