@@ -23,6 +23,8 @@ export {
   checkOutlineCopy,
   checkCharCountClaims,
   checkOutlineContract,
+  checkCalendarSpanContradictions,
+  checkGoldenOpeningPacing,
 } from "./rule-engine.mjs";
 export { profileText, countHan } from "./profiler.mjs";
 export {
@@ -30,6 +32,8 @@ export {
   verifyChapterBoundaries,
   computeBoundaryEchoRatio,
   checkDeceasedCharacterAppearances,
+  checkUnresolvedTacticalProps,
+  checkWorldRuleViolations,
 } from "./boundary-compiler.mjs";
 export { auditChapterText } from "./auditor.mjs";
 export { validateEvidenceReview } from "./evidence-validator.mjs";
@@ -81,6 +85,8 @@ export {
 export {
   validateLedger,
   applyChapterSettlement,
+  applyBatchSettlement,
+  buildLedgerBackfillPrompts,
   extractCandidateCharacters,
 } from "./ledger-manager.mjs";
 export {
@@ -104,6 +110,8 @@ export {
   resolvePlatformConfig,
   formatChapterForPlatform,
   exportChapters,
+  buildStoreZipBuffer,
+  buildSubmissionDocxBytes,
 } from "./exporter.mjs";
 export {
   diagnoseChapterEntries,

@@ -219,7 +219,11 @@
     "NESTED_DE_CHAINS": "嵌套“的…的…”长链",
     "UNNATURAL_PARAGRAPH_DENSITY": "段落句数均值偏离自然节奏",
     "SINGLE_SENTENCE_PARAGRAPH_STREAK": "连续多行一句一段机器排版",
-    "FLOATING_OPENING_DIALOGUE": "开场台词缺少说话人锚定"
+    "FLOATING_OPENING_DIALOGUE": "开场台词缺少说话人锚定",
+    "UNRESOLVED_TACTICAL_PROP": "短线战术道具/机关已达预定截止章仍未触发或回收",
+    "WORLD_RULE_VIOLATION": "违反全书世界观硬性铁律（immutableWorldRules）",
+    "CALENDAR_SPAN_CONTRADICTION": "同章历法日期跨度与宣称天数（如半个月）自相矛盾",
+    "GOLDEN_OPENING_SLOW_START": "黄金三章首屏冲突延迟（前 380 字缺乏对白或即时危机）"
   },
   "layerLabels": {
     "universal": "通用层",
@@ -281,6 +285,11 @@
     "bookLedgerDownloaded": "已生成并下载含自动挖掘角色名单的 ledger.json。",
     "bookCharsEmpty": "未挖掘到高频角色名（建议章数 >= 2 且含明确人物动作）。",
     "variantBadgeHans": "简体中文 (zh-hans)",
-    "variantBadgeHant": "繁體中文 (zh-hant)"
+    "variantBadgeHant": "繁體中文 (zh-hant)",
+    "bookExportDocxReady": "已生成并下载「{platform}」内投标准 Word (.docx)（{count} 章，共 {han} 字；{status}）。",
+    "bookExportZipReady": "已打包并下载「{platform}」分章与合并卷 .zip（{count} 章，共 {han} 字；{status}）。",
+    "submissionOk": "已达内投 {min} 字门槛",
+    "submissionShort": "距内投 {min} 字门槛还差 {diff} 字",
+    "inlineEditTip": "双击此行可直接就地改稿，回车或失焦后自动重算消警"
   }
 }

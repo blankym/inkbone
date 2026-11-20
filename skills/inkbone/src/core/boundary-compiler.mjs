@@ -405,6 +405,20 @@ export function verifyChapterBoundaries(
     cfg
   );
 
+  // 6. 扫描已达 mustResolveByChapter 预定截止章的短线战术伏笔/道具是否在本章漏收（防悬空道具吃书）
+  const unresolvedProps = checkUnresolvedTacticalProps(
+    plainChapterText,
+    ledger,
+    numChapter
+  );
+
+  // 7. 扫描正文是否违反带 forbiddenPattern 的结构化世界观硬铁律（immutableWorldRules）
+  const worldRuleHits = checkWorldRuleViolations(
+    plainChapterText,
+    ledger,
+    numChapter
+  );
+
   const totalHan = countHan(chapterText, hanRegex);
 
   return {
@@ -415,9 +429,98 @@ export function verifyChapterBoundaries(
     missingAnchors,
     deprecatedHits,
     deceasedHits,
+    unresolvedProps,
+    worldRuleHits,
     pass:
       spoilerHits.length === 0 &&
       missingAnchors.length === 0 &&
       deprecatedHits.length === 0,
   };
+}
+
+// 检查在当前章必须结算回收的短线战术道具（mustResolveByChapter）是否已在正文兑现
+export function checkUnresolvedTacticalProps(chapterText, ledger, chapterNumber) {
+  const numChapter = Number(chapterNumber);
+  if (!ledger || !Number.isFinite(numChapter)) return [];
+  const closedStatuses = new Set(["paid_off", "abandoned", "resolved"]);
+  const pool = [
+    ...(Array.isArray(ledger.foreshadowing) ? ledger.foreshadowing : []),
+    ...(Array.isArray(ledger.tacticalProps) ? ledger.tacticalProps : []),
+  ];
+  const text = String(chapterText || "");
+  const unresolved = [];
+
+  for (const item of pool) {
+    if (!item || typeof item !== "object") continue;
+    if (closedStatuses.has(String(item.status || "").toLowerCase())) continue;
+    const resolveBy =
+      item.mustResolveByChapter != null
+        ? Number(item.mustResolveByChapter)
+        : item.shortTerm && item.targetChapter != null
+          ? Number(item.targetChapter)
+          : null;
+    if (resolveBy === null || !Number.isFinite(resolveBy)) continue;
+    const planted = item.plantedChapter != null ? Number(item.plantedChapter) : 0;
+    if (numChapter < planted || numChapter < resolveBy) continue;
+
+    const anchor = String(item.anchorTerm || item.prop || item.clue || "").trim();
+    if (!anchor) continue;
+    if (!text.includes(anchor)) {
+      unresolved.push({
+        id: item.id || anchor,
+        anchorTerm: anchor,
+        plantedChapter: planted || null,
+        mustResolveByChapter: resolveBy,
+        clue: item.clue || anchor,
+      });
+    }
+  }
+
+  return unresolved;
+}
+
+// 检查正文是否违反 ledger.immutableWorldRules 中定义了 forbiddenPattern 的世界观硬铁律
+export function checkWorldRuleViolations(chapterText, ledger, chapterNumber) {
+  const numChapter = Number(chapterNumber);
+  if (!chapterText || !ledger) return [];
+  const rules = Array.isArray(ledger.immutableWorldRules)
+    ? ledger.immutableWorldRules
+    : [];
+  const structuredRules = rules.filter(
+    (r) => r && typeof r === "object" && typeof r.forbiddenPattern === "string" && r.forbiddenPattern.trim()
+  );
+  if (structuredRules.length === 0) return [];
+
+  const lines = String(chapterText).split(/\r?\n/u);
+  const hits = [];
+
+  for (const ruleObj of structuredRules) {
+    if (Array.isArray(ruleObj.activeChapters) && ruleObj.activeChapters.length >= 2 && Number.isFinite(numChapter)) {
+      const minCh = Number(ruleObj.activeChapters[0]);
+      const maxCh = Number(ruleObj.activeChapters[1]);
+      if (numChapter < minCh || numChapter > maxCh) continue;
+    }
+    const re = new RegExp(ruleObj.forbiddenPattern, "gu");
+    const exemptTerms = Array.isArray(ruleObj.exemptTerms)
+      ? ruleObj.exemptTerms.filter(Boolean)
+      : [];
+
+    lines.forEach((rawLine, idx) => {
+      const trimmed = rawLine.trim();
+      if (!trimmed || trimmed.startsWith("#")) return;
+      if (exemptTerms.some((term) => trimmed.includes(term))) return;
+      re.lastIndex = 0;
+      const m = re.exec(trimmed);
+      if (m) {
+        hits.push({
+          line: idx + 1,
+          id: ruleObj.id || "world_rule_guard",
+          rule: String(ruleObj.rule || ruleObj.text || ruleObj.id || ""),
+          matched: m[0],
+        });
+      }
+    });
+  }
+
+  return hits;
 }

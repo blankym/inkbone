@@ -60,6 +60,7 @@ function activate(context) {
       genre: settings.genre,
       variant: settings.variant,
       skipLengthGate: settings.skipLengthGate,
+      platform: settings.defaultPlatform,
       lang: "zh",
     });
 
@@ -80,7 +81,15 @@ function activate(context) {
     const errCount = result.report.summary.error || 0;
     const warnCount = result.report.summary.warning || 0;
     const genreLabel = result.report.genre || "general-clean";
-    statusBar.text = `InkBone [${genreLabel}]: ${errCount}E / ${warnCount}W`;
+    const wc = result.wordCountStatus;
+    const wcTag = wc
+      ? wc.inRange
+        ? `${wc.totalHan} (${wc.platform} OK)`
+        : wc.shortfallHan > 0
+          ? `${wc.totalHan} (${wc.platform} -${wc.shortfallHan})`
+          : `${wc.totalHan} (${wc.platform} +${wc.excessHan})`
+      : `${result.report.metrics?.totalHan || 0}`;
+    statusBar.text = `InkBone [${genreLabel}] ${wcTag} | ${errCount}E / ${warnCount}W`;
     statusBar.show();
     return result;
   }
@@ -143,6 +152,29 @@ function activate(context) {
       [{ language: "markdown" }, { language: "plaintext" }],
       codeActionProvider,
       { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] }
+    ),
+    vscode.languages.registerHoverProvider(
+      [{ language: "markdown" }, { language: "plaintext" }],
+      {
+        async provideHover(doc, position) {
+          if (!isTargetDocument(doc) || doc.isUntitled) return null;
+          const core = await loadCore();
+          const cfgPath = core.findProjectConfig(path.dirname(doc.fileName));
+          if (!cfgPath) return null;
+          const project = core.loadProjectConfig(cfgPath);
+          if (!project?.ledgerFile || !fs.existsSync(project.ledgerFile)) return null;
+          let ledger = null;
+          try {
+            ledger = JSON.parse(fs.readFileSync(project.ledgerFile, "utf8"));
+          } catch {
+            return null;
+          }
+          const lineText = doc.lineAt(position.line).text;
+          const card = core.lookupCharacterHoverCard(lineText, position.character, ledger);
+          if (!card) return null;
+          return new vscode.Hover(new vscode.MarkdownString(card.markdown));
+        },
+      }
     )
   );
 
@@ -207,6 +239,21 @@ function activate(context) {
         language: "plaintext",
       });
       await vscode.window.showTextDocument(outDoc, vscode.ViewColumn.Beside);
+    }),
+    vscode.commands.registerCommand("inkbone.exportSubmissionDocx", async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || editor.document.isUntitled) return;
+      const core = await loadCore();
+      const settings = getSettings();
+      const filePath = editor.document.fileName;
+      const outDocx = filePath.replace(/\.(md|txt)$/iu, "") + `-${settings.defaultPlatform}.docx`;
+      const res = core.exportChapters([filePath], {
+        platform: settings.defaultPlatform,
+        docxOut: outDocx,
+      });
+      vscode.window.showInformationMessage(
+        `InkBone: exported DOCX (${res.totalHan} Han) to ${path.basename(outDocx)}`
+      );
     })
   );
 

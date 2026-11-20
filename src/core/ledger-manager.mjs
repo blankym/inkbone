@@ -204,6 +204,116 @@ export function validateLedger(ledger, options = {}) {
     });
   }
 
+  // 5. 核查短线战术道具（mustResolveByChapter）是否已超过预定截止章仍未回收
+  const tacticalPool = [
+    ...activeForeshadowing,
+    ...(Array.isArray(ledger.tacticalProps)
+      ? ledger.tacticalProps.filter((p) => p && !CLOSED_FORESHADOW_STATUSES.has(p.status))
+      : []),
+  ];
+  const unresolvedProps = [];
+  for (const item of tacticalPool) {
+    const resolveBy =
+      item.mustResolveByChapter != null
+        ? Number(item.mustResolveByChapter)
+        : item.shortTerm && item.targetChapter != null
+          ? Number(item.targetChapter)
+          : null;
+    if (resolveBy !== null && Number.isFinite(resolveBy) && latestChapter >= resolveBy) {
+      unresolvedProps.push({
+        id: item.id || item.anchorTerm || item.clue || "",
+        anchorTerm: item.anchorTerm || item.clue || "",
+        plantedChapter: item.plantedChapter != null ? Number(item.plantedChapter) : null,
+        mustResolveByChapter: resolveBy,
+      });
+    }
+  }
+  if (unresolvedProps.length > 0) {
+    issues.push({
+      code: "UNRESOLVED_TACTICAL_PROP",
+      severity: "warning",
+      items: unresolvedProps,
+      detail: unresolvedProps
+        .map((p) => `${p.id} (mustResolveBy ch${p.mustResolveByChapter}, current ch${latestChapter})`)
+        .join("; "),
+    });
+  }
+
+  // 6. 核查跨章可量化资源流水（resourceDeltas）的单章加减算术与跨章期初/期末余额守恒
+  const sortedChObjs = [...chapters]
+    .filter((c) => c && Number.isFinite(Number(c.chapterNumber)))
+    .sort((a, b) => Number(a.chapterNumber) - Number(b.chapterNumber));
+  const lastResourceBalance = new Map();
+  const resourceMismatches = [];
+
+  for (const ch of sortedChObjs) {
+    const chNum = Number(ch.chapterNumber);
+    const deltas = ch.resourceDeltas;
+    if (!deltas || typeof deltas !== "object" || Array.isArray(deltas)) continue;
+
+    for (const [resName, rec] of Object.entries(deltas)) {
+      if (!rec || typeof rec !== "object") continue;
+      const before = rec.before != null ? Number(rec.before) : null;
+      const delta = rec.delta != null ? Number(rec.delta) : null;
+      const after = rec.after != null ? Number(rec.after) : null;
+
+      if (
+        before !== null &&
+        delta !== null &&
+        after !== null &&
+        Number.isFinite(before) &&
+        Number.isFinite(delta) &&
+        Number.isFinite(after)
+      ) {
+        const expectedAfter = Number((before + delta).toFixed(4));
+        if (Math.abs(expectedAfter - after) > 1e-4) {
+          resourceMismatches.push({
+            resource: resName,
+            chapterNumber: chNum,
+            kind: "arithmetic_error",
+            before,
+            delta,
+            after,
+            expectedAfter,
+          });
+        }
+      }
+
+      if (before !== null && Number.isFinite(before) && lastResourceBalance.has(resName)) {
+        const prev = lastResourceBalance.get(resName);
+        if (Math.abs(prev.after - before) > 1e-4) {
+          resourceMismatches.push({
+            resource: resName,
+            chapterNumber: chNum,
+            kind: "cross_chapter_discontinuity",
+            previousChapter: prev.chapterNumber,
+            previousAfter: prev.after,
+            currentBefore: before,
+          });
+        }
+      }
+
+      if (after !== null && Number.isFinite(after)) {
+        lastResourceBalance.set(resName, { chapterNumber: chNum, after });
+      }
+    }
+  }
+
+  if (resourceMismatches.length > 0) {
+    issues.push({
+      code: "RESOURCE_LEDGER_MISMATCH",
+      severity: "error",
+      mismatches: resourceMismatches,
+      detail: resourceMismatches
+        .map((m) =>
+          m.kind === "arithmetic_error"
+            ? `${m.resource}@ch${m.chapterNumber}: ${m.before} + (${m.delta}) != ${m.after}`
+            : `${m.resource}@ch${m.chapterNumber}: before=${m.currentBefore} != ch${m.previousChapter}.after=${m.previousAfter}`
+        )
+        .join("; "),
+    });
+  }
+
   const errorCount = issues.filter((i) => i.severity === "error").length;
   const warningCount = issues.filter((i) => i.severity === "warning").length;
 
@@ -266,6 +376,7 @@ export function applyChapterSettlement(ledger, patch) {
     updatedForeshadowing: [],
     resolvedForeshadowing: [],
     updatedKnowledge: [],
+    updatedResources: [],
   };
 
   // 1. 合并或追加 chapters[] 条目
@@ -402,10 +513,54 @@ export function applyChapterSettlement(ledger, patch) {
           targetChapter: upd.targetChapter ?? null,
           status: upd.status || "planted",
         };
+        if (upd.mustResolveByChapter != null) {
+          added.mustResolveByChapter = Number(upd.mustResolveByChapter);
+        }
+        if (upd.anchorTerm) added.anchorTerm = String(upd.anchorTerm).trim();
+        if (upd.shortTerm != null) added.shortTerm = Boolean(upd.shortTerm);
         if (upd.notes) added.notes = upd.notes;
         next.foreshadowing.push(added);
         diff.addedForeshadowing.push(added.id);
       }
+    }
+  }
+
+  // 4b. 合并章节可量化资源流水（resourceDeltas / resourceUpdates）并更新总账余额
+  const resInput = patch.resourceDeltas || patch.resourceUpdates;
+  if (resInput && typeof resInput === "object" && !Array.isArray(resInput)) {
+    if (!next.resourceLedger || typeof next.resourceLedger !== "object") {
+      next.resourceLedger = {};
+    }
+    const chIdx = next.chapters.findIndex((c) => Number(c.chapterNumber) === chapNum);
+    const chObj = chIdx >= 0 ? next.chapters[chIdx] : null;
+    if (chObj && (!chObj.resourceDeltas || typeof chObj.resourceDeltas !== "object")) {
+      chObj.resourceDeltas = {};
+    }
+    for (const [resName, rec] of Object.entries(resInput)) {
+      if (!resName || !rec || typeof rec !== "object") continue;
+      const cleanRec = {};
+      if (rec.before != null && Number.isFinite(Number(rec.before))) {
+        cleanRec.before = Number(rec.before);
+      }
+      if (rec.delta != null && Number.isFinite(Number(rec.delta))) {
+        cleanRec.delta = Number(rec.delta);
+      }
+      if (rec.after != null && Number.isFinite(Number(rec.after))) {
+        cleanRec.after = Number(rec.after);
+      } else if (cleanRec.before !== undefined && cleanRec.delta !== undefined) {
+        cleanRec.after = Number((cleanRec.before + cleanRec.delta).toFixed(4));
+      }
+      if (rec.note) cleanRec.note = String(rec.note);
+      if (chObj) {
+        chObj.resourceDeltas[resName] = cleanRec;
+      }
+      if (cleanRec.after !== undefined) {
+        next.resourceLedger[resName] = {
+          balance: cleanRec.after,
+          lastUpdatedChapter: chapNum,
+        };
+      }
+      diff.updatedResources.push(resName);
     }
   }
 
@@ -573,4 +728,116 @@ export function extractCandidateCharacters(texts, lingConfig, options = {}) {
   });
 
   return filtered.slice(0, maxCandidates);
+}
+
+// 批量无损合并多章写后结算补丁数组（供老书半途接管或批量回填 coreSummary 与状态使用）
+export function applyBatchSettlement(ledger, patchesInput) {
+  const list = Array.isArray(patchesInput)
+    ? patchesInput
+    : Array.isArray(patchesInput?.patches)
+      ? patchesInput.patches
+      : null;
+  if (!list || list.length === 0) {
+    throw new Error("Batch settlement requires a non-empty array of chapter patches.");
+  }
+  const sorted = [...list].sort(
+    (a, b) => Number(a?.chapterNumber || 0) - Number(b?.chapterNumber || 0)
+  );
+  let curLedger = ledger;
+  const diffs = [];
+  for (const patch of sorted) {
+    const res = applyChapterSettlement(curLedger, patch);
+    curLedger = res.ledger;
+    diffs.push(res.diff);
+  }
+  return {
+    ledger: curLedger,
+    batchDiff: {
+      settledCount: diffs.length,
+      chapters: diffs.map((d) => d.chapterNumber),
+      diffs,
+    },
+  };
+}
+
+// 针对老书尚未填写 coreSummary 的存量章节，分批生成可直接输出 settle --batch JSON 的回填提示词
+export function buildLedgerBackfillPrompts(chapterEntries, ledger = {}, options = {}) {
+  const batchSize =
+    Number.isFinite(Number(options.batchSize)) && Number(options.batchSize) > 0
+      ? Math.floor(Number(options.batchSize))
+      : 5;
+  const maxExcerptChars =
+    Number.isFinite(Number(options.maxExcerptChars)) && Number(options.maxExcerptChars) > 200
+      ? Math.floor(Number(options.maxExcerptChars))
+      : 3200;
+
+  const existingByNum = new Map();
+  for (const ch of ledger?.chapters || []) {
+    if (ch && Number.isFinite(Number(ch.chapterNumber))) {
+      existingByNum.set(Number(ch.chapterNumber), ch);
+    }
+  }
+
+  const missingEntries = (chapterEntries || [])
+    .filter((entry) => {
+      if (!entry || !Number.isFinite(Number(entry.chapterNumber))) return false;
+      const existing = existingByNum.get(Number(entry.chapterNumber));
+      if (options.includeAll) return true;
+      return !existing || !existing.coreSummary || !String(existing.coreSummary).trim();
+    })
+    .sort((a, b) => Number(a.chapterNumber) - Number(b.chapterNumber));
+
+  const batches = [];
+  for (let i = 0; i < missingEntries.length; i += batchSize) {
+    const slice = missingEntries.slice(i, i + batchSize);
+    const chNums = slice.map((s) => Number(s.chapterNumber));
+    const schemaExample = [
+      {
+        chapterNumber: chNums[0] || 1,
+        title: slice[0]?.title || "",
+        coreSummary: "One-sentence factual summary (<100 chars): who did what, key gain/cost, ending state.",
+        requiredAnchors: ["Anchor1", "Anchor2"],
+        activeCharacters: ["Protagonist"],
+        characterUpdates: {},
+        foreshadowingUpdates: [],
+        resourceDeltas: {},
+      },
+    ];
+
+    const bodyBlocks = slice.map((item) => {
+      const raw = String(item.text || "").trim();
+      const excerpt =
+        raw.length <= maxExcerptChars
+          ? raw
+          : `${raw.slice(0, Math.floor(maxExcerptChars * 0.65))}\n...\n${raw.slice(-Math.floor(maxExcerptChars * 0.35))}`;
+      return `=== CHAPTER ${item.chapterNumber}: ${item.title || item.name || ""} ===\n${excerpt}`;
+    });
+
+    const prompt = [
+      `# InkBone Batch Ledger Backfill (Chapters ${chNums[0]}-${chNums[chNums.length - 1]})`,
+      "Extract factual chapter summaries, key anchors, active characters, and resource/foreshadowing deltas from the chapters below.",
+      "Output ONLY a valid JSON array matching `inkbone settle --batch` format:",
+      "```json",
+      JSON.stringify(schemaExample, null, 2),
+      "```",
+      ...bodyBlocks,
+    ].join("\n\n");
+
+    batches.push({
+      batchIndex: batches.length + 1,
+      chapters: chNums,
+      chapterCount: slice.length,
+      prompt,
+    });
+  }
+
+  return {
+    totalMissingChapters: missingEntries.length,
+    batchSize,
+    batchCount: batches.length,
+    batches:
+      Number.isFinite(Number(options.limit)) && Number(options.limit) > 0
+        ? batches.slice(0, Number(options.limit))
+        : batches,
+  };
 }

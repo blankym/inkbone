@@ -1534,3 +1534,177 @@ export function checkOutlineContract(outlineText, options = {}) {
     placeholderHits,
   };
 }
+
+// 解析古历法月内日期（如初八、十五、廿三、三十）为 1-30 的整数
+function parseLunarDayToken(dayToken, calCfg) {
+  if (!dayToken || !calCfg) return null;
+  const tensMap = calCfg.dayTensMap || {};
+  const digitMap = calCfg.dayDigitMap || {};
+  for (const prefix of Object.keys(tensMap).sort((a, b) => b.length - a.length)) {
+    if (dayToken.startsWith(prefix)) {
+      const base = tensMap[prefix];
+      const rem = dayToken.slice(prefix.length);
+      if (!rem) return base === 0 ? null : base;
+      const d = digitMap[rem];
+      return d != null ? base + d : null;
+    }
+  }
+  return null;
+}
+
+// 校验同章内的历法月日跨度（如“上月十五”至“九月廿三”相差 38 天）是否与“半个月”宣称自相矛盾
+export function checkCalendarSpanContradictions(rawContent, customLingConfig) {
+  if (!rawContent || !customLingConfig) return [];
+  const calCfg = customLingConfig.calendarGuard;
+  if (!calCfg || !calCfg.monthDayPattern || !calCfg.halfMonthClaimPattern) return [];
+
+  const mdRe = new RegExp(calCfg.monthDayPattern, "gu");
+  const halfRe = new RegExp(calCfg.halfMonthClaimPattern, "gu");
+  const prevSet = new Set(calCfg.prevMonthTokens || []);
+  const monthMap = calCfg.monthMap || {};
+
+  const lines = String(rawContent).split(/\r?\n/u);
+  const absDates = [];
+  const prevMonthDates = [];
+  const halfMonthClaims = [];
+
+  lines.forEach((rawLine, idx) => {
+    const lineNo = idx + 1;
+    const trimmed = rawLine.trim();
+    if (!trimmed || trimmed.startsWith("#")) return;
+
+    mdRe.lastIndex = 0;
+    let m;
+    while ((m = mdRe.exec(trimmed)) !== null) {
+      const monthToken = m[1];
+      const relToken = m[2];
+      const dayToken = m[3];
+      const dayVal = parseLunarDayToken(dayToken, calCfg);
+      if (!dayVal) continue;
+      if (monthToken && monthMap[monthToken] != null) {
+        absDates.push({
+          line: lineNo,
+          month: monthMap[monthToken],
+          day: dayVal,
+          matched: m[0],
+        });
+      } else if (relToken && prevSet.has(relToken)) {
+        prevMonthDates.push({
+          line: lineNo,
+          day: dayVal,
+          matched: m[0],
+        });
+      }
+    }
+
+    halfRe.lastIndex = 0;
+    let hm;
+    while ((hm = halfRe.exec(trimmed)) !== null) {
+      halfMonthClaims.push({
+        line: lineNo,
+        matched: hm[0],
+      });
+    }
+  });
+
+  if (absDates.length === 0 || prevMonthDates.length === 0 || halfMonthClaims.length === 0) {
+    return [];
+  }
+
+  // 取章节内最早锚定的当前绝对日期作为基准
+  const anchor = absDates[0];
+  const hits = [];
+
+  for (const prev of prevMonthDates) {
+    const spanDays = 30 - prev.day + anchor.day;
+    if (spanDays < 26) continue;
+    // 检查该“上月X日”附近（同章或前后 15 行内）是否有“半个月”宣称
+    const nearbyClaim =
+      halfMonthClaims.find((c) => Math.abs(c.line - prev.line) <= 15) || halfMonthClaims[0];
+    if (nearbyClaim) {
+      hits.push({
+        line: prev.line,
+        claimLine: nearbyClaim.line,
+        matched: `${nearbyClaim.matched} vs ${prev.matched} -> ${anchor.matched}`,
+        claimedDays: 15,
+        actualSpanDays: spanDays,
+        anchorDate: anchor.matched,
+        pastDate: prev.matched,
+      });
+    }
+  }
+
+  return hits;
+}
+
+// 校验黄金三章首屏（前 380 汉字）是否存在无对白且无外部冲突信号的慢热开局
+export function checkGoldenOpeningPacing(rawContent, customLingConfig) {
+  if (!rawContent || !customLingConfig) return null;
+  const gCfg = customLingConfig.goldenOpeningGuard || {};
+  const windowHan = gCfg.windowHan || 380;
+  const maxDroughtHan = gCfg.maxOpeningDialogueDroughtHan || 450;
+  const hanRe = customLingConfig.compiledRegex?.hanCharGlobal;
+  const dlgRe = customLingConfig.compiledRegex?.dialogueSpanGlobal;
+  const conflictRe = gCfg.conflictSignalPattern
+    ? new RegExp(gCfg.conflictSignalPattern, "gu")
+    : null;
+
+  if (!hanRe) return null;
+  const lines = String(rawContent).split(/\r?\n/u);
+  let accumulatedHan = 0;
+  let firstBodyLine = 1;
+  let seenFirstBody = false;
+  let firstDialogueAtHan = null;
+  const windowSlices = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const trimmed = lines[i].trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    if (!seenFirstBody) {
+      firstBodyLine = i + 1;
+      seenFirstBody = true;
+    }
+    const hanMatches = trimmed.match(hanRe);
+    const lineHan = hanMatches ? hanMatches.length : 0;
+    if (firstDialogueAtHan === null && dlgRe) {
+      dlgRe.lastIndex = 0;
+      if (dlgRe.test(trimmed)) {
+        firstDialogueAtHan = accumulatedHan;
+      }
+    }
+    if (accumulatedHan < windowHan) {
+      windowSlices.push(trimmed);
+    }
+    accumulatedHan += lineHan;
+  }
+
+  if (accumulatedHan < windowHan) {
+    return null;
+  }
+
+  const windowText = windowSlices.join("\n");
+  let hasOpeningDialogue = false;
+  if (dlgRe) {
+    dlgRe.lastIndex = 0;
+    hasOpeningDialogue = dlgRe.test(windowText);
+  }
+  let conflictHits = 0;
+  if (conflictRe) {
+    const cm = windowText.match(conflictRe);
+    conflictHits = cm ? cm.length : 0;
+  }
+
+  const effectiveDrought =
+    firstDialogueAtHan !== null ? firstDialogueAtHan : accumulatedHan;
+  const slowStart =
+    !hasOpeningDialogue && (effectiveDrought > maxDroughtHan || conflictHits < 2);
+
+  return {
+    slowStart,
+    line: firstBodyLine,
+    windowHan,
+    hasOpeningDialogue,
+    conflictSignalHits: conflictHits,
+    firstDialogueAtHan: effectiveDrought,
+  };
+}

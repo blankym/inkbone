@@ -29,13 +29,19 @@ metadata:
 
 ## 文件索引
 
-- 命令行工具：`node "$SKILL_DIR/bin/inkbone.mjs"`（`--help` 列出高频日常命令，`--help-all` 列出全部 25 条命令，`--version` 查看版本）。
+- 命令行工具：`node "$SKILL_DIR/bin/inkbone.mjs"`（`--help` 列出高频日常命令，`--help-all` 列出全部 26 条命令，`--version` 查看版本）。
 - 常用新能力速查：
   - 安全拆书提取风格与 `customGates`：`style-profile <范文目录> [--out style.json]`
   - 长篇增量体检：`doctor ./chapters --chapters 40-45` 或 `doctor ./chapters --changed`（自动保留前章查跨章回声）
+  - 黄金三章首屏留存门禁：`audit` / `doctor` 支持 `--golden-three`（检查首屏 380 字内是否有对白或强冲突信号，防止慢热铺垫）
   - 简繁语体切换：`audit` / `doctor` 支持 `--variant auto|zh-hans|zh-hant`
-  - 退场/阵亡角色防诈尸：在 `ledger.json` 的 `characterSnapshots[name]` 记 `status: "deceased"` 或 `deceasedCharacters[]`，自动校验非回忆段落是否写串
-  - 平台投稿清洗导出：`export ./chapters --platform qidian|fanqie|qimao|jjwxc [--out ./dist] [--merge-out ./vol1.txt]`
+  - 退场/阵亡角色防诈尸、短线战术道具追踪与可执行世界观铁律：
+    - `characterSnapshots[name]` 记 `status: "deceased"` 或 `deceasedCharacters[]` 自动防诈尸（`DECEASED_CHARACTER_APPEARANCE`）；
+    - `foreshadowing` / `tacticalProps` 记 `mustResolveByChapter` + `anchorTerm` 自动追踪短线道具是否到期未回收（`UNRESOLVED_TACTICAL_PROP`）；
+    - `immutableWorldRules` 支持结构化规则 `{ id, rule, forbiddenPattern, activeChapters, exemptTerms }` 自动拦截吃设定行为（`WORLD_RULE_VIOLATION`）；
+    - `chapters[].resourceDeltas` 支持 `{ before, delta, after }` 自动核对单章加减与跨章余额守恒（`RESOURCE_LEDGER_MISMATCH`）。
+  - 存量旧书批量回填台账：`backfill-prompt <章节目录> --ledger <ledger.json> [--batch-size 5] [--limit 1]` 生成批量结算提示词，配合 `settle --ledger <ledger.json> --patch <batch.json> --batch` 一次合入多章摘要与快照。
+  - 平台投稿清洗导出与内投 `.docx` / `.zip` 打包：`export ./chapters --platform qidian|fanqie|qimao|jjwxc [--out ./dist] [--merge-out ./vol1.txt] [--docx-out ./内投2万字.docx] [--zip-out ./chapters.zip] [--outline ./outline.md] [--title "书名"]`（零依赖直出标准宋体四号内投 Word 文档与达标字数校验）。
 - 内置题材包：`$SKILL_DIR/configs/genres.json`，运行 `node "$SKILL_DIR/bin/inkbone.mjs" genres` 查看。
 - 各阶段提示词：
   - 定语体：`$SKILL_DIR/prompts/00-style-architect.md`

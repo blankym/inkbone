@@ -21,6 +21,7 @@ import {
   findProjectConfig,
   loadProjectConfig,
   importLedgerFromChapters,
+  parseChapterNumberAndTitle,
   normalizeFiles,
   checkOutlineContract,
   computeRuleStats,
@@ -33,6 +34,8 @@ import {
   summarizeReviews,
   validateLedger,
   applyChapterSettlement,
+  applyBatchSettlement,
+  buildLedgerBackfillPrompts,
   formatAuditMarkdown,
   buildTargetedRewritePrompt,
   startMcpServer,
@@ -74,6 +77,8 @@ function parseFlags(args) {
     "indent",
     "no-indent",
     "platforms",
+    "golden-three",
+    "batch",
   ]);
   for (let i = 0; i < args.length; i += 1) {
     const token = args[i];
@@ -218,7 +223,7 @@ function printHelp(showAll = false) {
     "  inkbone normalize <file|dir>... [--check] [--strip-bold] [--fix-emdash] [--project <dir|novel.json>] [--no-project]",
     "                                                    Deterministic formatting & pause-punctuation cleaner (zero tokens)",
     "  inkbone audit <file.md> [--genre <id>] [--preset <id>] [--variant auto|zh-hans|zh-hant] [--format json|md] [--lang zh|en]",
-    "                [--ledger <ledger.json> --chapter <n> --prev <prev.md> --skip-length] [--outline-chapter <outline.md>] [--strict]",
+    "                [--ledger <ledger.json> --chapter <n> --prev <prev.md> --skip-length] [--outline-chapter <outline.md>] [--golden-three] [--strict]",
     "                                                    Run boundary, deceased-guard, register, rhetoric, density & continuity audit",
     "  inkbone doctor <file|dir>... [--genre <id>] [--variant auto|zh-hans|zh-hant] [--chapters <40-45>] [--changed [ref]]",
     "                 [--outline <dir|file>...] [--ledger <ledger.json>] [--lang zh|en] [--json]",
@@ -226,13 +231,15 @@ function printHelp(showAll = false) {
     "  inkbone rewrite-prompt <file.md> [--genre <id>] [--variant auto|zh-hans|zh-hant] [--lang zh|en] [--skip-length]",
     "                                                    Audit chapter and output a copy-ready targeted rewrite prompt",
     "  inkbone check-ledger <ledger.json> [--current <n>] [--overdue <20>]",
-    "                                                    Check ledger health (duplicates, reveal order, overdue foreshadowing)",
-    "  inkbone settle --ledger <ledger.json> --patch <patch.json> [--dry-run]",
-    "                                                    Merge post-chapter settlement updates non-destructively into ledger",
+    "                                                    Check ledger health (duplicates, reveal order, resource balance, overdue foreshadowing)",
+    "  inkbone settle --ledger <ledger.json> --patch <patch.json> [--batch] [--dry-run]",
+    "                                                    Merge single or batch post-chapter settlement updates non-destructively into ledger",
+    "  inkbone backfill-prompt <file|dir>... --ledger <ledger.json> [--batch-size <5>] [--limit <1>] [--json]",
+    "                                                    Generate batch LLM prompts to backfill missing coreSummary & deltas for existing books",
     "  inkbone style-profile <file|dir>... [--out <style.json>] [--label <name>] [--lang zh|en] [--json]",
     "                                                    Copyright-safe statistical style profile & suggested customGates",
-    "  inkbone export <file|dir>... --platform <qidian|fanqie|qimao|jjwxc> [--out <dir>] [--merge-out <book.txt>] [--indent] [--check]",
-    "                                                    Clean Markdown & format chapters for web-fiction publishing platforms",
+    "  inkbone export <file|dir>... --platform <qidian|fanqie|qimao|jjwxc> [--out <dir>] [--merge-out <book.txt>] [--docx-out <sub.docx>] [--zip-out <pkg.zip>] [--indent] [--check]",
+    "                                                    Clean Markdown & export chapters/submission DOCX/ZIP for web-fiction platforms",
     "  inkbone mcp                                       Start zero-dependency stdio MCP server (9 tools, 8 prompts, 11 resources)",
   ];
 
@@ -414,6 +421,7 @@ async function main() {
       previousChapterText: prevText,
       outlineText,
       skipLengthGate: Boolean(flags["skip-length"]),
+      goldenThree: Boolean(flags["golden-three"]),
       strict: Boolean(flags.strict),
       reference: flags.reference
         ? JSON.parse(fs.readFileSync(path.resolve(flags.reference), "utf8"))
@@ -816,20 +824,29 @@ async function main() {
     }
     const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8"));
     const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
-    const settled = applyChapterSettlement(ledger, patch);
+    const isBatch =
+      Boolean(flags.batch) ||
+      Array.isArray(patch) ||
+      Array.isArray(patch?.patches);
+    const settled = isBatch
+      ? applyBatchSettlement(ledger, patch)
+      : applyChapterSettlement(ledger, patch);
     const dryRun = Boolean(flags["dry-run"]);
     if (!dryRun) {
       fs.writeFileSync(ledgerPath, JSON.stringify(settled.ledger, null, 2) + "\n");
     }
+    const latestChap = isBatch
+      ? Math.max(...(settled.batchDiff.chapters || [0]))
+      : settled.diff.chapterNumber;
     const health = validateLedger(settled.ledger, {
-      currentChapter: settled.diff.chapterNumber,
+      currentChapter: latestChap > 0 ? latestChap : undefined,
     });
     console.log(
       JSON.stringify(
         {
           ledgerPath,
           wroteFile: !dryRun,
-          diff: settled.diff,
+          ...(isBatch ? { batchDiff: settled.batchDiff } : { diff: settled.diff }),
           health,
         },
         null,
@@ -837,6 +854,45 @@ async function main() {
       )
     );
     process.exitCode = health.pass ? 0 : 1;
+    return;
+  }
+
+  if (command === "backfill-prompt") {
+    if (positional.length === 0) {
+      console.error("Error: Provide at least one <file.md> or <directory> for backfill-prompt.");
+      process.exit(2);
+    }
+    const project = resolveProject(flags, positional[0]);
+    const ledgerPath = flags.ledger
+      ? path.resolve(flags.ledger)
+      : project?.ledgerFile && fs.existsSync(project.ledgerFile)
+        ? project.ledgerFile
+        : null;
+    const ledger = ledgerPath ? JSON.parse(fs.readFileSync(ledgerPath, "utf8")) : {};
+    const files = collectTextFiles(positional);
+    const entries = files.map((filePath) => {
+      const text = fs.readFileSync(filePath, "utf8");
+      const parsed = parseChapterNumberAndTitle(filePath, text);
+      return {
+        filePath,
+        name: path.basename(filePath),
+        chapterNumber: parsed.chapterNumber,
+        title: parsed.title,
+        text,
+      };
+    });
+    const built = buildLedgerBackfillPrompts(entries, ledger, {
+      batchSize: flags["batch-size"] ? Number(flags["batch-size"]) : 5,
+      limit: flags.limit ? Number(flags.limit) : undefined,
+      includeAll: Boolean(flags.all),
+    });
+    if (flags.json) {
+      console.log(JSON.stringify(built, null, 2));
+    } else if (built.batches.length === 0) {
+      console.log("All scanned chapters already have non-empty coreSummary in ledger.");
+    } else {
+      console.log(built.batches.map((b) => b.prompt).join("\n\n---\n\n"));
+    }
     return;
   }
 
@@ -913,10 +969,18 @@ async function main() {
     }
     const project = resolveProject(flags, positional[0]);
     const indentOpt = flags.indent ? true : flags["no-indent"] ? false : undefined;
+    const outlineFlag = Array.isArray(flags.outline) ? flags.outline[0] : flags.outline;
     const report = exportChapters(positional, {
       platform: typeof flags.platform === "string" ? flags.platform : "qidian",
       outDir: typeof flags.out === "string" ? flags.out : undefined,
       mergeOut: typeof flags["merge-out"] === "string" ? flags["merge-out"] : undefined,
+      docxOut: typeof flags["docx-out"] === "string" ? flags["docx-out"] : undefined,
+      zipOut: typeof flags["zip-out"] === "string" ? flags["zip-out"] : undefined,
+      outlinePath: typeof outlineFlag === "string" ? outlineFlag : undefined,
+      bookTitle:
+        typeof flags.title === "string"
+          ? flags.title
+          : project?.raw?.projectTitle || undefined,
       indent: indentOpt,
       check: Boolean(flags.check),
       whitelistLiterals: project?.rules?.whitelistLiterals || [],

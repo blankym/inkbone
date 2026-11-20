@@ -12,7 +12,14 @@ import { validateEvidenceReview } from "./vendor/core/evidence-validator.mjs";
 import { validateLedger } from "./vendor/core/ledger-manager.mjs";
 import { buildTargetedRewritePrompt } from "./vendor/core/formatter.mjs";
 import { diagnoseChapterEntries } from "./vendor/core/browser-doctor.mjs";
-import { exportChapterEntries, resolvePlatformConfig } from "./vendor/core/exporter.mjs";
+import {
+  exportChapterEntries,
+  resolvePlatformConfig,
+  buildStoreZipBuffer,
+  buildSubmissionDocxBytes,
+} from "./vendor/core/exporter.mjs";
+
+const DRAFT_STORAGE_KEY = "inkbone_playground_draft_v2";
 
 const state = {
   lingConfig: null,
@@ -288,12 +295,66 @@ function renderAnnotatedLines(rawText, surgeryTargets, violationSeverityMap) {
     const row = createNode("div", sev ? `aline sev-${sev}` : "aline");
     row.dataset.line = String(lineNo);
 
-    row.appendChild(createNode("div", "aline-num", lineNo));
+    const numCell = createNode("div", "aline-num", lineNo);
+    numCell.style.cursor = "pointer";
+    numCell.addEventListener("click", () => startInlineLineEdit(row, textCell, idx));
+    row.appendChild(numCell);
+
     const textCell = createNode("div", "aline-text");
+    textCell.title = state.samples?.uiMessages?.inlineEditTip || "";
     appendHighlightedLineContent(textCell, lineText, issues, violationSeverityMap);
+    textCell.addEventListener("dblclick", () => startInlineLineEdit(row, textCell, idx));
     row.appendChild(textCell);
     container.appendChild(row);
   });
+}
+
+// 启动单行就地编辑模式：回车或失焦时自动写回主文本框并即时重算消警
+function startInlineLineEdit(rowEl, textCell, zeroLineIdx) {
+  if (textCell.contentEditable === "true") return;
+  const textarea = el("chapterInput");
+  const allLines = String(textarea.value || "").split(/\r?\n/u);
+  const originalLine = allLines[zeroLineIdx] ?? "";
+
+  textCell.textContent = originalLine;
+  textCell.contentEditable = "true";
+  textCell.classList.add("editing");
+  textCell.focus();
+
+  const commitEdit = () => {
+    if (textCell.contentEditable !== "true") return;
+    textCell.contentEditable = "false";
+    textCell.classList.remove("editing");
+    const updatedLine = String(textCell.textContent || "").replace(/\r?\n/gu, " ");
+    if (updatedLine !== originalLine) {
+      allLines[zeroLineIdx] = updatedLine;
+      textarea.value = allLines.join("\n");
+      saveDraftToLocal(textarea.value);
+      runAudit();
+    } else {
+      runAudit();
+    }
+  };
+
+  textCell.addEventListener("blur", commitEdit, { once: true });
+  textCell.addEventListener("keydown", (evt) => {
+    if (evt.key === "Enter" && !evt.shiftKey) {
+      evt.preventDefault();
+      textCell.blur();
+    } else if (evt.key === "Escape") {
+      evt.preventDefault();
+      textCell.textContent = originalLine;
+      textCell.blur();
+    }
+  });
+}
+
+function saveDraftToLocal(text) {
+  try {
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, String(text || ""));
+  } catch {
+    // 忽略隐私模式下 localStorage 写入失败
+  }
 }
 
 function flashSourceLine(lineNo) {
@@ -423,12 +484,14 @@ function runAudit() {
   const characterNames = parseCharacterList(el("charactersInput").value);
   const protagonistName = el("protagonistInput").value.trim();
   const skipLengthGate = el("skipLengthCheck").checked;
+  const goldenThree = el("goldenThreeCheck") ? el("goldenThreeCheck").checked : false;
   const strict = el("strictModeCheck").checked;
 
   const result = auditChapterText(text, {
     genre,
     variant,
     skipLengthGate,
+    goldenThree,
     strict,
     characterNames,
     ledger: protagonistName ? { protagonist: { name: protagonistName } } : undefined,
@@ -908,7 +971,16 @@ async function init() {
     el("runAuditBtn").addEventListener("click", runAudit);
     el("normalizeBtn").addEventListener("click", runNormalize);
     el("skipLengthCheck").addEventListener("change", runAudit);
+    if (el("goldenThreeCheck")) {
+      el("goldenThreeCheck").addEventListener("change", runAudit);
+    }
     el("strictModeCheck").addEventListener("change", runAudit);
+    let inputTimer = null;
+    el("chapterInput").addEventListener("input", () => {
+      saveDraftToLocal(el("chapterInput").value);
+      if (inputTimer) window.clearTimeout(inputTimer);
+      inputTimer = window.setTimeout(runAudit, 320);
+    });
     el("copyPromptBtn").addEventListener("click", copyRewritePrompt);
     el("togglePromptBtn").addEventListener("click", () => {
       el("promptDrawer").classList.toggle("open");
@@ -979,6 +1051,15 @@ async function init() {
       notice.className = "status-banner ok";
       notice.textContent = msgs.bookLedgerDownloaded || "Downloaded ledger.json";
     });
+    const formatSubmissionBadge = (exported) => {
+      const msgs = state.samples.uiMessages || {};
+      return exported.submissionReady
+        ? interpolate(msgs.submissionOk || "OK ({min})", { min: exported.submissionMinHan })
+        : interpolate(msgs.submissionShort || "-{diff} ({min})", {
+            min: exported.submissionMinHan,
+            diff: exported.submissionShortfallHan,
+          });
+    };
     el("exportBookBtn").addEventListener("click", () => {
       if (!state.bookEntries || state.bookEntries.length === 0) return;
       const msgs = state.samples.uiMessages || {};
@@ -989,12 +1070,70 @@ async function init() {
       const notice = el("bookNotice");
       notice.style.display = "block";
       notice.className = "status-banner ok";
-      notice.textContent = interpolate(msgs.bookExportReady || "Exported {count}", {
+      notice.textContent = `${interpolate(msgs.bookExportReady || "Exported {count}", {
         platform: spec.title,
         count: exported.chapterCount,
         han: exported.totalHan,
-      });
+      })} (${formatSubmissionBadge(exported)})`;
     });
+    if (el("exportZipBtn")) {
+      el("exportZipBtn").addEventListener("click", () => {
+        if (!state.bookEntries || state.bookEntries.length === 0) return;
+        const msgs = state.samples.uiMessages || {};
+        const platId = el("bookPlatformSelect").value || "qidian";
+        const spec = resolvePlatformConfig(state.platformsConfig, platId);
+        const exported = exportChapterEntries(state.bookEntries, spec, state.lingConfig);
+        const entries = exported.chapters.map((ch) => ({
+          name: ch.name.replace(/\.md$/iu, ".txt"),
+          data: ch.output,
+        }));
+        entries.push({
+          name: `${spec.id}-merged.txt`,
+          data: exported.mergedText,
+        });
+        const zipBytes = buildStoreZipBuffer(entries);
+        triggerLocalDownload(
+          `inkbone-${spec.id}-chapters.zip`,
+          zipBytes,
+          "application/zip"
+        );
+        const notice = el("bookNotice");
+        notice.style.display = "block";
+        notice.className = "status-banner ok";
+        notice.textContent = interpolate(msgs.bookExportZipReady || "ZIP {count}", {
+          platform: spec.title,
+          count: exported.chapterCount,
+          han: exported.totalHan,
+          status: formatSubmissionBadge(exported),
+        });
+      });
+    }
+    if (el("exportDocxBtn")) {
+      el("exportDocxBtn").addEventListener("click", () => {
+        if (!state.bookEntries || state.bookEntries.length === 0) return;
+        const msgs = state.samples.uiMessages || {};
+        const platId = el("bookPlatformSelect").value || "qidian";
+        const spec = resolvePlatformConfig(state.platformsConfig, platId);
+        const exported = exportChapterEntries(state.bookEntries, spec, state.lingConfig);
+        const docxBytes = buildSubmissionDocxBytes(exported, {
+          bookTitle: state.lastBookReport?.suggestedLedger?.projectTitle || "",
+        });
+        triggerLocalDownload(
+          `inkbone-${spec.id}-submission.docx`,
+          docxBytes,
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+        const notice = el("bookNotice");
+        notice.style.display = "block";
+        notice.className = exported.submissionReady ? "status-banner ok" : "status-banner warn";
+        notice.textContent = interpolate(msgs.bookExportDocxReady || "DOCX {count}", {
+          platform: spec.title,
+          count: exported.chapterCount,
+          han: exported.totalHan,
+          status: formatSubmissionBadge(exported),
+        });
+      });
+    }
     loadDemoBook();
   } catch (err) {
     const banner = el("loadErrorBanner");

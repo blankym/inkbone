@@ -36,6 +36,8 @@ import {
   runDegenerationChecks,
   checkOutlineCopy,
   checkCharCountClaims,
+  checkCalendarSpanContradictions,
+  checkGoldenOpeningPacing,
 } from "./rule-engine.mjs";
 
 // 统计命中列表里指定 family 的总次数（用于跨规则家族联合密度升级）
@@ -671,6 +673,24 @@ export function auditChapterText(rawContent, options = {}) {
           "Character is marked deceased/exited in earlier chapters; verify this is an explicit flashback or fix continuity.",
       });
     }
+    if (boundaryReport.unresolvedProps && boundaryReport.unresolvedProps.length > 0) {
+      violations.push({
+        code: "UNRESOLVED_TACTICAL_PROP",
+        count: boundaryReport.unresolvedProps.length,
+        hits: boundaryReport.unresolvedProps,
+        remedy:
+          "Resolve or mention the planted short-term tactical prop by its deadline chapter, or mark it paid_off/abandoned in ledger.",
+      });
+    }
+    if (boundaryReport.worldRuleHits && boundaryReport.worldRuleHits.length > 0) {
+      violations.push({
+        code: "WORLD_RULE_VIOLATION",
+        count: boundaryReport.worldRuleHits.length,
+        hits: boundaryReport.worldRuleHits,
+        remedy:
+          "Prose violates an immutableWorldRules forbiddenPattern in ledger.json; align with world-building constraints.",
+      });
+    }
   } else if (
     options.previousChapterText &&
     options.previousChapterText.trim().length > 0
@@ -723,6 +743,34 @@ export function auditChapterText(rawContent, options = {}) {
       remedy:
         "Align stated character count with the actual characters inside the adjacent quotation.",
     });
+  }
+
+  // 11. 校验同章历法日期跨度与“半个月”宣称是否自相矛盾
+  const calendarHits = disabled.has("calendar_span_contradiction")
+    ? []
+    : checkCalendarSpanContradictions(rawContent, lingConfig);
+  if (calendarHits.length > 0) {
+    violations.push({
+      code: "CALENDAR_SPAN_CONTRADICTION",
+      count: calendarHits.length,
+      hits: calendarHits,
+      remedy:
+        "Reconcile stated lunar month/day span with the half-month duration claim in the same chapter.",
+    });
+  }
+
+  // 12. 黄金三章首屏留存专项门禁（--golden-three 开启时检查首屏前 380 字是否有对白或突发冲突）
+  let goldenOpeningReport = null;
+  if (options.goldenThree && !disabled.has("golden_opening_slow_start")) {
+    goldenOpeningReport = checkGoldenOpeningPacing(rawContent, lingConfig);
+    if (goldenOpeningReport && goldenOpeningReport.slowStart) {
+      violations.push({
+        code: "GOLDEN_OPENING_SLOW_START",
+        details: goldenOpeningReport,
+        remedy:
+          "Front-load dialogue, unexpected action, or anomalous evidence within the first 380 Han characters for Golden-Three retention.",
+      });
+    }
   }
 
   // 汇总需要局部动刀的精确行号手术单（供 Stage 4 qu-ai-wei 靶向手术刀消费）
@@ -865,6 +913,38 @@ export function auditChapterText(rawContent, options = {}) {
       { layer: "project", level: "advisory", review: "semantic" }
     )
   );
+  (boundaryReport?.unresolvedProps || []).forEach((p) =>
+    registerLineIssue(
+      1,
+      "unresolved_tactical_prop",
+      `${p.anchorTerm} (planted ch${p.plantedChapter ?? "?"}, mustResolveBy ch${p.mustResolveByChapter})`,
+      { layer: "project", level: "advisory", review: "semantic" }
+    )
+  );
+  (boundaryReport?.worldRuleHits || []).forEach((h) =>
+    registerLineIssue(
+      h.line,
+      "world_rule_violation",
+      `${h.id}: ${h.matched} (${h.rule})`,
+      { layer: "project", level: "advisory", review: "semantic" }
+    )
+  );
+  calendarHits.forEach((h) =>
+    registerLineIssue(
+      h.line,
+      "calendar_span_contradiction",
+      `${h.matched} (~${h.actualSpanDays}d vs ~${h.claimedDays}d)`,
+      { layer: "universal", level: "advisory", review: "semantic" }
+    )
+  );
+  if (goldenOpeningReport && goldenOpeningReport.slowStart) {
+    registerLineIssue(
+      goldenOpeningReport.line || 1,
+      "golden_opening_slow_start",
+      `first ${goldenOpeningReport.windowHan} Han lacks dialogue (first dialogue at ${goldenOpeningReport.firstDialogueAtHan} Han)`,
+      { layer: "universal", level: "advisory", review: "semantic" }
+    );
+  }
 
   const surgeryTargets = Array.from(surgeryLineMap.entries())
     .sort((a, b) => a[0] - b[0])

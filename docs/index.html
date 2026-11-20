@@ -349,7 +349,8 @@
       border-right: 1px solid #f0ece3;
       user-select: none;
     }
-    .aline-text { padding: 7px 10px; white-space: pre-wrap; word-break: break-word; }
+    .aline-text { padding: 7px 10px; white-space: pre-wrap; word-break: break-word; outline: none; }
+    .aline-text.editing { background: #fffdf7; box-shadow: inset 0 0 0 2px var(--accent); }
     .aline.sev-error { background: #fdf0ee; }
     .aline.sev-error .aline-num { background: #fbe2de; color: var(--accent); font-weight: 700; }
     .aline.sev-warning { background: #fef9ee; }
@@ -519,6 +520,7 @@
         <div class="actions-row">
           <div class="checks-inline">
             <label><input id="skipLengthCheck" type="checkbox" checked /> 跳过单章字数区间门禁</label>
+            <label><input id="goldenThreeCheck" type="checkbox" /> 黄金三章首屏留存门禁（--golden-three）</label>
             <label><input id="strictModeCheck" type="checkbox" /> 严格模式（--strict）</label>
           </div>
           <div class="btns-inline">
@@ -542,7 +544,7 @@
       <div class="split-grid">
         <div class="card">
           <h3 class="pane-title">
-            <span>逐行原文对照（词级高亮）</span>
+            <span>逐行原文对照（词级高亮 · 双击任意行就地修改即刻消警）</span>
             <span class="btns-inline">
               <span id="variantDetectedBadge" class="badge badge-info"></span>
               <span id="lineStatsHint" class="badge badge-muted"></span>
@@ -652,10 +654,12 @@
             <select id="bookPlatformSelect"></select>
           </label>
           <div class="field" style="justify-content:flex-end;">
-            <span>一键导出产物</span>
+            <span>一键导出产物（纯本地生成）</span>
             <div class="btns-inline">
               <button id="downloadLedgerBtn" class="btn-secondary" type="button">下载 ledger.json</button>
-              <button id="exportBookBtn" class="btn-primary" type="button">导出平台纯净版 .txt</button>
+              <button id="exportBookBtn" class="btn-secondary" type="button">导出纯净 .txt</button>
+              <button id="exportZipBtn" class="btn-secondary" type="button">打包分章 .zip</button>
+              <button id="exportDocxBtn" class="btn-primary" type="button">导出内投 Word (.docx)</button>
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@ import { compileBoundaryPacket } from "./boundary-compiler.mjs";
 import { diagnoseProject } from "./doctor.mjs";
 import { normalizeProseText, normalizeFiles } from "./normalizer.mjs";
 import { validateEvidenceReview } from "./evidence-validator.mjs";
-import { validateLedger, applyChapterSettlement } from "./ledger-manager.mjs";
+import { validateLedger, applyChapterSettlement, applyBatchSettlement } from "./ledger-manager.mjs";
 import { formatAuditMarkdown, formatDoctorMarkdown } from "./formatter.mjs";
 import { analyzeStyleProfile, formatStyleProfileMarkdown } from "./style-profiler.mjs";
 import { formatChapterForPlatform, exportChapters } from "./exporter.mjs";
@@ -184,6 +184,7 @@ export const MCP_TOOLS = [
           description: "Optional character names for subject continuity check",
         },
         skipLength: { type: "boolean", description: "Skip chapter word-count gate" },
+        goldenThree: { type: "boolean", description: "Enable Golden-Three opening retention pacing check" },
         strict: { type: "boolean", description: "Fail on warnings/info too" },
         noProject: { type: "boolean", description: "Ignore upward novel.json discovery" },
         format: { type: "string", enum: ["json", "md"], description: "Output format (default md)" },
@@ -304,6 +305,10 @@ export const MCP_TOOLS = [
         indent: { type: "boolean", description: "Apply full-width two-space paragraph indentation" },
         outDir: { type: "string", description: "Optional output directory for per-chapter .txt files" },
         mergeOut: { type: "string", description: "Optional output file for merged volume .txt" },
+        docxOut: { type: "string", description: "Optional output file for submission .docx" },
+        zipOut: { type: "string", description: "Optional output file for bundled .zip" },
+        outlinePath: { type: "string", description: "Optional outline markdown path to prepend in .docx" },
+        bookTitle: { type: "string", description: "Optional book title heading for .docx" },
         checkOnly: { type: "boolean", description: "Dry-run length and formatting check without writing files" },
       },
     },
@@ -391,6 +396,7 @@ function executeToolCall(name, rawArgs = {}) {
       previousChapterText: prevText,
       outlineText,
       skipLengthGate: Boolean(args.skipLength),
+      goldenThree: Boolean(args.goldenThree),
       strict: Boolean(args.strict),
     });
     const outText =
@@ -515,16 +521,24 @@ function executeToolCall(name, rawArgs = {}) {
     if (!patch) {
       throw new Error("Provide either patch object or patchPath for inkbone_settle.");
     }
-    const settled = applyChapterSettlement(ledger, patch);
+    const isBatch = Array.isArray(patch) || Array.isArray(patch?.patches);
+    const settled = isBatch
+      ? applyBatchSettlement(ledger, patch)
+      : applyChapterSettlement(ledger, patch);
     const wroteFile = Boolean(ledgerPath && !args.dryRun);
     if (wroteFile) {
       fs.writeFileSync(ledgerPath, JSON.stringify(settled.ledger, null, 2) + "\n");
     }
+    const latestChap = isBatch
+      ? Math.max(...(settled.batchDiff.chapters || [0]))
+      : settled.diff.chapterNumber;
     const payload = {
       wroteFile,
       ledgerPath,
-      diff: settled.diff,
-      health: validateLedger(settled.ledger, { currentChapter: settled.diff.chapterNumber }),
+      ...(isBatch ? { batchDiff: settled.batchDiff } : { diff: settled.diff }),
+      health: validateLedger(settled.ledger, {
+        currentChapter: latestChap > 0 ? latestChap : undefined,
+      }),
     };
     return {
       content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
@@ -570,6 +584,10 @@ function executeToolCall(name, rawArgs = {}) {
         indent: args.indent,
         outDir: args.outDir,
         mergeOut: args.mergeOut,
+        docxOut: args.docxOut,
+        zipOut: args.zipOut,
+        outlinePath: args.outlinePath,
+        bookTitle: args.bookTitle,
         check: Boolean(args.checkOnly),
       });
       return {

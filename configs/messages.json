@@ -51,6 +51,10 @@
         "SUBJECT_AMBIGUITY": "省略主语导致动作归属歧义",
         "OPENING_PATTERN_STREAK": "连续多段同一种起头句式",
         "DECEASED_CHARACTER_APPEARANCE": "已阵亡/退场角色在非回忆段落中再次活跃出场",
+        "UNRESOLVED_TACTICAL_PROP": "短线战术道具/机关已达预定截止章仍未触发或回收",
+        "WORLD_RULE_VIOLATION": "违反全书世界观硬性铁律（immutableWorldRules）",
+        "CALENDAR_SPAN_CONTRADICTION": "同章历法日期跨度与宣称天数（如半个月）自相矛盾",
+        "GOLDEN_OPENING_SLOW_START": "黄金三章首屏冲突延迟（前 380 字缺乏对白或即时危机）",
         "WORD_COUNT_OUT_OF_RANGE": "章节总字数不在预设区间",
         "HIGH_LEXICAL_ENTROPY_MATTR": "词汇熵 MATTR-50 偏高（换词洁癖）",
         "EXCESSIVE_HAPAX_SYNONYM_CHURN": "一次性装饰词占比过高",
@@ -93,6 +97,10 @@
         "SUBJECT_AMBIGUITY": "上一句主语是其他角色而本句省略主语，请补出明确人名或代词以防动作张冠李戴。",
         "OPENING_PATTERN_STREAK": "打破连续 3 段相同的起头句式，交替使用环境声响、对手动作与人名起笔。",
         "DECEASED_CHARACTER_APPEARANCE": "该角色在台账中已标记阵亡或退场；若此处并非回忆/梦境或借尸还魂，请核对是否写串吃书。",
+        "UNRESOLVED_TACTICAL_PROP": "前文埋下的短线战术道具/机关已到达 mustResolveByChapter 截止章，请在本章兑现触发、回收销毁或在台账更新状态。",
+        "WORLD_RULE_VIOLATION": "正文中出现了违反 ledger.immutableWorldRules 硬门禁的描写（如低阶越境御剑），请对齐本书世界观设定。",
+        "CALENDAR_SPAN_CONTRADICTION": "核对本章前后出现的农历月日与“半个月/数日”天数跨度，消除时间账自相矛盾。",
+        "GOLDEN_OPENING_SLOW_START": "黄金三章首屏前 380 字宜直接切入反常物证、突发外部动作或对手戏对白，把静态背景与设定说明后移融入冲突中。",
         "WORD_COUNT_OUT_OF_RANGE": "调整场景推进节奏，使章节有效汉字数落在目标区间内。",
         "HIGH_LEXICAL_ENTROPY_MATTR": "减少刻意轮换华丽近义词，回到平实准确的日常动词。",
         "EXCESSIVE_HAPAX_SYNONYM_CHURN": "减少一次性装饰性复合词堆砌，保留干净直白的动作表达。",
@@ -121,7 +129,9 @@
         "INVALID_REVEAL_CHAPTER": "知识台账揭露章早于首次出场章（revealChapter < firstChapter）",
         "EMPTY_CHARACTER_NAMES": "角色名单 characterNames 为空（主语连续性检测默认不会触发）",
         "OVERDUE_FORESHADOWING": "存在超期仍未回收的活跃伏笔",
-        "MISSING_PROTAGONIST": "缺少主角信息（protagonist）"
+        "MISSING_PROTAGONIST": "缺少主角信息（protagonist）",
+        "RESOURCE_LEDGER_MISMATCH": "资源台账跨章余额断档或单章增减算术不一致",
+        "UNRESOLVED_TACTICAL_PROP": "短线战术道具已过 mustResolveByChapter 截止章仍未回收"
       },
       "reportStrings": {
         "doctorTitle": "# InkBone（墨骨）全书体检报告",
@@ -228,7 +238,9 @@
         "INVALID_REVEAL_CHAPTER": "knowledgeLedger revealChapter is earlier than firstChapter",
         "EMPTY_CHARACTER_NAMES": "characterNames is empty (subject continuity check is inactive)",
         "OVERDUE_FORESHADOWING": "Active foreshadowing items overdue for payoff",
-        "MISSING_PROTAGONIST": "Missing protagonist metadata"
+        "MISSING_PROTAGONIST": "Missing protagonist metadata",
+        "RESOURCE_LEDGER_MISMATCH": "Resource ledger arithmetic or cross-chapter balance mismatch",
+        "UNRESOLVED_TACTICAL_PROP": "Short-term tactical prop passed mustResolveByChapter without resolution"
       },
       "reportStrings": {
         "doctorTitle": "# InkBone Doctor Report",

@@ -55,10 +55,20 @@ import {
   detectScriptVariant,
   loadTraditionalConfig,
   checkDeceasedCharacterAppearances,
+  checkUnresolvedTacticalProps,
+  checkWorldRuleViolations,
+  checkCalendarSpanContradictions,
+  checkGoldenOpeningPacing,
+  applyBatchSettlement,
+  buildLedgerBackfillPrompts,
+  buildStoreZipBuffer,
+  buildSubmissionDocxBytes,
 } from "../src/index.mjs";
 import {
   buildEditorDiagnostics,
   computeQuickFixProposal,
+  computeEditorWordCountStatus,
+  lookupCharacterHoverCard,
 } from "../editors/vscode-inkbone/diagnostics-core.mjs";
 import { execFileSync } from "node:child_process";
 
@@ -2019,4 +2029,180 @@ test("VS Code diagnostics-core locates spans accurately and proposes normalize &
   const normFix = computeQuickFixProposal(f.vscodeSample, starDiag);
   assert.equal(normFix.kind, "replace_document");
   assert.equal(normFix.newText.includes("**"), false);
+});
+
+// 1. 短线战术道具追踪：到达 mustResolveByChapter 未在正文出现且未结清时触发 UNRESOLVED_TACTICAL_PROP
+test("short-term tactical prop tracker flags unresolved deadline props in chapter audit and ledger validation", () => {
+  const f = fixtures.v21Features;
+  const unresolved = checkUnresolvedTacticalProps(f.tacticalMissingText, f.tacticalLedger, 3);
+  assert.equal(unresolved.length, 2);
+
+  const auditedBad = auditChapterText(f.tacticalMissingText, {
+    skipLengthGate: true,
+    ledger: f.tacticalLedger,
+    chapterNumber: 3,
+  });
+  assert.ok(auditedBad.violations.some((v) => v.code === "UNRESOLVED_TACTICAL_PROP" && v.severity === "warning"));
+  assert.ok(auditedBad.surgeryTargets.some((t) => t.issues.some((i) => i.tag === "unresolved_tactical_prop")));
+
+  const resolved = checkUnresolvedTacticalProps(f.tacticalResolvedText, f.tacticalLedger, 3);
+  assert.equal(resolved.length, 0);
+
+  const ledgerCheck = validateLedger(f.tacticalLedger);
+  assert.ok(ledgerCheck.issues.some((i) => i.code === "UNRESOLVED_TACTICAL_PROP"));
+});
+
+// 2. 数值资源流水账与章内农历跨度自相矛盾检测
+test("resource ledger catches arithmetic and continuity mismatches and calendar guard catches lunar span contradictions", () => {
+  const f = fixtures.v21Features;
+  const badCheck = validateLedger(f.resourceLedgerBad);
+  const resIssues = badCheck.issues.filter((i) => i.code === "RESOURCE_LEDGER_MISMATCH");
+  assert.equal(resIssues.length, 1);
+  assert.equal(resIssues[0].mismatches.length, 2);
+
+  let ledger = { projectTitle: "test", chapters: [] };
+  const s1 = applyChapterSettlement(ledger, f.resourcePatchCh1);
+  ledger = s1.ledger;
+  const s2 = applyChapterSettlement(ledger, f.resourcePatchCh2);
+  ledger = s2.ledger;
+  assert.equal(ledger.resourceLedger[f.resourceName].balance, 7);
+  const cleanCheck = validateLedger(ledger);
+  assert.equal(cleanCheck.issues.filter((i) => i.code === "RESOURCE_LEDGER_MISMATCH").length, 0);
+
+  const calBad = checkCalendarSpanContradictions(f.calendarBadText);
+  assert.equal(calBad.length, 1);
+  assert.equal(calBad[0].actualSpanDays, 38);
+
+  const calAudit = auditChapterText(f.calendarBadText, { skipLengthGate: true });
+  assert.ok(calAudit.violations.some((v) => v.code === "CALENDAR_SPAN_CONTRADICTION"));
+
+  const calClean = checkCalendarSpanContradictions(f.calendarCleanText);
+  assert.equal(calClean.length, 0);
+});
+
+// 3. 可执行世界观铁律门禁：命中 forbiddenPattern 报警，命中 exemptTerms 自动豁免
+test("executable world-rule invariants flag forbiddenPattern within activeChapters and honor exemptTerms", () => {
+  const f = fixtures.v21Features;
+  const hits = checkWorldRuleViolations(f.worldRuleBadText, f.worldRuleLedger, 3);
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].id, "rule-no-divine-sense");
+
+  const audited = auditChapterText(f.worldRuleBadText, {
+    skipLengthGate: true,
+    ledger: f.worldRuleLedger,
+    chapterNumber: 3,
+  });
+  assert.ok(audited.violations.some((v) => v.code === "WORLD_RULE_VIOLATION" && v.severity === "warning"));
+  assert.ok(audited.surgeryTargets.some((t) => t.issues.some((i) => i.tag === "world_rule_violation")));
+
+  const exemptHits = checkWorldRuleViolations(f.worldRuleExemptText, f.worldRuleLedger, 3);
+  assert.equal(exemptHits.length, 0);
+
+  const outOfRangeHits = checkWorldRuleViolations(f.worldRuleBadText, f.worldRuleLedger, 15);
+  assert.equal(outOfRangeHits.length, 0);
+});
+
+// 4. 黄金三章开篇留存门禁（--golden-three / GOLDEN_OPENING_SLOW_START）
+test("golden-three opening retention gate flags slow static openings and passes high-tension openings", () => {
+  const f = fixtures.v21Features;
+  const slowRes = checkGoldenOpeningPacing(f.goldenSlowText);
+  assert.ok(slowRes);
+  assert.equal(slowRes.slowStart, true);
+
+  const auditedSlow = auditChapterText(f.goldenSlowText, {
+    skipLengthGate: true,
+    goldenThree: true,
+  });
+  assert.ok(auditedSlow.violations.some((v) => v.code === "GOLDEN_OPENING_SLOW_START"));
+
+  const fastRes = checkGoldenOpeningPacing(f.goldenFastText);
+  assert.ok(fastRes);
+  assert.equal(fastRes.slowStart, false);
+});
+
+// 5. 零依赖内投 Word (.docx) 与分章 .zip 打包导出 + 平台内投达标字数校验
+test("zero-dependency Submission .docx and .zip exporter produces valid PK archives and checks submissionMinHan", () => {
+  const f = fixtures.v20Features;
+  const zipBytes = buildStoreZipBuffer([
+    { name: "hello.txt", data: "inkbone-zip-test" },
+  ]);
+  assert.equal(zipBytes[0], 0x50);
+  assert.equal(zipBytes[1], 0x4b);
+
+  const docxBytes = buildSubmissionDocxBytes(
+    [{ chapterNumber: 1, title: f.exportExpectedTitle, output: f.exportExpectedIndentPrefix }],
+    { title: "TestBook", outlineText: "# Outline\n\n- Beat 1" }
+  );
+  assert.equal(docxBytes[0], 0x50);
+  assert.equal(docxBytes[1], 0x4b);
+  assert.ok(docxBytes.length > 1500);
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "inkbone-docx-"));
+  try {
+    const chDir = path.join(tmp, "chapters");
+    const docxPath = path.join(tmp, "submission.docx");
+    const zipPath = path.join(tmp, "chapters.zip");
+    fs.mkdirSync(chDir);
+    fs.writeFileSync(path.join(chDir, "ch01.md"), f.exportSampleMarkdown);
+
+    const exp = exportChapters([chDir], {
+      platform: "qimao",
+      docxOut: docxPath,
+      zipOut: zipPath,
+      title: "TestNovel",
+    });
+    assert.equal(exp.submissionMinHan, 20000);
+    assert.equal(exp.submissionReady, false);
+    assert.ok(exp.submissionShortfallHan > 19000);
+    assert.equal(fs.existsSync(docxPath), true);
+    assert.equal(fs.existsSync(zipPath), true);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// 6. 存量旧书批量回填台账：applyBatchSettlement 与 buildLedgerBackfillPrompts
+test("applyBatchSettlement merges ordered chapter patches and buildLedgerBackfillPrompts groups missing chapters", () => {
+  const f = fixtures.v21Features;
+  const batchRes = applyBatchSettlement(
+    { projectTitle: "BatchBook", chapters: [] },
+    [f.resourcePatchCh2, f.resourcePatchCh1]
+  );
+  assert.equal(batchRes.batchDiff.settledCount, 2);
+  assert.deepEqual(batchRes.batchDiff.chapters, [1, 2]);
+  assert.equal(batchRes.ledger.resourceLedger[f.resourceName].balance, 7);
+
+  const prompts = buildLedgerBackfillPrompts(
+    [
+      { chapterNumber: 1, title: "Ch1", text: f.tacticalMissingText },
+      { chapterNumber: 2, title: "Ch2", text: f.tacticalResolvedText },
+      { chapterNumber: 3, title: "Ch3", text: f.worldRuleExemptText },
+    ],
+    { chapters: [{ chapterNumber: 1, title: "Ch1", coreSummary: "Already settled" }] },
+    { batchSize: 2 }
+  );
+  assert.equal(prompts.totalMissingChapters, 2);
+  assert.equal(prompts.batchCount, 1);
+  assert.deepEqual(prompts.batches[0].chapters, [2, 3]);
+  assert.ok(prompts.batches[0].prompt.includes("resourceDeltas"));
+});
+
+// 7. VS Code 扩展状态栏字数差额与角色台账悬停卡片（Hover Card）
+test("VS Code diagnostics-core computes platform word-count delta and renders character ledger hover cards", () => {
+  const f = fixtures.v21Features;
+  const wcStatus = computeEditorWordCountStatus(1200, "qimao");
+  assert.equal(wcStatus.platform, "qimao");
+  assert.equal(wcStatus.totalHan, 1200);
+  assert.equal(wcStatus.inRange, false);
+  assert.equal(wcStatus.shortfallHan, 800);
+
+  const activeCard = lookupCharacterHoverCard(f.hoverTargetActive, f.hoverLedger);
+  assert.ok(activeCard);
+  assert.equal(activeCard.isDeceased, false);
+  assert.ok(activeCard.markdown.includes(f.hoverTargetActive));
+
+  const deadCard = lookupCharacterHoverCard(f.hoverTargetDeceased, f.hoverLedger);
+  assert.ok(deadCard);
+  assert.equal(deadCard.isDeceased, true);
+  assert.equal(deadCard.afterChapter, 2);
 });

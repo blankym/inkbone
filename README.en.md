@@ -9,7 +9,7 @@
 [![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[中文](README.md) · **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** · **[npm](https://www.npmjs.com/package/inkbone)** · **[Discussions](https://github.com/blankym/inkbone/discussions)** · 9 genre packs · Simplified + Traditional Chinese · Full MCP Server · VS Code Extension · 66 tests
+[中文](README.md) · **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** · **[npm](https://www.npmjs.com/package/inkbone)** · **[Discussions](https://github.com/blankym/inkbone/discussions)** · 9 genre packs · Simplified + Traditional Chinese · Zero-Dep `.docx` / `.zip` Export · Full MCP Server · VS Code Extension · 73 tests
 
 > **Language note:** Prompts, rule patterns, and CLI findings target **Chinese long-form fiction** (both Simplified and Traditional Chinese). This README documents the architecture and workflow in English.
 
@@ -19,10 +19,10 @@
 
 | How you write | Fastest way to start | What you get immediately |
 | :--- | :--- | :--- |
-| **Web LLMs (DeepSeek / Claude / Gemini)**<br/>*(zero setup)* | Open **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** | Drop a chapter or an entire `chapters/` folder (**100% client-side, zero uploads**) → word-level highlights, cross-chapter echo ranking, **one-click targeted rewrite prompt**, and clean `.txt` export for Qidian / Fanqie / Qimao / JJWXC |
+| **Web LLMs (DeepSeek / Claude / Gemini)**<br/>*(zero setup)* | Open **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** | Drop a chapter or an entire `chapters/` folder (**100% client-side, zero uploads**) → word-level highlights with **double-click inline editing**, cross-chapter echo ranking, **one-click targeted rewrite prompt**, and clean `.txt` / **submission `.docx`** / **bundled `.zip`** export |
 | **Claude Code / Codex / Antigravity / OpenCode** | `npx skills add blankym/inkbone` | 8-stage fiction workflow + spoiler-safe living ledger + local linting + 9 genre playbooks |
 | **Claude Desktop / Cursor / Windsurf (MCP)** | Add `npx -y inkbone mcp` | One config loads **9 Tools + 8 Prompts + 11 Resources** — no separate skill setup needed |
-| **VS Code / Cursor & Terminal CLI** | `npx inkbone audit ch01.md` or install [VS Code Extension](editors/vscode-inkbone/) | Clone-free CLI checkups, copyright-safe style profiling, and live squiggly diagnostics (ESLint for Chinese fiction) |
+| **VS Code / Cursor & Terminal CLI** | `npx inkbone audit ch01.md` or install [VS Code Extension](editors/vscode-inkbone/) | Clone-free CLI checkups, copyright-safe style profiling, live squiggly diagnostics, **character ledger Hover cards**, and **status-bar platform word-count delta** |
 
 ---
 
@@ -219,15 +219,17 @@ Four everyday workflows (replace `npx inkbone` with `inkbone` if installed globa
    npx inkbone settle --ledger ./my-novel/ledger.json --patch ./my-novel/ch04-settlement.json
    npx inkbone check-ledger ./my-novel/ledger.json --current 4
    ```
-3. **Incremental long-form checkup (`--chapters` / `--changed`)**
+3. **Batch ledger backfill & incremental long-form checkup (`--chapters` / `--changed`)**
    ```bash
    npx inkbone import-ledger ./my-novel/chapters --auto-characters --out ./my-novel/ledger.json --title "BookTitle"
+   npx inkbone backfill-prompt ./my-novel/chapters --ledger ./my-novel/ledger.json --batch-size 5 --limit 1
+   npx inkbone settle --ledger ./my-novel/ledger.json --patch ./my-novel/batch-settlement.json --batch
    npx inkbone doctor ./my-novel/chapters --chapters 40-45 --lang en
    npx inkbone doctor ./my-novel/chapters --changed --lang en
    ```
-4. **Export clean chapters for web-fiction platforms (`qidian`, `fanqie`, `qimao`, `jjwxc`)**
+4. **Export clean chapters, editorial submission `.docx`, and `.zip` bundles (`qidian`, `fanqie`, `qimao`, `jjwxc`)**
    ```bash
-   npx inkbone export ./my-novel/chapters --platform qidian --out ./dist/qidian --merge-out ./dist/vol1.txt
+   npx inkbone export ./my-novel/chapters --platform qimao --out ./dist/qimao --merge-out ./dist/vol1.txt --docx-out ./dist/submission.docx --zip-out ./dist/chapters.zip --outline ./my-novel/outline.md --title "BookTitle"
    ```
 
 ---
@@ -252,8 +254,9 @@ The `prompts/` directory defines eight stages (`00`–`07`), with CLI/MCP enforc
 
 | Area | Examples | Default level |
 | :--- | :--- | :--- |
-| Ledger & character state | Missing required anchors, premature spoilers before `revealChapter`, deprecated terms, opening echoing the prior ending; **deceased/departed characters acting or speaking outside flashbacks** | `error` / `warning` |
-| Format & length claims | Markdown asterisks, inline ledger notes like `(余13滴)`, mismatched quote-length claims | `error` (fails check) |
+| Ledger, tactical props & world rules | Missing required anchors, premature spoilers before `revealChapter`, deprecated terms, opening echoing the prior ending; **deceased/departed characters acting or speaking outside flashbacks (`DECEASED_CHARACTER_APPEARANCE`)**; **short-term tactical props past `mustResolveByChapter` (`UNRESOLVED_TACTICAL_PROP`)**; **executable world-rule invariants (`WORLD_RULE_VIOLATION`)**; **numeric resource ledger balance continuity (`RESOURCE_LEDGER_MISMATCH`)** | `error` / `warning` |
+| Format, length & calendar claims | Markdown asterisks, inline ledger notes like `(余13滴)`, mismatched quote-length claims; **intra-chapter lunar calendar span contradicting "half a month" claims (`CALENDAR_SPAN_CONTRADICTION`)** | `error` / `warning` |
+| Golden-three opening retention | With `--golden-three`, flags slow openings (first 380 Han chars) that lack spoken dialogue and immediate conflict/action signals (`GOLDEN_OPENING_SLOW_START`) | `warning` |
 | Model degeneration | Verbatim line/sentence loops, truncated endings, garbled characters, AI refusal/meta-leakage | `error` / `warning` |
 | Subject continuity | Subjectless action right after another character's action; three consecutive paragraphs opening the same way | `warning` |
 | Register & script variant | Modern slang in period settings, invalid traditional time counts, archaic phrasing in urban fiction; **auto Simplified/Traditional Chinese & HK/TW web-novel rules** | `warning` (escalates on high density) |
@@ -284,7 +287,7 @@ Beyond deterministic linting, InkBone bundles practical plotting and editing gui
 
 ---
 
-## Genre Packs & 25-Command Reference
+## Genre Packs & 26-Command Reference
 
 <details>
 <summary>Expand 9 built-in genre packs (run <code>npx inkbone genres</code> to inspect)</summary>
@@ -304,13 +307,13 @@ Beyond deterministic linting, InkBone bundles practical plotting and editing gui
 | Group | Command | Purpose |
 | :--- | :--- | :--- |
 | Living ledger | `genres` / `init` | List all 9 genre packs / scaffold `novel.json` and `ledger.json` |
-| | `import-ledger` | Scan existing chapters, heuristically mine candidate character names, and merge ledger non-destructively |
+| | `import-ledger` / `backfill-prompt` | Scan existing chapters, mine candidate character names & merge ledger / emit batched `settle --batch` prompts for unsettled chapters |
 | | `packet` | Compile spoiler-safe context with un-revealed `fullTruth` redacted and optional snapshot pruning |
-| | `check-ledger` / `settle` | Validate ledger health & overdue setups / merge post-chapter settlement JSON cleanly |
+| | `check-ledger` / `settle` | Validate ledger health, tactical props & resource balances / merge single or `--batch` settlement JSON cleanly |
 | Format & QA | `normalize` / `check-outline` | Strip asterisks & normalize dashes / verify Stage 1 beat outlines |
-| | `audit` / `doctor` | Single-chapter audit (Simplified/Traditional + deceased guard) / full or incremental checkup (`--chapters` / `--changed`) |
+| | `audit` / `doctor` | Single-chapter audit (Simplified/Traditional + deceased/world-rule/golden-three guards) / full or incremental checkup (`--chapters` / `--changed`) |
 | | `rewrite-prompt` | Audit a chapter and emit a copy-ready targeted rewrite prompt for web LLMs |
-| Style & publish | `style-profile` / `export` | Copyright-safe statistical style profiler / clean `.txt` export for `qidian`, `fanqie`, `qimao`, `jjwxc` |
+| Style & publish | `style-profile` / `export` | Copyright-safe statistical style profiler / clean `.txt`, **editorial `.docx`**, and **`.zip`** export for `qidian`, `fanqie`, `qimao`, `jjwxc` |
 | Protocol | `mcp` | Start the zero-dependency stdio MCP server (9 tools, 8 prompts, 11 resources) |
 
 <details>
@@ -332,28 +335,28 @@ Beyond deterministic linting, InkBone bundles practical plotting and editing gui
 
 </details>
 
-Run `npx inkbone --help` for daily commands, or `npx inkbone --help-all` for all 25 commands.
+Run `npx inkbone --help` for daily commands, or `npx inkbone --help-all` for all 26 commands.
 
 ---
 
 ## Layout & Development
 
 ```text
-bin/  src/         CLI, zero-dependency core engine (style profiler, exporter, Browser Doctor) & full MCP server
+bin/  src/         CLI, zero-dependency core engine (style profiler, DOCX/ZIP exporter, Browser Doctor) & full MCP server
 configs/           Universal rules, 9 genre packs, Traditional Chinese layer, 4 platform presets, gates & zh/en catalog
-docs/              Browser-only static playground & multi-chapter Browser Doctor
-editors/           Standalone zero-dependency VS Code / Cursor real-time linter extension
+docs/              Browser-only static playground (double-click inline editing) & Browser Doctor (.docx / .zip export)
+editors/           Standalone zero-dependency VS Code / Cursor real-time linter + ledger Hover cards & word-count status bar
 examples/          MCP client config & Claude Code PostToolUse Hook templates
 prompts/           8 staged drafting, review & settlement prompts (00–07)
 resources/         Before/after examples, micro-techniques, 9 genre playbooks, eval guide
 benchmarks/        4 original eval seeds, public eval pairs & reproducible comparison report (no private drafts)
 evals/             Runtime-agnostic skill trigger eval set
 skills/inkbone/    Generated self-contained skill package (do not edit directly)
-tests/             66 unit tests
+tests/             73 unit tests
 ```
 
 ```bash
-npm test               # Run all 66 tests (zero-Han-literal, full MCP, zh-hant, VS Code core, docs & skill sync)
+npm test               # Run all 73 tests (zero-Han-literal, full MCP, zh-hant, DOCX/ZIP export, VS Code core, docs & skill sync)
 npm run build:skill    # Repackage skills/inkbone after editing sources/configs/prompts/README
 npm run check:skill    # Verify skills/inkbone matches sources (enforced in CI)
 npm run build:docs     # Sync browser playground docs/vendor after editing src/core or configs

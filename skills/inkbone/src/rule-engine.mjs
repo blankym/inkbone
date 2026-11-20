@@ -17,6 +17,8 @@ import {
   parseChineseOrArabicNumber,
   checkCharCountClaims as checkCharCountClaimsCore,
   checkOutlineContract as checkOutlineContractCore,
+  checkCalendarSpanContradictions as checkCalendarSpanContradictionsCore,
+  checkGoldenOpeningPacing as checkGoldenOpeningPacingCore,
 } from "./core/rule-engine.mjs";
 
 export {
@@ -70,4 +72,20 @@ export function checkOutlineContract(outlineText, options = {}) {
     ...options,
     lingConfig: options.lingConfig || loadLinguisticsConfig(),
   });
+}
+
+// 校验同章内的历法月日跨度是否与“半个月”宣称自相矛盾
+export function checkCalendarSpanContradictions(rawContent, customLingConfig = null) {
+  return checkCalendarSpanContradictionsCore(
+    rawContent,
+    customLingConfig || loadLinguisticsConfig()
+  );
+}
+
+// 校验黄金三章首屏是否存在无对白且无即时冲突的慢热开局
+export function checkGoldenOpeningPacing(rawContent, customLingConfig = null) {
+  return checkGoldenOpeningPacingCore(
+    rawContent,
+    customLingConfig || loadLinguisticsConfig()
+  );
 }

@@ -506,5 +506,123 @@
     ],
     "vscodeSample": "陆青摸着**铁牌**，忽然瞳孔骤缩。",
     "vscodeExpectedMatched": "瞳孔骤缩"
+  },
+  "v21Features": {
+    "tacticalLedger": {
+      "projectTitle": "短期道具追踪测试",
+      "protagonist": { "name": "陆青" },
+      "characterNames": ["陆青", "孙岳"],
+      "foreshadowing": [
+        {
+          "id": "fs-needle",
+          "description": "袖中藏了一根牛毛毒针",
+          "status": "open",
+          "plantedChapter": 2,
+          "mustResolveByChapter": 3,
+          "anchorTerm": "牛毛毒针"
+        }
+      ],
+      "tacticalProps": [
+        {
+          "id": "tp-talisman",
+          "description": "门框背面贴了预警纸符",
+          "status": "open",
+          "plantedChapter": 2,
+          "mustResolveByChapter": 3,
+          "anchorTerm": "预警纸符"
+        }
+      ],
+      "chapters": [
+        { "chapterNumber": 2, "title": "夜探", "coreSummary": "埋设短线道具", "requiredAnchors": [] },
+        { "chapterNumber": 3, "title": "对峙", "coreSummary": "正面交锋", "requiredAnchors": [] }
+      ]
+    },
+    "tacticalMissingText": "陆青推开门走进院子，孙岳站在台阶上冷眼看着他。",
+    "tacticalResolvedText": "陆青摸出袖里的牛毛毒针，顺手撕下门框背面的预警纸符。",
+    "resourceLedgerBad": {
+      "projectTitle": "资源流水校验测试",
+      "protagonist": { "name": "陆青" },
+      "characterNames": ["陆青"],
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "领饷",
+          "coreSummary": "领十块灵石",
+          "resourceDeltas": {
+            "下品灵石": { "before": 0, "delta": 10, "after": 10 }
+          }
+        },
+        {
+          "chapterNumber": 2,
+          "title": "买符",
+          "coreSummary": "期初与加减均算错",
+          "resourceDeltas": {
+            "下品灵石": { "before": 12, "delta": -4, "after": 6 }
+          }
+        }
+      ]
+    },
+    "resourcePatchCh1": {
+      "chapterNumber": 1,
+      "title": "领饷",
+      "coreSummary": "入账",
+      "resourceDeltas": {
+        "下品灵石": { "before": 0, "delta": 10, "after": 10 }
+      }
+    },
+    "resourcePatchCh2": {
+      "chapterNumber": 2,
+      "title": "买药",
+      "coreSummary": "出账",
+      "resourceDeltas": {
+        "下品灵石": { "before": 10, "delta": -3, "after": 7 }
+      }
+    },
+    "resourceName": "下品灵石",
+    "calendarBadText": "那老道死了半个月，从上月十五咽气算起，到今日九月廿三整整三十八天，尸身竟一点没腐。",
+    "calendarCleanText": "那老道从九月初八咽气算起，到今日九月廿三整整半个月，尸身竟一点没腐。",
+    "worldRuleLedger": {
+      "projectTitle": "世界观铁律测试",
+      "protagonist": { "name": "陆青" },
+      "immutableWorldRules": [
+        "凡人不可御剑",
+        {
+          "id": "rule-no-divine-sense",
+          "rule": "凝脉期前无神识外放",
+          "forbiddenPattern": "神识(?:扫过|外放|探出|席卷)",
+          "activeChapters": [1, 10],
+          "exemptTerms": ["神识玉简"]
+        }
+      ],
+      "chapters": [
+        { "chapterNumber": 3, "title": "静室", "coreSummary": "闭关", "requiredAnchors": [] }
+      ]
+    },
+    "worldRuleBadText": "陆青盘坐在石床上，神识扫过院外三丈之地，立刻察觉有人靠近。",
+    "worldRuleExemptText": "陆青盘坐在石床上，捏碎了师尊留下的神识玉简。",
+    "goldenSlowText": "青阳山脉绵延千里，云雾常年笼罩着陡峭的苍翠峰峦。山腰处的石阶上长满了厚厚的青苔，清晨的露珠顺着松针缓缓滑落，滴在斑驳的青石板上发出细微的声响。历代祖师留下的古老殿宇静静矗立在松林深处，飞檐斗拱之间悬挂着锈迹斑斑的铜铃，山风吹过也听不见半点回音。药园四周种满了耐寒的灵草，泥土里散发着潮湿的腐叶气味，一条清澈的溪流绕过竹篱笆流向山下。石亭里的石桌上摆着一只缺了口的粗瓷茶壶，茶水早已凉透，水面上漂浮着半片枯黄的竹叶。远处偶尔传来一两声不知名的山鸟啼鸣，把整座山谷衬托得愈发幽深寂静，仿佛千百年来从未有人打破过这里的宁静，只有山雾在林间慢慢聚散。山涧石缝里渗出的泉水汇聚成一汪浅潭，水面如镜，映出灰蒙蒙的天空与枯枝的倒影。石桥尽头的古松已经生长了数百年，树皮皲裂如龙鳞，盘根错节地扎进坚硬的岩层之中。微风拂过草叶，带起一阵淡淡的药草清香，整片山坡在晨光中显得格外静谧安详，连树影的晃动都慢得让人察觉不到时间的流逝。半山腰的云海翻涌不息，将山脚下的村落彻底遮蔽在白茫茫的雾气之下，放眼望去只见天地苍茫一片，唯有几株老梅在崖边静静吐露着冷冽的芬芳。",
+    "goldenFastText": "刀锋贴着陆青的喉咙停住，冰冷的血珠顺着刃口往下淌。\n\n“账册交出来，”黑衣人扣紧刀柄，低声喝道，“否则现在就送你下渠喂鱼！”\n\n陆青反手按住袖中的铁牌，往后退了半步：“账册早就在丑时送到内门执事堂了，你就算杀了我也拿不到半页纸。”\n\n黑衣人冷笑一声，手腕猛地往前一送，刀尖挑破了陆青肩头的粗布衣裳。陆青侧身撞翻身旁的木架，趁着药篓砸落扬起大片药粉，左脚狠狠踹在对方膝弯上，借力滚到了石门边。门外廊下传来急促的脚步声，孙岳提着油灯冲进院子，厉声喝道：“谁敢在东药园动刀！”黑衣人脸色微变，反手掷出一枚铁蒺藜逼退孙岳，翻身跃上东墙，转眼没入夜雨之中。陆青捂着渗血的左肩站起身，借着火光看清了地上的半截断刃，刃口上赫然刻着内门刑堂的火纹标记。孙岳低头看了一眼断刃，脸色瞬间沉了下来：“立刻把门闩死，今夜谁敲门都别开！这把刀是内门周执事贴身之物，他既然亲自派人来灭口，说明东渠底下的那具尸首已经瞒不住了，我们必须在天亮前把所有剩下的铁牌全部转移到后山废井里去。”\n\n陆青抓起墙角的麻绳与铁铲，迅速将散落在地上的药材残渣扫进竹筐，又用湿布擦净石板上的血迹：“后山废井那边还有两个巡夜弟子守着，我们走西侧的排污暗渠过去，半个时辰之内就能赶在寅时换班之前把箱子沉入井底。”",
+    "hoverLedger": {
+      "projectTitle": "悬停卡片测试",
+      "characterNames": ["陆青", "陈师兄"],
+      "characterSnapshots": {
+        "陆青": {
+          "name": "陆青",
+          "role": "外门收尸弟子",
+          "status": "active",
+          "location": "东药园",
+          "cultivation": "凡胎八重",
+          "notes": "持有铁牌"
+        },
+        "陈师兄": {
+          "name": "陈师兄",
+          "role": "前任管事",
+          "status": "deceased",
+          "deceasedChapter": 2
+        }
+      }
+    },
+    "hoverTargetActive": "陆青",
+    "hoverTargetDeceased": "陈师兄"
   }
 }

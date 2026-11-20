@@ -3,10 +3,17 @@ import { loadLinguisticsConfig } from "./config-loader.mjs";
 import {
   validateLedger,
   applyChapterSettlement,
+  applyBatchSettlement,
+  buildLedgerBackfillPrompts,
   extractCandidateCharacters as extractCandidateCharactersCore,
 } from "./core/ledger-manager.mjs";
 
-export { validateLedger, applyChapterSettlement };
+export {
+  validateLedger,
+  applyChapterSettlement,
+  applyBatchSettlement,
+  buildLedgerBackfillPrompts,
+};
 
 // 零依赖启发式挖掘存量章节中的高频角色名候选
 export function extractCandidateCharacters(texts, options = {}) {

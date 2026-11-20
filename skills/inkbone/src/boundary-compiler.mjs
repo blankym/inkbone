@@ -4,9 +4,15 @@ import {
   computeBoundaryEchoRatio as computeBoundaryEchoRatioCore,
   verifyChapterBoundaries as verifyChapterBoundariesCore,
   checkDeceasedCharacterAppearances as checkDeceasedCharacterAppearancesCore,
+  checkUnresolvedTacticalProps,
+  checkWorldRuleViolations,
 } from "./core/boundary-compiler.mjs";
 
-export { compileBoundaryPacket };
+export {
+  compileBoundaryPacket,
+  checkUnresolvedTacticalProps,
+  checkWorldRuleViolations,
+};
 
 // 检查已阵亡或退场角色是否在非回忆段落中再次活跃出场
 export function checkDeceasedCharacterAppearances(

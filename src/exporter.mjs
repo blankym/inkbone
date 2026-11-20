@@ -8,9 +8,11 @@ import {
   resolvePlatformConfig,
   formatChapterForPlatform as formatChapterForPlatformCore,
   exportChapterEntries as exportChapterEntriesCore,
+  buildStoreZipBuffer,
+  buildSubmissionDocxBytes,
 } from "./core/exporter.mjs";
 
-export { resolvePlatformConfig };
+export { resolvePlatformConfig, buildStoreZipBuffer, buildSubmissionDocxBytes };
 
 // 列出所有内置投稿平台预设
 export function listPlatforms(customPath = null) {
@@ -20,6 +22,7 @@ export function listPlatforms(customPath = null) {
     title: p.title,
     minHan: p.minHan,
     maxHan: p.maxHan,
+    submissionMinHan: p.submissionMinHan ?? 20000,
     defaultIndent: Boolean(p.defaultIndent),
   }));
 }
@@ -81,6 +84,36 @@ export function exportChapters(targetPaths, options = {}) {
       fs.writeFileSync(absMerge, result.mergedText, "utf8");
       writtenFiles.push(absMerge);
     }
+    if (options.docxOut) {
+      const absDocx = path.resolve(options.docxOut);
+      fs.mkdirSync(path.dirname(absDocx), { recursive: true });
+      const outlineText =
+        options.outlineText ||
+        (options.outlinePath && fs.existsSync(path.resolve(options.outlinePath))
+          ? fs.readFileSync(path.resolve(options.outlinePath), "utf8")
+          : "");
+      const docxBytes = buildSubmissionDocxBytes(result, {
+        bookTitle: options.bookTitle || "",
+        outlineText,
+      });
+      fs.writeFileSync(absDocx, docxBytes);
+      writtenFiles.push(absDocx);
+    }
+    if (options.zipOut) {
+      const absZip = path.resolve(options.zipOut);
+      fs.mkdirSync(path.dirname(absZip), { recursive: true });
+      const zipEntries = result.chapters.map((ch) => ({
+        name: ch.name.replace(/\.md$/iu, ".txt"),
+        data: ch.output,
+      }));
+      zipEntries.push({
+        name: `${result.platform}-merged.txt`,
+        data: result.mergedText,
+      });
+      const zipBytes = buildStoreZipBuffer(zipEntries);
+      fs.writeFileSync(absZip, zipBytes);
+      writtenFiles.push(absZip);
+    }
   }
 
   return {
@@ -89,6 +122,9 @@ export function exportChapters(targetPaths, options = {}) {
     chapterCount: result.chapterCount,
     totalHan: result.totalHan,
     outOfRangeCount: result.outOfRangeCount,
+    submissionMinHan: result.submissionMinHan,
+    submissionReady: result.submissionReady,
+    submissionShortfallHan: result.submissionShortfallHan,
     checkOnly: Boolean(options.check),
     writtenFiles,
     chapters: result.chapters.map((c) => ({

@@ -5,11 +5,17 @@
 ### 重大升级（完全向后兼容 v1.x CLI 与台账格式）
 - **MCP 全能力三件套（9 Tools + 8 Prompts + 11 Resources）**：`inkbone mcp` 在零第三方依赖的前提下补齐 `prompts/list`、`prompts/get`（传入 `genre` 自动拼附对应题材剧本卡）、`resources/list` 与 `resources/read`（9 份流派剧本卡 + 微技法 + 正反例对照），并新增 `inkbone_style_profile` 与 `inkbone_export` 工具
 - **零版权风险“安全拆书”引擎（`style-profile` + `customGates`）**：新增 `src/core/style-profiler.mjs` 与 `inkbone style-profile` 命令，基于样本纯统计区间自动匹配最接近预设并生成可直接写入 `novel.json` 的 `customGates`，绝不输出任何原句
-- **长篇硬状态守卫（阵亡/退场角色防诈尸）**：新增 `DECEASED_CHARACTER_APPEARANCE` 校验，支持从 `characterSnapshots[name].status` 或 `deceasedCharacters[]` 识别已退场角色，在后续章节非回忆/追忆段落中若作为活跃主语说话或行动则精准预警（回忆/梦境语境自动豁免）
-- **大长篇增量体检与 4 平台投稿导出**：`doctor` 新增 `--chapters <40-45>` 与 `--changed [git-ref]` 增量模式（自动保留前章用于跨章回声校验）；新增 `configs/platforms.json`、`src/core/exporter.mjs` 与 `inkbone export` 命令，一键清洗 Markdown 杂项并按起点、番茄、七猫、晋江习惯导出单章或整卷纯文本
+- **长篇硬状态守卫（阵亡/退场角色防诈尸 + 短线战术道具追踪 + 可执行世界观铁律 + 资源流水账与历法跨度守卫）**：
+  - `DECEASED_CHARACTER_APPEARANCE`：从 `characterSnapshots[name].status` 或 `deceasedCharacters[]` 识别已退场角色，在后续章节非回忆/追忆段落中若作为活跃主语说话或行动则精准预警；
+  - `UNRESOLVED_TACTICAL_PROP`：支持在 `foreshadowing` 或 `tacticalProps` 中标记 `mustResolveByChapter` 与 `anchorTerm`，到达截止章仍未出现且未结清时自动预警；
+  - `WORLD_RULE_VIOLATION`：`immutableWorldRules` 升级支持结构化规则对象 `{ id, rule, forbiddenPattern, activeChapters, exemptTerms }`，把世界观铁律编译为确定性代码门禁；
+  - `RESOURCE_LEDGER_MISMATCH` 与 `CALENDAR_SPAN_CONTRADICTION`：`settle` 与 `check-ledger` 支持 `resourceDeltas`（`{ before, delta, after }`）单章算术与跨章期初/期末余额守恒核验；审计引擎新增同章农历月日跨度与“半个月”宣称自相矛盾检测
+- **黄金三章首屏留存门禁（`--golden-three` / `GOLDEN_OPENING_SLOW_START`）**：开启后自动核查开篇前 380 汉字是否零对白且缺乏即时冲突动作信号，拦截慢热风景/背景铺垫开局
+- **大长篇增量体检、4 平台投稿导出与零依赖内投 `.docx` / `.zip` 打包**：`doctor` 新增 `--chapters <40-45>` 与 `--changed [git-ref]` 增量模式；`export` 新增 `--docx-out`（零依赖直出标准宋体小四、1.25 倍行距、首行缩进 2 字符、自动防双重缩进的 OOXML Word 内投文档，支持 `--outline` 拼合大纲）、`--zip-out` 分章压缩包与各平台内投达标字数（2万/1.5万字）自动核验
+- **存量旧书批量回填台账工作流（`backfill-prompt` + `settle --batch`）**：新增 `inkbone backfill-prompt` 按批次为未填摘要的存量章节生成结构化回填 Prompt，配合 `inkbone settle --batch` 一次无损合入多章结算数组
 - **繁体中文 / 港台网文规则层与自动识别**：新增 `configs/zh-traditional.json` 与 `--variant auto|zh-hans|zh-hant`，自动识别繁体文本并叠加繁体高频 AI 套话、港台跨语境用词、繁体历法刻数与直角引号（`「」`/`『』`）对话标点卫生检查
-- **浏览器整书多章体检台（Browser Doctor · Tab 4）**：新增 `src/core/browser-doctor.mjs` 与 Playground Tab 4，支持纯本地一次选择或拖入整个 `chapters/` 文件夹，按章号排序跑跨章回声体检、逐章字数与告警走势图、全书高频套话 Top 10 榜、一键下载含自动挖掘角色的 `ledger.json` 与一键导出平台纯净版 `.txt`
-- **VS Code / Cursor 实时波浪线扩展（中文小说 ESLint）**：新增零第三方依赖独立扩展 `editors/vscode-inkbone/`，支持防抖实时红/黄波浪线、状态栏汇总、一键清理格式/加入 `.inkbone-whitelist` Quick Fix，以及命令面板四件套
+- **浏览器试跑台原地双击改稿与整书多章体检台（Browser Doctor · Tab 4）**：Tab 1 支持双击任意高亮行原地编辑（`contentEditable`）、实时重算高亮并自动持久化至 `localStorage`；Tab 4 支持一次拖入整个 `chapters/` 文件夹跑跨章回声体检、Top 10 套话榜、一键下载 `ledger.json`、一键导出平台 `.txt` / **内投 Word `.docx`** / **分章 `.zip`**
+- **VS Code / Cursor 实时波浪线扩展升级**：新增角色台账 Hover 悬停状态卡片（防写串/防诈尸）、状态栏当前章有效汉字数与目标平台字数差额实时显示、一键导出内投 `.docx` 命令及完整插件市场发布元数据
 - **公开可复现基准与实机截图**：新增 `benchmarks/eval-set/public-pairs.json`、`scripts/run-public-eval.mjs` 与 `benchmarks/public-report.md`，并在 README 首屏补充实机截图与公开对比表
 
 ## 1.3.0 — 2026-11
