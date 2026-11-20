@@ -435,6 +435,20 @@
       border-radius: 4px;
       color: var(--text);
     }
+    footer.cli-note a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(154, 52, 18, 0.45);
+    }
+    footer.cli-note a:hover {
+      border-bottom-style: solid;
+    }
+    footer.cli-note .footer-links {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+    }
   </style>
 </head>
 <body>
@@ -692,6 +706,9 @@
       <strong>需要完整 CLI、MCP Server（9 工具 + 8 阶段 Prompt + 11 份剧本卡资源）、VS Code 实时波浪线扩展或安全拆书（<code>style-profile</code>）？</strong><br />
       零第三方依赖，仅需 Node.js 18+：
       <code>npx skills add blankym/inkbone</code> · <code>npx -y inkbone mcp</code> · <code>npx inkbone doctor ./chapters --changed</code>
+      <div class="footer-links">
+        本项目按 <a href="https://github.com/blankym/inkbone/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> 协议完整开源 · 友情链接与社区认可：<a href="https://linux.do/" target="_blank" rel="noopener">LINUX DO</a>（感谢社区开源分享氛围与早期试跑建议）
+      </div>
     </footer>
   </div>
 

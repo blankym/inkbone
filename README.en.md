@@ -366,10 +366,10 @@ Try a real draft in the **[Live Playground](https://blankym.github.io/inkbone/)*
 
 - **Discussions & Showcase**: [GitHub Discussions](https://github.com/blankym/inkbone/discussions)
 - **Report False Positive / Propose Rule**: [Issue Forms](https://github.com/blankym/inkbone/issues/new/choose)
+- **Community Link & Acknowledgment**: InkBone is 100% open source and appreciates the open-source sharing spirit and early testing feedback from the [LINUX DO](https://linux.do/) community ([https://linux.do/](https://linux.do/)).
 - **Inspirations**:
   - Chapter boundary isolation and verbatim-quote review checks inspired by [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)
   - Chinese clause-trunk and symmetric-frame checks inspired by [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)
   - Rhetorical density grading, degeneration detection, and meta-leak checks inspired by [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)
-  - Thanks to early testers from the [LINUX DO](https://linux.do/) community
 
 Released under the [MIT License](LICENSE), including all rule configurations and playbooks.

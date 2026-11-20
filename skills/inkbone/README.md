@@ -370,10 +370,10 @@ npm run check:docs     # 检查 docs/vendor 同步状态（CI 强制检查）
 
 - **交流与晒单**：[GitHub Discussions](https://github.com/blankym/inkbone/discussions)
 - **报告误报 / 提议新规则**：[提交表单](https://github.com/blankym/inkbone/issues/new/choose)
+- **社区友链与认可**：本项目完整开源，认可并感谢 [LINUX DO](https://linux.do/) 社区的开源分享氛围与早期试跑建议（友链：[https://linux.do/](https://linux.do/)）
 - **致谢启发**：
   - 上下章边界隔离与“审读必须附原文引文”参考 [EthanYoQ/Pagekin](https://github.com/EthanYoQ/Pagekin)
   - 中文主干与对称句式清理思路参考 [LifelongLazyLearner/qu-ai-wei](https://github.com/LifelongLazyLearner/qu-ai-wei)
   - 修辞密度分级、退化及工程词泄漏检测参考 [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode)
-  - 感谢 [LINUX DO](https://linux.do/) 社区朋友的早期试跑与建议
 
 采用 [MIT](LICENSE) 协议开源。所有规则文件与流派剧本卡同样使用 MIT，欢迎直接复用或改造成自己的写作规则包。
