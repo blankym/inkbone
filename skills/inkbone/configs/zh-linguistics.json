@@ -181,6 +181,18 @@
       "id": "cliche_blood_boil_shiver",
       "category": "purple_prose",
       "pattern": "浑身血液(?:仿佛|瞬间|几乎)?(?:凝固|倒流|沸腾)|灵魂(?:深处)?都在(?:战栗|颤栗|发抖)"
+    },
+    {
+      "id": "cliche_speakerphone_briefing",
+      "category": "stage_cliche",
+      "scope": "narration",
+      "pattern": "(?:手机|电话|听筒)?免提里(?:安静|沉默)了[一两几三半]秒[，,]\\s*传出[^，。：\\r\\n]{1,12}(?:干脆|利落|清冷|低沉|威严|沙哑|冷淡)的?(?:嗓音|话音|声音)"
+    },
+    {
+      "id": "cliche_bystander_choke_mutter",
+      "category": "reaction_cliche",
+      "scope": "narration",
+      "pattern": "差点一口[^，。\\r\\n]{1,8}呛[着住][^。\\r\\n]{0,36}(?:小声|低声|压低声音|暗自)(?:嘀咕|嘟囔|念叨)"
     }
   ],
   "dialogueHygieneRules": [
@@ -197,6 +209,15 @@
       "scope": "all",
       "pattern": "(?:(?:说|道|问|答|喊|叫|喝|叹|笑)道?[：:，,][^\\S\\r\\n]*(?:“[^”\\r\\n。！？!?…—]{2,}”。|「[^」\\r\\n。！？!?…—]{2,}」。)|(?:^|[。！？!?：:][^\\S\\r\\n]*)(?:“[^”\\r\\n。！？!?…—]{2,}”。|「[^」\\r\\n。！？!?…—]{2,}」。)[^\\S\\r\\n]*[^“”「」\\r\\n。！？!?]{0,18}(?:说|问|答|喊|叫|喝|叹|笑|低声|沉声|冷笑|笑道|叹道|喝道|提醒|吩咐|开口|[^\\s一二三四五六七八九十两半几百千万\\d之同此其前后端]道)|^(?:“[^”\\r\\n。！？!?…—]{4,}”。|「[^」\\r\\n。！？!?…—]{4,}」。)[^\\S\\r\\n]*$)",
       "remedy": "Place the sentence-ending period inside the closing quotation mark."
+    },
+    {
+      "id": "dialogue_period_before_quote",
+      "category": "dialogue_punctuation",
+      "scope": "all",
+      "advisoryMinHits": 2,
+      "scaleUnitChars": 3500,
+      "pattern": "(?<![”」』“「『])[。！？!?][^\\S\\r\\n]*[“「『]",
+      "remedy": "Avoid repeatedly cutting an attribution action with a full stop right before an opening quote in the same paragraph; use a colon/comma or start a new paragraph."
     }
   ],
   "symmetricSkeletons": [
@@ -372,6 +393,18 @@
       "review": "semantic",
       "pattern": "(?:没有|没|不)[^，。！？；,!?\\n\\r]{1,10}[，,]\\s*[^，。！？；,!?\\n\\r]{0,6}?也(?:没有|没|不)",
       "remedy": "Too many 'didn't A, and didn't B' negative pairs; show what the character actually did."
+    },
+    {
+      "id": "rhet_panel_dossier_recitation",
+      "category": "panel_dossier_recitation",
+      "scope": "narration",
+      "window": "all",
+      "advisoryMinHits": 2,
+      "blockingMinHits": 4,
+      "scaleUnitChars": 3500,
+      "review": "semantic",
+      "pattern": "(?:折价单|账单|账册|面板|光幕|字条|小字|红字|绿字|词条|鉴定栏)[^。！？“”\\r\\n]{0,14}(?:写明|写得明白|写得清楚|注明|提示[^。，]{2,18}只剩)",
+      "remedy": "Deliver appraisal/panel numbers through live spoken reaction or bargaining dialogue instead of third-person narrator dossier recitation."
     }
   ],
   "crossParagraphParallel": {

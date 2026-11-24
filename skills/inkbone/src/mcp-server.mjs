@@ -1,4 +1,4 @@
-// 零第三方依赖 MCP Server（JSON-RPC 2.0 over stdio），完整实现 Tools(9) + Prompts(8) + Resources(11) 三件套
+// 零第三方依赖 MCP Server（JSON-RPC 2.0 over stdio），完整实现 Tools(10) + Prompts(8) + Resources(11) 三件套
 // 自动兼容 NDJSON 与 Content-Length 两种帧协议
 import fs from "node:fs";
 import path from "node:path";
@@ -14,6 +14,11 @@ import { formatAuditMarkdown, formatDoctorMarkdown } from "./formatter.mjs";
 import { analyzeStyleProfile, formatStyleProfileMarkdown } from "./style-profiler.mjs";
 import { formatChapterForPlatform, exportChapters } from "./exporter.mjs";
 import { collectTextFiles } from "./calibrator.mjs";
+import {
+  scanChapterAigcWindows,
+  checkFilesAigcRisk,
+  formatAigcCheckMarkdown,
+} from "./aigc-guard.mjs";
 
 const currentFile = fileURLToPath(import.meta.url);
 const rootDir = path.resolve(path.dirname(currentFile), "..");
@@ -124,8 +129,8 @@ const RESOURCE_ENTRIES = [
   },
   {
     uri: "inkbone://craft/bad-vs-good-cases",
-    name: "8 Before/After Prose Revision Cases",
-    description: "Side-by-side examples of cutting micro-action bloat, late-in/early-out dialogue, and preserving flow.",
+    name: "10 Before/After Prose Revision Cases",
+    description: "Side-by-side examples of cutting micro-action bloat, dialogic panel delivery, anti-rebound cadence variety, and preserving flow.",
     mimeType: "text/markdown",
     file: "resources/bad_vs_good_cases.md",
   },
@@ -185,6 +190,8 @@ export const MCP_TOOLS = [
         },
         skipLength: { type: "boolean", description: "Skip chapter word-count gate" },
         goldenThree: { type: "boolean", description: "Enable Golden-Three opening retention pacing check" },
+        aigcGuard: { type: "boolean", description: "Enable offline 280-char sliding-window AIGC structural & lexical guard" },
+        aigcThreshold: { type: "number", description: "Optional AIGC window risk threshold (default 0.5)" },
         strict: { type: "boolean", description: "Fail on warnings/info too" },
         noProject: { type: "boolean", description: "Ignore upward novel.json discovery" },
         format: { type: "string", enum: ["json", "md"], description: "Output format (default md)" },
@@ -209,6 +216,8 @@ export const MCP_TOOLS = [
         chapters: { type: "string", description: "Optional chapter filter spec (e.g. 40-45,48)" },
         ledgerPath: { type: "string" },
         skipLength: { type: "boolean" },
+        aigcGuard: { type: "boolean", description: "Enable offline 280-char sliding-window AIGC structural & lexical guard" },
+        aigcThreshold: { type: "number", description: "Optional AIGC window risk threshold (default 0.5)" },
         format: { type: "string", enum: ["json", "md"] },
         lang: { type: "string", enum: ["zh", "en"] },
       },
@@ -313,6 +322,29 @@ export const MCP_TOOLS = [
       },
     },
   },
+  {
+    name: "inkbone_aigc_check",
+    description:
+      "Run offline zero-token 280-char sliding-window AIGC structural & lexical guard (N/A/Q/S paragraph cadence entropy, sandwich-quote overload, U-shaped 'de' balance, 'zhe/na' demonstrative spike, and >=5-char modifier bricks).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "Inline chapter prose to scan" },
+        paths: {
+          type: "array",
+          items: { type: "string" },
+          description: "Chapter files or directories to scan",
+        },
+        threshold: { type: "number", description: "Window risk alert threshold (default 0.5)" },
+        exemptTerms: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional character names or proper nouns exempted from compound brick counting",
+        },
+        format: { type: "string", enum: ["json", "md"], description: "Output format (default md)" },
+      },
+    },
+  },
 ];
 
 // 辅助读取台账对象（支持文件路径或内联对象）
@@ -397,6 +429,8 @@ function executeToolCall(name, rawArgs = {}) {
       outlineText,
       skipLengthGate: Boolean(args.skipLength),
       goldenThree: Boolean(args.goldenThree),
+      aigcGuard: Boolean(args.aigcGuard),
+      aigcThreshold: args.aigcThreshold,
       strict: Boolean(args.strict),
     });
     const outText =
@@ -437,6 +471,8 @@ function executeToolCall(name, rawArgs = {}) {
       genreSource: !args.genre && project?.genre ? "project" : undefined,
       ledger,
       skipLengthGate: Boolean(args.skipLength),
+      aigcGuard: Boolean(args.aigcGuard),
+      aigcThreshold: args.aigcThreshold,
     });
     const outText =
       args.format === "json"
@@ -596,6 +632,41 @@ function executeToolCall(name, rawArgs = {}) {
       };
     }
     throw new Error("Provide either text or paths for inkbone_export.");
+  }
+
+  if (name === "inkbone_aigc_check") {
+    const threshold = args.threshold !== undefined ? Number(args.threshold) : 0.5;
+    const exemptTerms = Array.isArray(args.exemptTerms) ? args.exemptTerms : [];
+    if (typeof args.text === "string") {
+      const report = scanChapterAigcWindows(args.text, { threshold, exemptTerms });
+      const batch = {
+        pass: report.pass,
+        threshold,
+        filesScanned: 1,
+        failingCount: report.pass ? 0 : 1,
+        chapters: [{ file: "inline.md", path: "inline.md", ...report }],
+      };
+      const outText =
+        args.format === "json"
+          ? JSON.stringify(report, null, 2)
+          : formatAigcCheckMarkdown(batch);
+      return {
+        content: [{ type: "text", text: outText }],
+        structuredContent: report,
+      };
+    }
+    if (Array.isArray(args.paths) && args.paths.length > 0) {
+      const batch = checkFilesAigcRisk(args.paths, { threshold, exemptTerms });
+      const outText =
+        args.format === "json"
+          ? JSON.stringify(batch, null, 2)
+          : formatAigcCheckMarkdown(batch);
+      return {
+        content: [{ type: "text", text: outText }],
+        structuredContent: batch,
+      };
+    }
+    throw new Error("Provide either text or paths for inkbone_aigc_check.");
   }
 
   throw new Error(`Unknown MCP tool: ${name}`);

@@ -9,7 +9,7 @@
 [![Node.js ≥ 18](https://img.shields.io/badge/Node.js-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[中文](README.md) · **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** · **[npm](https://www.npmjs.com/package/inkbone)** · **[Discussions](https://github.com/blankym/inkbone/discussions)** · 9 genre packs · Simplified + Traditional Chinese · Zero-Dep `.docx` / `.zip` Export · Full MCP Server · VS Code Extension · 73 tests
+[中文](README.md) · **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** · **[npm](https://www.npmjs.com/package/inkbone)** · **[Discussions](https://github.com/blankym/inkbone/discussions)** · 9 genre packs · Offline 280-Char AIGC Guard · Simplified + Traditional Chinese · Zero-Dep `.docx` / `.zip` Export · Full MCP Server · VS Code Extension · 80 tests
 
 > **Language note:** Prompts, rule patterns, and CLI findings target **Chinese long-form fiction** (both Simplified and Traditional Chinese). This README documents the architecture and workflow in English.
 
@@ -20,8 +20,8 @@
 | How you write | Fastest way to start | What you get immediately |
 | :--- | :--- | :--- |
 | **Web LLMs (DeepSeek / Claude / Gemini)**<br/>*(zero setup)* | Open **[Live Playground & Browser Doctor](https://blankym.github.io/inkbone/)** | Drop a chapter or an entire `chapters/` folder (**100% client-side, zero uploads**) → word-level highlights with **double-click inline editing**, cross-chapter echo ranking, **one-click targeted rewrite prompt**, and clean `.txt` / **submission `.docx`** / **bundled `.zip`** export |
-| **Claude Code / Codex / Antigravity / OpenCode** | `npx skills add blankym/inkbone` | 8-stage fiction workflow + spoiler-safe living ledger + local linting + 9 genre playbooks |
-| **Claude Desktop / Cursor / Windsurf (MCP)** | Add `npx -y inkbone mcp` | One config loads **9 Tools + 8 Prompts + 11 Resources** — no separate skill setup needed |
+| **Claude Code / Codex / Antigravity / OpenCode** | `npx skills add blankym/inkbone` | 8-stage fiction workflow + offline 280-char AIGC structural guard + spoiler-safe living ledger + local linting + 9 genre playbooks |
+| **Claude Desktop / Cursor / Windsurf (MCP)** | Add `npx -y inkbone mcp` | One config loads **10 Tools + 8 Prompts + 11 Resources** — no separate skill setup needed |
 | **VS Code / Cursor & Terminal CLI** | `npx inkbone audit ch01.md` or install [VS Code Extension](editors/vscode-inkbone/) | Clone-free CLI checkups, copyright-safe style profiling, live squiggly diagnostics, **character ledger Hover cards**, and **status-bar platform word-count delta** |
 
 ---
@@ -41,7 +41,7 @@ Longer prompts cannot enforce themselves once rules drift out of context. **InkB
 
 ![InkBone Browser Playground: inline word-level highlights, rhythm strip, and one-click targeted rewrite prompt](docs/assets/playground-audit.png)
 
-> **Tab 1 (Single Chapter Audit)** runs pure ES Modules inside your browser: drag-and-drop `.md`/`.txt`, automatic Simplified/Traditional Chinese rule switching, inline `<mark>` highlights, paragraph rhythm strip, and a **one-click targeted rewrite prompt** ready to paste back into any web LLM.
+> **Tab 1 (Single Chapter Audit)** runs pure ES Modules inside your browser: drag-and-drop `.md`/`.txt`, automatic Simplified/Traditional Chinese rule switching, inline `<mark>` highlights, double-click inline editing, Golden-Three & **offline 280-char AIGC window guard (`--aigc-guard`)** toggles, paragraph rhythm strip, and a **one-click targeted rewrite prompt** ready to paste back into any web LLM.
 
 ![InkBone Browser Doctor: multi-chapter sorting, cross-chapter echo detection, Top 10 clichés, and auto-mined ledger](docs/assets/playground-book-doctor.png)
 
@@ -49,7 +49,7 @@ Longer prompts cannot enforce themselves once rules drift out of context. **InkB
 
 ### How It Differs from Pure-Prompt Writing Kits
 
-| Area | Typical Prompt-Only Kits | InkBone v2.0 |
+| Area | Typical Prompt-Only Kits | InkBone v2.1 |
 | :--- | :--- | :--- |
 | **Register & Cliché Control** | Relies on LLM willpower; drifts after a few thousand characters | **Deterministic code linter** with 9 genre packs, Simplified/Traditional auto-detection, and project overrides |
 | **Continuity & Anti-Spoiler** | Stuffs the entire outline into context and leaks twists early | **Living Ledger (`packet` + `settle` + `check-ledger`)**: redacts un-revealed `fullTruth` as `[REDACTED]` and guards against deceased characters reappearing |
@@ -167,9 +167,9 @@ Then just talk to your agent:
 ### Path 3: Zero-Dependency MCP Server, Hooks & VS Code Extension
 
 InkBone ships a **zero-dependency stdio MCP server** exposing:
-- **9 Tools**: `inkbone_audit`, `inkbone_doctor`, `inkbone_packet`, `inkbone_settle`, `inkbone_check_ledger`, `inkbone_verify_review`, `inkbone_rewrite_prompt`, `inkbone_style_profile`, `inkbone_export`;
+- **10 Tools**: `inkbone_audit`, `inkbone_doctor`, `inkbone_aigc_check`, `inkbone_packet`, `inkbone_settle`, `inkbone_check_ledger`, `inkbone_verify_review`, `inkbone_normalize`, `inkbone_style_profile`, `inkbone_export`;
 - **8 Stage Prompts**: `inkbone/style-architect` through `inkbone/chapter-settler` (passing `genre` automatically attaches the matching playbook);
-- **11 Read-Only Resources**: `inkbone://playbooks/<genre>` (9 playbooks), micro-techniques guide, and 8 before/after cases.
+- **11 Read-Only Resources**: `inkbone://playbooks/<genre>` (9 playbooks), micro-techniques guide, and 10 before/after cases.
 
 Add to Claude Desktop / Cursor / Windsurf (see [examples/mcp-config.json](examples/mcp-config.json)):
 
@@ -205,10 +205,11 @@ node bin/inkbone.mjs --help
 
 Four everyday workflows (replace `npx inkbone` with `inkbone` if installed globally):
 
-1. **30-second chapter check & rewrite prompt (Simplified + Traditional Chinese auto-detected)**
+1. **30-second chapter check, offline 280-char AIGC window guard & rewrite prompt (Simplified + Traditional Chinese auto-detected)**
    ```bash
    npx inkbone audit ch01.md --genre urban-realism --format md --lang en --no-project --no-ledger --skip-length
-   npx inkbone rewrite-prompt ch01.md --genre urban-realism --lang en --no-project --no-ledger --skip-length
+   npx inkbone aigc-check ch01.md
+   npx inkbone rewrite-prompt ch01.md --genre urban-realism --aigc-guard --lang en --no-project --no-ledger --skip-length
    ```
 2. **Copyright-safe style profiling + living ledger loop**
    ```bash
@@ -260,8 +261,9 @@ The `prompts/` directory defines eight stages (`00`–`07`), with CLI/MCP enforc
 | Model degeneration | Verbatim line/sentence loops, truncated endings, garbled characters, AI refusal/meta-leakage | `error` / `warning` |
 | Subject continuity | Subjectless action right after another character's action; three consecutive paragraphs opening the same way | `warning` |
 | Register & script variant | Modern slang in period settings, invalid traditional time counts, archaic phrasing in urban fiction; **auto Simplified/Traditional Chinese & HK/TW web-novel rules** | `warning` (escalates on high density) |
-| Clichés & density | Stock micro-acting phrases, symmetric skeletons, excessive similes/exclamation marks/ellipses, telegraphic over-compression guard | `warning` (escalates on high density) |
-| Statistical fingerprint | 20+ metrics (MATTR-50, sentence-length CV, `的`-modifier density) compared against human reference ranges | `info` (diagnostic only) |
+| Clichés & density | Stock micro-acting phrases, symmetric skeletons, panel dossier recitation, excessive similes/exclamation marks/ellipses, telegraphic over-compression guard | `warning` (escalates on high density) |
+| Offline AIGC window guard | `aigc-check` or `--aigc-guard` scans 280-char windows for `N/A/Q/S/M` paragraph cadence entropy, sandwich-quote (`SSS`) streaks, U-shaped `的` starvation rebound, narration `这/那` demonstrative spikes, and `>=6`-char compound modifier bricks | `warning` / `info` |
+| Statistical fingerprint | 20+ metrics (MATTR-50, sentence-length CV, cadence entropy, `的`-modifier density) compared against human reference ranges | `info` (diagnostic only) |
 
 Warnings exit `0` for human judgment; hard errors and high-frequency blocking violations exit non-zero for CI. Pass `--strict` to fail on all gates.
 
@@ -282,12 +284,12 @@ Before promoting a rule above the project layer, run `npx inkbone rule-stats --h
 Beyond deterministic linting, InkBone bundles practical plotting and editing guides (loaded on demand per stage so prompts stay lean):
 
 - **[Micro-Techniques & Revision Lookup (`resources/micro_techniques.md`)](resources/micro_techniques.md)**: action-reaction "two-press, one-lift" beats, 80/20 climax framing, multi-purpose foreshadowing, post-climax three-part loot settlements, anti-bloat discipline, and a 9-symptom revision lookup table.
-- **[8 Before/After Case Studies (`resources/bad_vs_good_cases.md`)](resources/bad_vs_good_cases.md)**: side-by-side rewrites covering micro-action trimming, late-in/early-out dialogue, grounded worldbuilding, and avoiding telegraphic over-compression.
+- **[10 Before/After Case Studies (`resources/bad_vs_good_cases.md`)](resources/bad_vs_good_cases.md)**: side-by-side rewrites covering micro-action trimming, late-in/early-out dialogue, dialogic panel/ledger delivery, anti-rebound cadence variety, and avoiding telegraphic over-compression.
 - **[9 Genre Playbooks (`resources/genre_playbooks/`)](resources/genre_playbooks/)**: dedicated playbooks for xianxia, historical court, wuxia, mystery/thriller, urban realism, sci-fi wasteland, light fantasy, romance, and clean general fiction.
 
 ---
 
-## Genre Packs & 26-Command Reference
+## Genre Packs & 27-Command Reference
 
 <details>
 <summary>Expand 9 built-in genre packs (run <code>npx inkbone genres</code> to inspect)</summary>
@@ -311,10 +313,10 @@ Beyond deterministic linting, InkBone bundles practical plotting and editing gui
 | | `packet` | Compile spoiler-safe context with un-revealed `fullTruth` redacted and optional snapshot pruning |
 | | `check-ledger` / `settle` | Validate ledger health, tactical props & resource balances / merge single or `--batch` settlement JSON cleanly |
 | Format & QA | `normalize` / `check-outline` | Strip asterisks & normalize dashes / verify Stage 1 beat outlines |
-| | `audit` / `doctor` | Single-chapter audit (Simplified/Traditional + deceased/world-rule/golden-three guards) / full or incremental checkup (`--chapters` / `--changed`) |
-| | `rewrite-prompt` | Audit a chapter and emit a copy-ready targeted rewrite prompt for web LLMs |
+| | `audit` / `doctor` | Single-chapter audit (Simplified/Traditional + deceased/world-rule/golden-three/`--aigc-guard` guards) / full or incremental checkup (`--chapters` / `--changed`) |
+| | `aigc-check` / `rewrite-prompt` | Zero-token 280-char sliding-window AIGC structural & lexical guard / emit a copy-ready targeted rewrite prompt for web LLMs |
 | Style & publish | `style-profile` / `export` | Copyright-safe statistical style profiler / clean `.txt`, **editorial `.docx`**, and **`.zip`** export for `qidian`, `fanqie`, `qimao`, `jjwxc` |
-| Protocol | `mcp` | Start the zero-dependency stdio MCP server (9 tools, 8 prompts, 11 resources) |
+| Protocol | `mcp` | Start the zero-dependency stdio MCP server (10 tools, 8 prompts, 11 resources) |
 
 <details>
 <summary>Expand review, blind evaluation & rule calibration commands (11 advanced commands)</summary>
@@ -335,28 +337,28 @@ Beyond deterministic linting, InkBone bundles practical plotting and editing gui
 
 </details>
 
-Run `npx inkbone --help` for daily commands, or `npx inkbone --help-all` for all 26 commands.
+Run `npx inkbone --help` for daily commands, or `npx inkbone --help-all` for all 27 commands.
 
 ---
 
 ## Layout & Development
 
 ```text
-bin/  src/         CLI, zero-dependency core engine (style profiler, DOCX/ZIP exporter, Browser Doctor) & full MCP server
+bin/  src/         CLI, zero-dependency core engine (AIGC window guard, style profiler, DOCX/ZIP exporter, Browser Doctor) & full MCP server
 configs/           Universal rules, 9 genre packs, Traditional Chinese layer, 4 platform presets, gates & zh/en catalog
-docs/              Browser-only static playground (double-click inline editing) & Browser Doctor (.docx / .zip export)
+docs/              Browser-only static playground (double-click inline editing + AIGC window guard) & Browser Doctor (.docx / .zip export)
 editors/           Standalone zero-dependency VS Code / Cursor real-time linter + ledger Hover cards & word-count status bar
 examples/          MCP client config & Claude Code PostToolUse Hook templates
 prompts/           8 staged drafting, review & settlement prompts (00–07)
 resources/         Before/after examples, micro-techniques, 9 genre playbooks, eval guide
-benchmarks/        4 original eval seeds, public eval pairs & reproducible comparison report (no private drafts)
+benchmarks/        4 original eval seeds, de-identified AIGC window calibration pairs & reproducible comparison report
 evals/             Runtime-agnostic skill trigger eval set
 skills/inkbone/    Generated self-contained skill package (do not edit directly)
-tests/             73 unit tests
+tests/             80 unit tests
 ```
 
 ```bash
-npm test               # Run all 73 tests (zero-Han-literal, full MCP, zh-hant, DOCX/ZIP export, VS Code core, docs & skill sync)
+npm test               # Run all 80 tests (zero-Han-literal, 280-char AIGC guard, full MCP, zh-hant, DOCX/ZIP export, VS Code core, docs & skill sync)
 npm run build:skill    # Repackage skills/inkbone after editing sources/configs/prompts/README
 npm run check:skill    # Verify skills/inkbone matches sources (enforced in CI)
 npm run build:docs     # Sync browser playground docs/vendor after editing src/core or configs

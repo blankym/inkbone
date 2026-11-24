@@ -122,3 +122,13 @@ export {
   compileTraditionalConfig,
   detectScriptVariant,
 } from "./core/config-compiler.mjs";
+export {
+  classifyParagraphCadence,
+  computeCadenceEntropy,
+  measureCompoundBricks,
+  extractNumberedParagraphs,
+  evaluateWindowSlice,
+  scanChapterAigcWindows,
+  checkFilesAigcRisk,
+  formatAigcCheckMarkdown,
+} from "./aigc-guard.mjs";

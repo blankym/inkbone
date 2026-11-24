@@ -39,6 +39,7 @@ import {
   checkCalendarSpanContradictions,
   checkGoldenOpeningPacing,
 } from "./rule-engine.mjs";
+import { scanChapterAigcWindows } from "./aigc-guard.mjs";
 
 // 统计命中列表里指定 family 的总次数（用于跨规则家族联合密度升级）
 function countRuleFamily(hits, rules) {
@@ -773,6 +774,66 @@ export function auditChapterText(rawContent, options = {}) {
     }
   }
 
+  // 13. 离线 280 字滑窗 AIGC 结构句式熵与虚词双侧护栏扫描
+  const aigcGuardActive = Boolean(options.aigcGuard || gates.aigcGuard);
+  const aigcThreshold =
+    options.aigcThreshold !== undefined
+      ? Number(options.aigcThreshold)
+      : gates.aigcWindowThreshold !== undefined
+        ? Number(gates.aigcWindowThreshold)
+        : 0.5;
+  const aigcReport = scanChapterAigcWindows(rawContent, {
+    threshold: aigcThreshold,
+    exemptTerms: [...characterNames, ...whitelistLiterals],
+  });
+  m.cadenceEntropy = aigcReport.chapterCadence.cadenceEntropy;
+  m.sandwichParaRatio = aigcReport.chapterCadence.sandwichRatio;
+  m.demonsPer100Han = aigcReport.chapterCadence.demonsPer100Han;
+  m.maxWindowAigcRisk = aigcReport.maxWindowRisk;
+
+  if (
+    !disabled.has("cadence_template_monotony") &&
+    aigcReport.monotonySpans.length > 0
+  ) {
+    violations.push({
+      code: "CADENCE_TEMPLATE_MONOTONY",
+      count: aigcReport.monotonySpans.length,
+      spans: aigcReport.monotonySpans,
+      forceSeverity: aigcGuardActive ? "warning" : undefined,
+      remedy:
+        "Break 4+ consecutive mid-attribution sandwich quotes (S) or 8+ action-colon (A) paragraphs by mixing pure narration (N) and bare-quote (Q) turns.",
+    });
+  }
+  if (
+    !disabled.has("telegraphic_modifier_stuffing") &&
+    aigcReport.telegraphicSpans.length > 0
+  ) {
+    violations.push({
+      code: "TELEGRAPHIC_MODIFIER_STUFFING",
+      count: aigcReport.telegraphicSpans.length,
+      windows: aigcReport.telegraphicSpans,
+      forceSeverity: aigcGuardActive ? "warning" : undefined,
+      remedy:
+        "Over-dehydrated prose (<0.9/100 'de') with demonstrative 'zhe/na' spike and >=5-char modifier bricks triggers AIGC rebound; restore natural spoken particles.",
+    });
+  }
+  if (
+    aigcGuardActive &&
+    !disabled.has("aigc_window_risk") &&
+    !aigcReport.pass
+  ) {
+    violations.push({
+      code: "AIGC_WINDOW_RISK",
+      count: aigcReport.flaggedWindows.length,
+      maxRisk: aigcReport.maxWindowRisk,
+      threshold: aigcReport.threshold,
+      windows: aigcReport.flaggedWindows,
+      forceSeverity: "warning",
+      remedy:
+        "280-char window exceeds AIGC structural risk threshold; rebalance N/A/Q/S paragraph cadence, keep 'de' in 1.45-2.15/100, and cut 'zhe/na' below 1.15/100.",
+    });
+  }
+
   // 汇总需要局部动刀的精确行号手术单（供 Stage 4 qu-ai-wei 靶向手术刀消费）
   const surgeryLineMap = new Map();
   const registerLineIssue = (line, tag, detail, meta = null) => {
@@ -945,6 +1006,24 @@ export function auditChapterText(rawContent, options = {}) {
       { layer: "universal", level: "advisory", review: "semantic" }
     );
   }
+  if (aigcGuardActive) {
+    aigcReport.monotonySpans.forEach((sp) =>
+      registerLineIssue(
+        sp.startLine,
+        "cadence_template_monotony",
+        `${sp.streak}x ${sp.kind} (lines ${sp.startLine}-${sp.endLine})`,
+        { layer: "universal", level: "advisory", review: "semantic" }
+      )
+    );
+    aigcReport.flaggedWindows.forEach((fw) =>
+      registerLineIssue(
+        fw.startLine,
+        "aigc_window_risk",
+        `risk=${fw.estimatedRisk} (L${fw.startLine}-L${fw.endLine}, seq=${fw.sequence}, de=${fw.dePer100}, dem=${fw.demonsPer100}): ${(fw.reasons || []).join(",") || "composite"}`,
+        { layer: "universal", level: "advisory", review: "semantic" }
+      )
+    );
+  }
 
   const surgeryTargets = Array.from(surgeryLineMap.entries())
     .sort((a, b) => a[0] - b[0])
@@ -987,6 +1066,7 @@ export function auditChapterText(rawContent, options = {}) {
     referenceComparison,
     boundaryReport,
     outlineCopyReport,
+    aigcReport,
     violationCount: violations.length,
     violations,
     surgeryTargets,

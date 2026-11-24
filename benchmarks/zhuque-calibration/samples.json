@@ -1,0 +1,54 @@
+{
+  "version": "2.1.0",
+  "description": "Original book-agnostic paired Chinese prose windows calibrated against 280-char sliding-window AIGC structural & lexical failure modes.",
+  "pairs": [
+    {
+      "id": "pair_01_sandwich_cadence_overload",
+      "archetype": "paragraph_cadence_monotony",
+      "genre": "urban-realism",
+      "yellow": {
+        "expectedMaxRiskMin": 0.52,
+        "expectedReasons": ["sandwich_overload", "low_cadence_entropy"],
+        "text": "“月底之前这批轴承必须入库，”周建国指节敲了敲桌面上的送货单，“晚一天违约金按合同双倍扣。”\n\n“厂里两台冲床昨天刚拆开检修，”林川把安全帽夹在胳膊底下，“最快也得排到礼拜四夜班。”\n\n“那是你们车间的事，”周建国摘下老花镜扔在文件夹上，“采购部只认白纸黑字的交货期。”\n\n“上次临时改图纸的时候可没重签工期，”林川抽出底下那张变更回执，“上面还盖着技术科的章。”\n\n“少拿技术科压我，”周建国端起保温杯抿了一口浓茶，“明早八点我要见到排产表。”\n\n“排产表今晚就能发你群里，”林川转身拉开了办公室的铁门，“加班费申请单您也顺手批一下。”"
+      },
+      "green": {
+        "expectedMaxRiskMax": 0.48,
+        "text": "周建国拿钢笔尾端敲了敲桌上的送货单：“月底之前这批轴承必须入库，晚一天按双倍扣违约金。”\n\n林川没接话，弯腰从帆布包里抽出一张折出印子的变更回执，推到玻璃板正中间。纸角还沾着车间里的机油印，红章盖在礼拜二的日期上。\n\n“两台老冲床昨天刚拆开换主轴，最快也得排到礼拜四夜班吧？”\n\n周建国扫了一眼那个红章，摘下老花镜搁在文件夹上，没再提违约金的事：“明早八点前，先把新的排产表发群里。”\n\n“成啊。”林川把安全帽重新扣回脑袋上，拉开门出去前又补了一句，“那顺道把这礼拜的夜班补贴单也批了呗。”\n\n走廊尽头的排气扇嗡嗡转着，铁门合上时撞落了一小块墙皮。"
+      }
+    },
+    {
+      "id": "pair_02_de_starvation_demonstrative_rebound",
+      "archetype": "telegraphic_dehydration_rebound",
+      "genre": "urban-realism",
+      "yellow": {
+        "expectedMaxRiskMin": 0.53,
+        "expectedReasons": ["period_before_quote", "demonstrative_spike"],
+        "expectedRuleIds": ["dialogue_period_before_quote", "reg_news_classifier_demonstrative"],
+        "text": "那名青年摊主踢了踢脚边暗红樟木旧工具箱。“这批老扳手全是从那座废弃汽修厂库房里清出来的。”\n\n那名顾客蹲在水泥路沿旁，伸手拨开那层厚重黄油防锈纸。“这几把套筒尺码倒是齐全。”\n\n“那是自然，”那名摊主搓了搓粗糙手背，“这批铬钒钢套筒你在那条五金街根本淘不到。”\n\n那名顾客拿起那把加长棘轮扳手掂了掂分量。“这棘轮卡齿咬合还算紧实，就是手柄橡胶皮裂了道口子。”\n\n那名摊主弯腰拎起那只旧铁皮油壶晃了晃。“抹点机油照样顺溜，这整箱算你三百块。”\n\n那名顾客掏出手机扫过那张收款码牌。“两百六，连那只铁皮油壶一块装车。”"
+      },
+      "green": {
+        "expectedMaxRiskMax": 0.48,
+        "text": "蹲在马路牙子上的年轻摊主拿鞋尖点点脚边的旧木箱：“刚从城西老汽修厂库房里清出来的家伙，自己挑。”\n\n陆凯蹲下身，掀开上面那层发黄的防锈油纸，顺手拎起一把加长棘轮扳手转了两圈。卡齿咔哒咔哒响得脆生，就是包胶手柄尾端裂了一道细口。\n\n“尺码倒是挺全，手柄怎么裂了？”\n\n“放库房里压的呗，又不耽误你拧大梁螺丝。”摊主伸出三根手指晃了一下，“整箱端走的话，给三百块钱拉倒。”\n\n陆凯把扳手丢回木箱里，掏出手机点开扫码界面：“抹四十吧，旁边那个小铁皮油壶也搭给我，省得我再去五金店跑一趟。”\n\n摊主啧了一声，扯过两根尼龙绳替他把木箱捆紧了。"
+      }
+    },
+    {
+      "id": "pair_03_panel_dossier_and_cutaway_cliches",
+      "archetype": "panel_recitation_and_stage_cliches",
+      "genre": "light-fantasy",
+      "yellow": {
+        "expectedMaxRiskMin": 0.44,
+        "expectedRuleIds": [
+          "rhet_panel_dossier_recitation",
+          "cliche_speakerphone_briefing",
+          "cliche_bystander_choke_mutter",
+          "filler_eat_sleep_boil_montage"
+        ],
+        "text": "林川回到出租屋补了一大觉，睡醒之后烧了壶热水，顺手翻开桌上那张押金回执。\n\n折价单背面小字写得清楚：刀身裂纹扣除六成工本，火毒残留再扣两成，算下来只剩三十五块补贴。面板鉴定栏底下同样注明：器物耐久跌破阈值，修复收益只剩一成。\n\n桌角手机免提里安静了两秒，传出沈组长干脆利落的嗓音：“城北仓库又送来三件残次品，半小时内过来签收。”\n\n坐在对面嗦粉的陈胖子差点一口酸辣汤呛住，咳得满脸通红，低声嘀咕道：“三十五块补贴连打车钱都不够贴的。”\n\n林川收起回执单推门下楼，街口早点铺刚撤掉蒸笼。\n\n风卷着落叶刮过卷闸门，他拦下一辆空出租车报了仓库地址。"
+      },
+      "green": {
+        "expectedMaxRiskMax": 0.48,
+        "text": "陈胖子探头瞄了一眼拍在桌上的押金回执，手里的塑料叉子啪地戳进碗底：“刀身裂纹扣六成、火毒再扣两成，合着忙活一宿就剩三十五块钱补贴？连咱俩打车都不够啊！”\n\n林川把回执单折成两半塞进裤兜，面板最底下那行耐久跌破阈值的灰字还没消下去。\n\n桌上的手机震了两下，刚按开免提，沈组长的催促声就顶了出来：“城北仓库新到三件退回来的残次件，半小时内过来签字领走。”\n\n“知道了，路上堵车的话晚十分钟。”\n\n电话那头直接挂断了。林川抓起椅背上的薄外套往肩上一搭，顺手抽走陈胖子手边没拆封的纸巾：“别嗦了，赶紧下楼拦车，去晚了挑剩的更难修。”\n\n两人一前一后钻进巷口刚停稳的出租车，后备厢盖哐地弹回锁扣。"
+      }
+    }
+  ]
+}

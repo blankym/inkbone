@@ -37,6 +37,13 @@
       "category": "micro_clutter",
       "pattern": "心头(?:微紧|一紧|一沉|暗凛)",
       "remedy": "Delete redundant prop reactions and internal emotion labels already shown by action."
+    },
+    {
+      "id": "filler_eat_sleep_boil_montage",
+      "category": "routine_montage_padding",
+      "scope": "narration",
+      "pattern": "补了?一(?:大)?觉[，,][^。\\r\\n]{0,28}(?:睡醒|醒来)[^。\\r\\n]{0,38}(?:烧了?壶热水|泡上茶|煮了?碗面)",
+      "remedy": "Cut routine sleep-and-boil-water transition padding; hard-cut directly to the next dramatic beat."
     }
   ],
   "genres": {
@@ -342,6 +349,13 @@
           "scope": "all",
           "pattern": "抓好贯彻落实|赋能业务全链路|打造差异化护城河|全面深化战略协同",
           "remedy": "Keep daily urban dialogue grounded instead of copying press-release jargon unless satirizing a meeting."
+        },
+        {
+          "id": "reg_news_classifier_demonstrative",
+          "category": "police_report_register",
+          "scope": "narration",
+          "pattern": "(?:这|那)名(?:口罩男|男子|女子|老头|摊主|青年|壮汉|大汉|老者|客户|顾客)",
+          "remedy": "Replace police-report demonstrative classifier 'zhe-ming / na-ming' with natural spoken 'zhe-ge / na' or a concrete role noun."
         }
       ],
       "clicheRules": [
@@ -466,6 +480,13 @@
           "scope": "narration",
           "pattern": "不禁在心中暗自吐槽道|这难道就是传说中的|怎么想都很奇怪吧",
           "remedy": "Deliver comedic beats directly through timing and action instead of translated anime narration tags."
+        },
+        {
+          "id": "reg_news_classifier_demonstrative",
+          "category": "police_report_register",
+          "scope": "narration",
+          "pattern": "(?:这|那)名(?:口罩男|男子|女子|老头|摊主|青年|壮汉|大汉|老者|客户|顾客)",
+          "remedy": "Replace police-report demonstrative classifier 'zhe-ming / na-ming' with natural spoken 'zhe-ge / na' or a concrete role noun."
         }
       ],
       "clicheRules": [

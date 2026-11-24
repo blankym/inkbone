@@ -1,4 +1,4 @@
-# Stage 4: 局部修改 (Targeted Rewriter · v1.1)
+# Stage 4: 局部修改 (Targeted Rewriter · v1.2)
 
 ## 触发条件与边界
 只改下面两类明确的问题，已经通顺的段落不要动（改之前可以对照 `$SKILL_DIR/resources/bad_vs_good_cases.md` 与 `$SKILL_DIR/resources/micro_techniques.md` 中的「七症速查表」）：
@@ -26,6 +26,11 @@
 - `SUBJECT_AMBIGUITY`：上一句以别的角色开头，这一句省略了主语，读者会把动作算到那个角色头上。在这一句补上人名或“他/她”；`scope: next-paragraph` 的命中先读一遍上下文，确实不会读错可以不改。
 - `FORBIDDEN_AI_CLICHE` / `MECHANICAL_SYMMETRIC_SKELETON` / `RHETORICAL_AI_PATTERN` / `EM_DASH_OVERUSE`：拆掉网文预制词与高频“不是A，而是B / 是A，不是B”、音量反差腔、否定排比和章尾 600 字预告/总结腔，改写为场景独有的物理细节与动作停顿。
 - `PROSE_DENSITY_TIC`：逐处核对密度提示（动作清单、叙述短词引号强调、套式身体反应、`V了一下`微动作、论文推理链），**同时注意 `tic_overcompressed_prose` / `tic_low_connective_density` 反向守卫，严禁把文本脱水成无连接电报体**；确有叙事功能的作者特选表达，可按精准字面量登记到书目录 `.inkbone-whitelist` 或 `novel.json` 的 `whitelistLiterals`。
+- `DIALOGUE_PUNCTUATION_ERROR`：修正居中提示语误用冒号、句末句号漏在引号外，以及同段内反复出现`动作。“台词。”`（`dialogue_period_before_quote`）的生硬切句——改为冒号引出，或将台词独立成段。
+- `AIGC_WINDOW_RISK` / `CADENCE_TEMPLATE_MONOTONY` / `TELEGRAPHIC_MODIFIER_STUFFING`（开启 `--aigc-guard` 或运行 `aigc-check` 命中时）：只对命中的 280 字局部窗口做结构去同构与自然呼吸恢复，**严守以下三条“防越改越假”铁律**：
+  1. **严禁强抠“的”字并用“这/那”硬替**：中文自然叙事每百字保留 `1.45～2.15` 个“的”最顺耳；若把“的”删到 `<1.1/百字`，同时冒出大量`这/那/那名`（`>1.3/百字`）或五字以上无虚词硬拼砖块（如`泛黄塑料壳老电视`），反而会触发更强的机器生成特征。遇到此类窗口，应拆开硬拼长定语、删掉多余的“这/那”，补回顺畅的口语助词。
+  2. **严禁把对话全改成居中夹心段（`S`）**：改稿时切勿顺手把相邻几段都改成`“……”他做某事，“……”`；若出现连续 `S` 段或长串 `A`（`动作：“……”`）墙，将其中一两段拆为纯叙述段（`N`）加不带提示语的首引号短台词（`Q`），拉开段落节奏。
+  3. **面板/鉴定与转场套话直接转入当面互动**：若窗口内同时存在旁白播报单据数字（`rhet_panel_dossier_recitation`）、免提播报腔、旁观呛汤嘀咕或“补了一觉烧壶热水”日常蒙太奇，删去旁白复述，改为角色当场接话算账或直接硬切下一幕冲突。
 
 ### 3. 初读者盲点、物理逻辑与精简手术（来自 Stage 3 举证审读）
 - `cold_reader_scale_blind` / `cold_reader_stakes_blind`：在首次提及等级/数值/隐藏状态处，用 1～2 句具体人事对比补齐“差距有多大”和“暴露/失败有什么下场”，严禁塞入大段设定百科。

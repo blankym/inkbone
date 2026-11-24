@@ -241,6 +241,8 @@ export function diagnoseProject(targetPaths, options = {}) {
       chapterNumber: chapNum,
       previousChapterText: prevText,
       skipLengthGate: Boolean(options.skipLengthGate),
+      aigcGuard: Boolean(options.aigcGuard),
+      aigcThreshold: options.aigcThreshold,
       genresPath: options.genresPath,
       presetsPath: options.presetsPath,
       linguisticsConfig: lingConfig,

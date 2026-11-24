@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.0 — 2026-11
+
+### 新增与改进（完全向后兼容 v2.0 CLI、MCP 与台账格式）
+- **离线 280 字滑窗 AIGC 结构熵与虚词双侧护栏（`aigc-check` + `--aigc-guard` + `inkbone_aigc_check`）**：
+  - 新增纯内存零依赖模块 `src/core/aigc-guard.mjs` 与本地封装 `src/aigc-guard.mjs`，同时接入 CLI、Browser Playground（`--aigc-guard` 勾选开关）、Browser Doctor 与第 10 个 MCP 工具 `inkbone_aigc_check`；
+  - 区分五类自然段结构句式（`N` 纯叙述、`A` 动作冒号、`Q` 首引号单轮、`S` 居中提示语夹心、`M` 多轮冒号复合段），计算段落句式香农熵并精准识别 `SSS+` 连续夹心对话同构与长串 `A` 动作冒号墙；
+  - 实施双侧`的`字护栏与引号外叙述层指代/砖块扫描：拦截因“强抠`的`字（`<1.25/百字`）改塞`这/那`指示词或硬拼 `>=6` 字实词定语砖块”引发的越改越假反弹，同时自动豁免台账角色名与项目白名单，避免误伤鲜活口语对白；
+  - 默认 `audit` / `doctor` 模式下仅输出 `cadenceEntropy`、`sandwichParaRatio`、`demonsPer100Han`、`maxWindowAigcRisk` 作为 `info` 参考指标（对既有合规书稿保持 100% 零误报），显式传入 `--aigc-guard` 或运行 `aigc-check` 时输出行级局部改稿目标。
+- **高区分度对话标点与叙事结构套路扩充**：
+  - `configs/zh-linguistics.json` 新增对话标点规则 `dialogue_period_before_quote`（同段内高频出现`动作。“台词。”`句号贴左引号硬切）、修辞规则 `rhet_panel_dossier_recitation`（第三人称旁白说明书式播报折价单/账单/面板数字），以及禁用套话 `cliche_speakerphone_briefing`（免提静默两秒传出干脆嗓音）与 `cliche_bystander_choke_mutter`（旁观者呛汤低声嘀咕切镜）；
+  - `configs/genres.json` 通用水词新增 `filler_eat_sleep_boil_montage`（补觉睡醒烧热水日常蒙太奇），`urban-realism` 与 `light-fantasy` 新增警情通报量词 `reg_news_classifier_demonstrative`（`这名/那名男子/摊主`）。
+- **起草/局部改稿提示词与 10 组正反例升级**：
+  - 升级 `prompts/02-paratactic-renderer.md`（v1.2）与 `prompts/03-targeted-rewriter.md`（v1.2），区分上位者冷硬短句与市井日常角色口语呼吸（`吧/吗/啊/呢`），明确面板/账目数字走当面抢白、旁观反应做当面拉扯，并写入“三条防越改越假铁律”；
+  - 扩充 `resources/bad_vs_good_cases.md` 至 10 组对照（新增案例九「账目/面板信息去说明书化」与案例十「防强删‘的’字反弹与连续夹心对话模板」），同步补强 `resources/genre_playbooks/light-fantasy.md`。
+- **脱敏校准基准与 80 项自动化测试**：新增原创零单书耦合对照样本 `benchmarks/zhuque-calibration/samples.json` 与 `tests/v21-aigc-guard.test.mjs`（含全仓 `.mjs` 源码零汉字字面量守卫），全量测试扩充至 80 项。
+
 ## 2.0.0 — 2026-11
 
 ### 重大升级（完全向后兼容 v1.x CLI 与台账格式）

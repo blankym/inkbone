@@ -182,6 +182,8 @@ export function diagnoseChapterEntries(entries, options = {}) {
       characterNames: effectiveCharacterNames,
       previousChapterText: isAdjacent ? prev.text : "",
       skipLengthGate: Boolean(options.skipLengthGate),
+      aigcGuard: Boolean(options.aigcGuard),
+      aigcThreshold: options.aigcThreshold,
       strict: Boolean(options.strict),
       variant: options.variant || "auto",
       linguisticsConfig: lingConfig,

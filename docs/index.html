@@ -521,6 +521,7 @@
           <div class="checks-inline">
             <label><input id="skipLengthCheck" type="checkbox" checked /> 跳过单章字数区间门禁</label>
             <label><input id="goldenThreeCheck" type="checkbox" /> 黄金三章首屏留存门禁（--golden-three）</label>
+            <label><input id="aigcGuardCheck" type="checkbox" /> 280 字滑窗 AIGC 结构卫士（--aigc-guard）</label>
             <label><input id="strictModeCheck" type="checkbox" /> 严格模式（--strict）</label>
           </div>
           <div class="btns-inline">
@@ -707,9 +708,9 @@
     </section>
 
     <footer class="cli-note">
-      <strong>需要完整 CLI、MCP Server（9 工具 + 8 阶段 Prompt + 11 份剧本卡资源）、VS Code 实时波浪线扩展或安全拆书（<code>style-profile</code>）？</strong><br />
+      <strong>需要完整 CLI、MCP Server（10 工具 + 8 阶段 Prompt + 11 份剧本卡资源）、离线 280 字滑窗 AIGC 结构卫士（<code>aigc-check</code>）、VS Code 实时波浪线扩展或安全拆书（<code>style-profile</code>）？</strong><br />
       零第三方依赖，仅需 Node.js 18+：
-      <code>npx skills add blankym/inkbone</code> · <code>npx -y inkbone mcp</code> · <code>npx inkbone doctor ./chapters --changed</code>
+      <code>npx skills add blankym/inkbone</code> · <code>npx -y inkbone mcp</code> · <code>npx inkbone aigc-check ./chapters</code> · <code>npx inkbone doctor ./chapters --changed</code>
       <div class="footer-links">
         本项目按 <a href="https://github.com/blankym/inkbone/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> 协议完整开源 · 友情链接与社区认可：<a href="https://linux.do/" target="_blank" rel="noopener">LINUX DO</a>（感谢社区开源分享氛围与早期试跑建议）
       </div>

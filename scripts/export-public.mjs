@@ -31,6 +31,7 @@ export const PUBLIC_ITEMS = [
   "skills",
   "tests",
   "benchmarks/eval-set",
+  "benchmarks/zhuque-calibration",
   "benchmarks/public-report.md",
   "benchmarks/shoushi-wenxian/README.md",
   "benchmarks/shoushi-wenxian/manifest.json",

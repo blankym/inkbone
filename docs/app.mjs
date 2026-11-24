@@ -485,6 +485,7 @@ function runAudit() {
   const protagonistName = el("protagonistInput").value.trim();
   const skipLengthGate = el("skipLengthCheck").checked;
   const goldenThree = el("goldenThreeCheck") ? el("goldenThreeCheck").checked : false;
+  const aigcGuard = el("aigcGuardCheck") ? el("aigcGuardCheck").checked : false;
   const strict = el("strictModeCheck").checked;
 
   const result = auditChapterText(text, {
@@ -492,6 +493,7 @@ function runAudit() {
     variant,
     skipLengthGate,
     goldenThree,
+    aigcGuard,
     strict,
     characterNames,
     ledger: protagonistName ? { protagonist: { name: protagonistName } } : undefined,
@@ -973,6 +975,9 @@ async function init() {
     el("skipLengthCheck").addEventListener("change", runAudit);
     if (el("goldenThreeCheck")) {
       el("goldenThreeCheck").addEventListener("change", runAudit);
+    }
+    if (el("aigcGuardCheck")) {
+      el("aigcGuardCheck").addEventListener("change", runAudit);
     }
     el("strictModeCheck").addEventListener("change", runAudit);
     let inputTimer = null;

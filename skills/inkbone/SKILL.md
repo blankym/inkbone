@@ -5,7 +5,7 @@ license: MIT
 compatibility: Node.js >= 18 (zero third-party dependencies)
 metadata:
   author: blankym
-  version: "2.0.0"
+  version: "2.1.0"
   repository: https://github.com/blankym/inkbone
 ---
 
@@ -17,7 +17,7 @@ metadata:
 
 - **路径约定**：本文件所在的目录记作 `SKILL_DIR`。下文所有 `$SKILL_DIR/...` 路径都相对这个目录，不相对小说项目目录。
 - **优先调用顺序**：
-  1. 若当前宿主已挂载 **InkBone MCP Server**（`inkbone mcp`），可直接调用 9 个结构化工具（含 `inkbone_style_profile`、`inkbone_export`）、8 个 MCP Prompts（`inkbone/beat-planner` 等）与 11 份剧本卡/微技法只读 Resources（`inkbone://playbooks/<genre>`）；
+  1. 若当前宿主已挂载 **InkBone MCP Server**（`inkbone mcp`），可直接调用 10 个结构化工具（含 `inkbone_aigc_check`、`inkbone_style_profile`、`inkbone_export`）、8 个 MCP Prompts（`inkbone/beat-planner` 等）与 11 份剧本卡/微技法只读 Resources（`inkbone://playbooks/<genre>`）；
   2. 若已全局安装（`npm install -g inkbone`），直接执行 `inkbone <command>`（跨 Windows / macOS / Linux 免配路径）；
   3. 否则通过节点运行本地随包 CLI：
      - macOS / Linux：`SKILL_DIR=/path/to/skills/inkbone`，执行 `node "$SKILL_DIR/bin/inkbone.mjs" <command>`
@@ -29,8 +29,9 @@ metadata:
 
 ## 文件索引
 
-- 命令行工具：`node "$SKILL_DIR/bin/inkbone.mjs"`（`--help` 列出高频日常命令，`--help-all` 列出全部 26 条命令，`--version` 查看版本）。
+- 命令行工具：`node "$SKILL_DIR/bin/inkbone.mjs"`（`--help` 列出高频日常命令，`--help-all` 列出全部 27 条命令，`--version` 查看版本）。
 - 常用新能力速查：
+  - 离线 280 字滑窗 AIGC 结构与虚词双侧护栏：`aigc-check <章节或目录> [--threshold 0.5] [--json]`，或在 `audit` / `doctor` / `rewrite-prompt` 加 `--aigc-guard`（零 token 定位连续夹心对话模板 `SSS`、“的”字过度脱水引发的“这/那”激增与五字实词砖块硬拼）
   - 安全拆书提取风格与 `customGates`：`style-profile <范文目录> [--out style.json]`
   - 长篇增量体检：`doctor ./chapters --chapters 40-45` 或 `doctor ./chapters --changed`（自动保留前章查跨章回声）
   - 黄金三章首屏留存门禁：`audit` / `doctor` 支持 `--golden-three`（检查首屏 380 字内是否有对白或强冲突信号，防止慢热铺垫）

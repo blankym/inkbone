@@ -2,7 +2,7 @@
   "name": "inkbone-vscode",
   "displayName": "InkBone（墨骨）中文小说实时质检",
   "description": "Real-time ESLint-style diagnostics, Quick Fixes, formatting cleaner, and targeted rewrite prompt generator for Chinese long-form fiction (zero dependencies).",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "publisher": "blankym",
   "license": "MIT",
   "repository": {

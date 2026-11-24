@@ -1,7 +1,7 @@
 {
   "name": "inkbone",
-  "version": "2.0.0",
-  "description": "Zero-dependency Chinese long-form fiction engineering suite: Agent Skill, full MCP server (tools/prompts/resources), living ledger, copyright-safe style profiler, platform exporter, Traditional Chinese support, Browser Doctor & VS Code linter.",
+  "version": "2.1.0",
+  "description": "Zero-dependency Chinese long-form fiction engineering suite: Agent Skill, full MCP server (tools/prompts/resources), offline 280-char AIGC window guard, living ledger, style profiler, platform exporter, Traditional Chinese support, Browser Doctor & VS Code linter.",
   "type": "module",
   "bin": {
     "inkbone": "./bin/inkbone.mjs"
@@ -27,7 +27,8 @@
     "./mcp": "./src/mcp-server.mjs",
     "./style": "./src/style-profiler.mjs",
     "./exporter": "./src/exporter.mjs",
-    "./browser-doctor": "./src/browser-doctor.mjs"
+    "./browser-doctor": "./src/browser-doctor.mjs",
+    "./aigc-guard": "./src/aigc-guard.mjs"
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",

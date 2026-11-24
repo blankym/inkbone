@@ -23,7 +23,11 @@
         "dePer100Han": "每百字“的”数",
         "emDashPer1kHan": "每千字破折号",
         "maxPronounHeadStreak": "最大连续代词起头",
-        "formattingArtifactCount": "格式/注记硬伤"
+        "formattingArtifactCount": "格式/注记硬伤",
+        "cadenceEntropy": "段落句式熵",
+        "sandwichParaRatio": "夹心对话段占比",
+        "demonsPer100Han": "每百字指示词（这/那）",
+        "maxWindowAigcRisk": "滑窗最高 AIGC 风险"
       },
       "violationLabels": {
         "FORMATTING_OR_LEDGER_ARTIFACTS": "Markdown 星号 / 括号算账注记残留",
@@ -69,7 +73,10 @@
         "NESTED_DE_CHAINS": "嵌套“的…的…”长链",
         "UNNATURAL_PARAGRAPH_DENSITY": "段落句数均值偏离自然节奏",
         "SINGLE_SENTENCE_PARAGRAPH_STREAK": "连续多行一句一段机器排版",
-        "FLOATING_OPENING_DIALOGUE": "开场台词缺少说话人锚定"
+        "FLOATING_OPENING_DIALOGUE": "开场台词缺少说话人锚定",
+        "AIGC_WINDOW_RISK": "280 字滑窗 AIGC 结构/虚词风险超标",
+        "CADENCE_TEMPLATE_MONOTONY": "段落对话句式同构连击（连续夹心段 S 或动作冒号墙 A）",
+        "TELEGRAPHIC_MODIFIER_STUFFING": "过度去虚词反弹（极低“的”伴随“这/那”激增与实词砖块硬拼）"
       },
       "remedies": {
         "FORMATTING_OR_LEDGER_ARTIFACTS": "清理正文中残留的 Markdown 星号与文内括号台账注记（可用 inkbone normalize --strip-bold）。",
@@ -115,7 +122,10 @@
         "NESTED_DE_CHAINS": "消除多层嵌套的“A的B的C”结构。",
         "UNNATURAL_PARAGRAPH_DENSITY": "将连续相关动作归并成 2～3 句自然段，单句成段留给关键重拍。",
         "SINGLE_SENTENCE_PARAGRAPH_STREAK": "合并连续多行机械“一句一段”的流水排版。",
-        "FLOATING_OPENING_DIALOGUE": "给场景开场的第一句台词补上说话人动作或位置锚点。"
+        "FLOATING_OPENING_DIALOGUE": "给场景开场的第一句台词补上说话人动作或位置锚点。",
+        "AIGC_WINDOW_RISK": "该 280 字窗口触发 AIGC 结构或虚词失衡：请混排 N（纯叙述）/ A（动作冒号）/ Q（首引号）/ S（夹心）四类段落，将“的”维持在 1.45～2.15/百字自然带，压低“这/那”指示词（<=1.15/百字）并拆开 >=5 字实词硬拼砖块。",
+        "CADENCE_TEMPLATE_MONOTONY": "打破连续 4 段及以上居中夹心对话（“……”动作，“……”）或连续 8 段动作冒号段，穿插纯叙述段与不带提示语的首引号快切台词。",
+        "TELEGRAPHIC_MODIFIER_STUFFING": "切勿为压低“的”字率强删虚词并改用“这/那”指代或硬拼五字以上实词定语砖块；恢复自然口语虚词与助词呼吸。"
       },
       "hintMessages": {
         "SUBJECT_CONTINUITY_DISABLED": "提示：当前未提供角色名单（ledger.characterNames 为空），主语歧义检测（SUBJECT_AMBIGUITY）未启用。可运行 inkbone import-ledger <目录> --auto-characters --out ledger.json 自动挖掘角色候选，或在 ledger.json 中填写 characterNames。",
@@ -222,10 +232,22 @@
         "dePer100Han": "De / 100 Han",
         "emDashPer1kHan": "EmDash / 1k",
         "maxPronounHeadStreak": "Max Pronoun Streak",
-        "formattingArtifactCount": "Format Artifacts"
+        "formattingArtifactCount": "Format Artifacts",
+        "cadenceEntropy": "Cadence Entropy",
+        "sandwichParaRatio": "Sandwich Quote Ratio",
+        "demonsPer100Han": "Demons (zhe/na) / 100",
+        "maxWindowAigcRisk": "Max Window AIGC Risk"
       },
-      "violationLabels": {},
-      "remedies": {},
+      "violationLabels": {
+        "AIGC_WINDOW_RISK": "280-char Window AIGC Structural/Lexical Risk",
+        "CADENCE_TEMPLATE_MONOTONY": "Paragraph Cadence Template Monotony (S/A Streak)",
+        "TELEGRAPHIC_MODIFIER_STUFFING": "Telegraphic De-Starvation & Modifier Brick Rebound"
+      },
+      "remedies": {
+        "AIGC_WINDOW_RISK": "Rebalance N/A/Q/S paragraph cadence in the flagged 280-char window, keep 'de' inside 1.45-2.15/100, reduce 'zhe/na' demonstratives below 1.15/100, and split >=5-char compound modifier bricks.",
+        "CADENCE_TEMPLATE_MONOTONY": "Break 4+ consecutive mid-attribution sandwich quotes (S) or 8+ action-colon (A) paragraphs by interleaving pure narration (N) and bare-quote (Q) turns.",
+        "TELEGRAPHIC_MODIFIER_STUFFING": "Avoid over-stripping 'de' (<0.9/100) while spiking 'zhe/na' demonstratives and >=5-char noun bricks; restore natural spoken particles."
+      },
       "hintMessages": {
         "SUBJECT_CONTINUITY_DISABLED": "Hint: No characterNames found (ledger.characterNames is empty), so SUBJECT_AMBIGUITY checks were skipped. Run `inkbone import-ledger <dir> --auto-characters` or add characterNames to ledger.json.",
         "MIXED_GENRE_DETECTED": "Warning: Mixed genres detected in unconfigured folder ({files}); pass `--genre` or add `novel.json` per book."

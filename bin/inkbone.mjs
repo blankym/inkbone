@@ -43,6 +43,9 @@ import {
   formatStyleProfileMarkdown,
   exportChapters,
   listPlatforms,
+  checkFilesAigcRisk,
+  formatAigcCheckMarkdown,
+  collectCharacterNames,
 } from "../src/index.mjs";
 
 const currentFile = fileURLToPath(import.meta.url);
@@ -79,6 +82,7 @@ function parseFlags(args) {
     "platforms",
     "golden-three",
     "batch",
+    "aigc-guard",
   ]);
   for (let i = 0; i < args.length; i += 1) {
     const token = args[i];
@@ -223,12 +227,14 @@ function printHelp(showAll = false) {
     "  inkbone normalize <file|dir>... [--check] [--strip-bold] [--fix-emdash] [--project <dir|novel.json>] [--no-project]",
     "                                                    Deterministic formatting & pause-punctuation cleaner (zero tokens)",
     "  inkbone audit <file.md> [--genre <id>] [--preset <id>] [--variant auto|zh-hans|zh-hant] [--format json|md] [--lang zh|en]",
-    "                [--ledger <ledger.json> --chapter <n> --prev <prev.md> --skip-length] [--outline-chapter <outline.md>] [--golden-three] [--strict]",
+    "                [--ledger <ledger.json> --chapter <n> --prev <prev.md> --skip-length] [--outline-chapter <outline.md>] [--golden-three] [--aigc-guard] [--strict]",
     "                                                    Run boundary, deceased-guard, register, rhetoric, density & continuity audit",
     "  inkbone doctor <file|dir>... [--genre <id>] [--variant auto|zh-hans|zh-hant] [--chapters <40-45>] [--changed [ref]]",
-    "                 [--outline <dir|file>...] [--ledger <ledger.json>] [--lang zh|en] [--json]",
+    "                 [--outline <dir|file>...] [--ledger <ledger.json>] [--aigc-guard] [--lang zh|en] [--json]",
     "                                                    Full or incremental multi-chapter checkup (preserves cross-chapter echo)",
-    "  inkbone rewrite-prompt <file.md> [--genre <id>] [--variant auto|zh-hans|zh-hant] [--lang zh|en] [--skip-length]",
+    "  inkbone aigc-check <file|dir>... [--threshold <0.5>] [--ledger <ledger.json>] [--json]",
+    "                                                    Offline 280-char sliding-window AIGC structural & lexical guard (zero tokens)",
+    "  inkbone rewrite-prompt <file.md> [--genre <id>] [--variant auto|zh-hans|zh-hant] [--aigc-guard] [--lang zh|en] [--skip-length]",
     "                                                    Audit chapter and output a copy-ready targeted rewrite prompt",
     "  inkbone check-ledger <ledger.json> [--current <n>] [--overdue <20>]",
     "                                                    Check ledger health (duplicates, reveal order, resource balance, overdue foreshadowing)",
@@ -240,7 +246,7 @@ function printHelp(showAll = false) {
     "                                                    Copyright-safe statistical style profile & suggested customGates",
     "  inkbone export <file|dir>... --platform <qidian|fanqie|qimao|jjwxc> [--out <dir>] [--merge-out <book.txt>] [--docx-out <sub.docx>] [--zip-out <pkg.zip>] [--indent] [--check]",
     "                                                    Clean Markdown & export chapters/submission DOCX/ZIP for web-fiction platforms",
-    "  inkbone mcp                                       Start zero-dependency stdio MCP server (9 tools, 8 prompts, 11 resources)",
+    "  inkbone mcp                                       Start zero-dependency stdio MCP server (10 tools, 8 prompts, 11 resources)",
   ];
 
   const advanced = [
@@ -348,6 +354,8 @@ async function main() {
       ledger,
       chapterNumber: flags.chapter ? Number(flags.chapter) : null,
       skipLengthGate: Boolean(flags["skip-length"]),
+      aigcGuard: Boolean(flags["aigc-guard"]),
+      aigcThreshold: flags.threshold ? Number(flags.threshold) : undefined,
     });
     if (flags.json) {
       console.log(JSON.stringify(diagnosis, null, 2));
@@ -422,6 +430,8 @@ async function main() {
       outlineText,
       skipLengthGate: Boolean(flags["skip-length"]),
       goldenThree: Boolean(flags["golden-three"]),
+      aigcGuard: Boolean(flags["aigc-guard"]),
+      aigcThreshold: flags.threshold ? Number(flags.threshold) : undefined,
       strict: Boolean(flags.strict),
       reference: flags.reference
         ? JSON.parse(fs.readFileSync(path.resolve(flags.reference), "utf8"))
@@ -624,6 +634,38 @@ async function main() {
       minRatio: flags["min-ratio"] ? Number(flags["min-ratio"]) : undefined,
     });
     console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  if (command === "aigc-check") {
+    if (positional.length === 0) {
+      console.error("Error: Provide at least one <file.md> or <directory> for aigc-check.");
+      process.exit(2);
+    }
+    const project = resolveProject(flags, positional[0]);
+    const ledgerPath = flags.ledger
+      ? path.resolve(flags.ledger)
+      : !flags["no-ledger"] && project?.ledgerFile && fs.existsSync(project.ledgerFile)
+        ? project.ledgerFile
+        : null;
+    const ledger = ledgerPath
+      ? JSON.parse(fs.readFileSync(ledgerPath, "utf8"))
+      : null;
+    const { names: charNames } = collectCharacterNames(ledger, []);
+    const exemptTerms = [
+      ...charNames,
+      ...(project?.rules?.whitelistLiterals || []),
+    ];
+    const batch = checkFilesAigcRisk(positional, {
+      threshold: flags.threshold ? Number(flags.threshold) : 0.5,
+      exemptTerms,
+    });
+    if (flags.json) {
+      console.log(JSON.stringify(batch, null, 2));
+    } else {
+      console.log(formatAigcCheckMarkdown(batch));
+    }
+    process.exitCode = batch.pass ? 0 : 1;
     return;
   }
 
@@ -919,6 +961,8 @@ async function main() {
       ledger,
       chapterNumber: flags.chapter ? Number(flags.chapter) : null,
       skipLengthGate: Boolean(flags["skip-length"]),
+      aigcGuard: Boolean(flags["aigc-guard"]),
+      aigcThreshold: flags.threshold ? Number(flags.threshold) : undefined,
       strict: Boolean(flags.strict),
     });
     const built = buildTargetedRewritePrompt(text, report, {
